@@ -2,10 +2,14 @@
   "name": "fire-market-sim",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "electron:dev": "concurrently \"cross-env NODE_ENV=development npm run dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+    "electron:build": "next build && electron-builder",
+    "electron:start": "electron ."
   },
   "dependencies": {
     "next": "16.1.6",
@@ -17,7 +21,27 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^40.4.1",
+    "electron-builder": "^26.7.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^9.0.4"
+  },
+  "build": {
+    "appId": "com.firemarketsim.app",
+    "productName": "FIRE Market Simulator",
+    "files": [
+      "electron/**/*",
+      "out/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.ico"
+    }
   }
 }
