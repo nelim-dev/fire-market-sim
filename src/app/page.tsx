@@ -1,65 +1,164 @@
-import Image from "next/image";
+'use client';
+
+/**
+ * ВРЕМЕННАЯ ТЕСТОВАЯ СТРАНИЦА
+ * 
+ * Используется для проверки работы GameLoop, LogicManager, селекторов
+ * Позже будет заменена на настоящий UI приложения
+ * 
+ * Функции:
+ * - Отображение игрового времени
+ * - Пауза/возобновление
+ * - Ускорение/замедление симуляции
+ * - Счётчик перерисовок (для проверки селекторов)
+ */
+
+import { useEffect, useState, useRef } from 'react';
+import { gameLoop } from '@/logic/runners/GameLoop';
 
 export default function Home() {
+  const [gameTime, setGameTime] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  
+  // Счётчик перерисовок
+  const renderCount = useRef(0);
+  
+  // Увеличиваем счётчик при каждой перерисовке
+  renderCount.current += 1;
+  console.log(`[Page] 🎨 RENDER #${renderCount.current}`);
+
+  // Запускаем GameLoop при монтировании компонента
+  useEffect(() => {
+    console.log('[Page] Монтирование компонента');
+    
+    // Запускаем игровой цикл
+    gameLoop.start();
+    setIsRunning(true);
+
+    // Подписываемся на изменения gameTime
+    const logicManager = gameLoop.getLogicManager();
+    const unsubscribe = logicManager.subscribe(
+      state => state.gameTime,  // Селектор — берём только gameTime
+      (time) => {
+        console.log('[Page] ✅ gameTime изменился:', time, '→ вызываем setGameTime');
+        setGameTime(time);
+      }
+    );
+
+    // Cleanup при размонтировании
+    return () => {
+      console.log('[Page] Размонтирование компонента');
+      unsubscribe();
+      gameLoop.stop();
+    };
+  }, []);
+
+  const handlePause = () => {
+    console.log('[Page] 🔴 Нажата кнопка ПАУЗА (изменится isPaused)');
+    gameLoop.getLogicManager().pause();
+  };
+
+  const handleResume = () => {
+    console.log('[Page] 🟢 Нажата кнопка ВОЗОБНОВИТЬ (изменится isPaused)');
+    gameLoop.getLogicManager().resume();
+  };
+
+  const handleSpeedUp = () => {
+    console.log('[Page] 🚀 Нажата кнопка УСКОРИТЬ (изменится timeScale)');
+    const currentScale = gameLoop.getLogicManager().getState().timeScale;
+    gameLoop.getLogicManager().setTimeScale(currentScale * 2);
+  };
+
+  const handleSlowDown = () => {
+    console.log('[Page] 🐌 Нажата кнопка ЗАМЕДЛИТЬ (изменится timeScale)');
+    const currentScale = gameLoop.getLogicManager().getState().timeScale;
+    gameLoop.getLogicManager().setTimeScale(currentScale / 2);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-900 text-white">
+      <div className="max-w-2xl w-full space-y-8">
+        <h1 className="text-4xl font-bold text-center">
+          FIRE Market Simulator
+        </h1>
+
+        <div className="bg-gray-800 rounded-lg p-8 space-y-6">
+          {/* Счётчик перерисовок */}
+          <div className="text-center border-b border-gray-700 pb-4">
+            <div className="text-sm text-gray-400 mb-2">Перерисовок компонента</div>
+            <div className="text-3xl font-bold text-pink-400">
+              🎨 {renderCount.current}
+            </div>
+          </div>
+
+          {/* Статус игрового цикла */}
+          <div className="text-center">
+            <div className="text-sm text-gray-400 mb-2">Статус цикла</div>
+            <div className={`text-2xl font-bold ${isRunning ? 'text-green-400' : 'text-red-400'}`}>
+              {isRunning ? '🟢 Запущен' : '🔴 Остановлен'}
+            </div>
+          </div>
+
+          {/* Игровое время */}
+          <div className="text-center">
+            <div className="text-sm text-gray-400 mb-2">Игровое время</div>
+            <div className="text-5xl font-bold text-blue-400">
+              {gameTime.toFixed(2)}с
+            </div>
+          </div>
+
+          {/* Кадры */}
+          <div className="text-center">
+            <div className="text-sm text-gray-400 mb-2">Кадров выполнено</div>
+            <div className="text-2xl font-bold text-purple-400">
+              {gameLoop.getFrameCount()}
+            </div>
+          </div>
+
+          {/* UPS */}
+          <div className="text-center">
+            <div className="text-sm text-gray-400 mb-2">Частота обновлений</div>
+            <div className="text-xl font-bold text-yellow-400">
+              {gameLoop.getTargetUPS()} UPS
+            </div>
+          </div>
+
+          {/* Управление */}
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={handlePause}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              ⏸ Пауза
+            </button>
+
+            <button
+              onClick={handleResume}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              ▶️ Возобновить
+            </button>
+
+            <button
+              onClick={handleSlowDown}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition"
+            >
+              🐌 Замедлить
+            </button>
+
+            <button
+              onClick={handleSpeedUp}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition"
+            >
+              🚀 Ускорить
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="text-center text-sm text-gray-500">
+          Откройте консоль браузера чтобы увидеть логи GameLoop и перерисовок
         </div>
-      </main>
+      </div>
     </div>
   );
 }
