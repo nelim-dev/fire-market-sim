@@ -13,9 +13,11 @@ export default function GameLayout({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-[#121212] text-zinc-100">
       <AppHeader />
-      <main className="mx-auto max-w-6xl p-6">{children}</main>
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+        {children}
+      </main>
     </div>
   );
 }

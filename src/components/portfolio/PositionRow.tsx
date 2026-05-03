@@ -1,9 +1,9 @@
-import type { PortfolioPosition } from '@/logic/domain/portfolio';
+import type { PortfolioPosition, PortfolioState } from '@/logic/domain/portfolio';
 import {
   positionMarketValueRub,
   positionPnlPct,
   positionPnlRub,
-  positionShareOfCategoryRub,
+  positionShareOfTotalNavPct,
 } from '@/logic/portfolio/portfolioDerived';
 import {
   formatPctSigned,
@@ -13,60 +13,61 @@ import {
 
 export function PositionRow({
   position: p,
-  categoryTotalRub,
+  portfolio,
 }: {
   position: PortfolioPosition;
-  categoryTotalRub: number;
+  portfolio: PortfolioState;
 }) {
   const mkt = positionMarketValueRub(p);
   const pnl = positionPnlRub(p);
   const pnlPct = positionPnlPct(p);
-  const share = positionShareOfCategoryRub(p, categoryTotalRub);
+  const shareTotal = positionShareOfTotalNavPct(p, portfolio);
   const pnlPositive = pnl >= 0;
 
-  const subLabel =
-    p.kind === 'bond' && p.secondaryId
-      ? p.secondaryId
-      : p.ticker;
+  const line1Col1 = p.displayName;
+  const line2Col1 =
+    p.kind === 'bond' && p.secondaryId ? p.secondaryId : p.ticker;
 
   return (
-    <div className="grid grid-cols-1 gap-2 border-b border-zinc-800/80 py-3 text-sm last:border-0 sm:grid-cols-12 sm:items-center sm:gap-3">
-      <div className="sm:col-span-3">
-        <div className="font-medium text-zinc-100">{p.displayName}</div>
-        <div className="text-xs text-zinc-500">{subLabel}</div>
-      </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-zinc-400 sm:col-span-6">
-        <span>
-          Цена:{' '}
-          <span className="text-zinc-200">{formatRub(p.lastPriceRub)}</span>
-        </span>
-        <span>
-          Кол-во:{' '}
-          <span className="text-zinc-200">
-            {p.quantity.toLocaleString('ru-RU')} шт.
-          </span>
-        </span>
-        <span>
-          Всего:{' '}
-          <span className="text-zinc-200">{formatRub(mkt)}</span>
-        </span>
-        <span>
-          Доля:{' '}
-          <span className="text-zinc-200">
-            {share.toFixed(1).replace('.', ',')}%
-          </span>
-        </span>
-      </div>
+    <div className="border-b border-zinc-800/80 py-2 text-[11px] last:border-0 sm:text-xs">
       <div
-        className={`text-right sm:col-span-3 ${
-          pnlPositive ? 'text-emerald-400' : 'text-red-400'
-        }`}
+        className="grid grid-cols-4 items-baseline gap-x-2 gap-y-0.5"
+        style={{ gridTemplateColumns: 'minmax(0,1.1fr) minmax(0,0.9fr) minmax(0,1fr) minmax(0,0.65fr)' }}
       >
-        <div className="font-medium">
-          {formatRubSignedDetailed(pnl)} ({formatPctSigned(pnlPct)})
+        <div className="flex min-w-0 items-baseline gap-1">
+          <span className="shrink-0 text-zinc-600" aria-hidden>
+            •
+          </span>
+          <span className="truncate font-medium text-zinc-100">{line1Col1}</span>
         </div>
-        <div className="text-xs text-zinc-500">
-          {pnlPositive ? '▲' : '▼'}
+        <div className="text-right tabular-nums text-zinc-300">
+          <span className="text-zinc-600">•</span>
+          {formatRub(p.lastPriceRub)}
+        </div>
+        <div className="text-right tabular-nums text-zinc-200">
+          {formatRub(mkt)}
+        </div>
+        <div className="text-right tabular-nums text-zinc-400">
+          {shareTotal.toFixed(1).replace('.', ',')}%
+        </div>
+
+        <div className="truncate text-zinc-500">{line2Col1}</div>
+        <div className="text-right tabular-nums text-zinc-500">
+          {p.quantity.toLocaleString('ru-RU')} шт.
+        </div>
+        <div
+          className={`text-right tabular-nums ${
+            pnlPositive ? 'text-emerald-400' : 'text-red-400'
+          }`}
+        >
+          {formatRubSignedDetailed(pnl)}
+        </div>
+        <div
+          className={`text-right tabular-nums ${
+            pnlPositive ? 'text-emerald-400' : 'text-red-400'
+          }`}
+        >
+          {formatPctSigned(pnlPct)} {pnlPositive ? '▲' : '▼'}
         </div>
       </div>
     </div>

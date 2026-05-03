@@ -1,8 +1,15 @@
+import { GameWorkspace } from '@/components/game/GameWorkspace';
+import { RightPanelPlaceholder } from '@/components/game/RightPanelPlaceholder';
 import { PortfolioScreen } from '@/components/portfolio/PortfolioScreen';
 
 /**
- * Главная: экран «Мой портфель» (M2).
+ * Главная: портфель слева, рабочая область справа (ТЗ §6).
  */
 export default function GameHomePage() {
-  return <PortfolioScreen />;
+  return (
+    <GameWorkspace
+      left={<PortfolioScreen />}
+      right={<RightPanelPlaceholder />}
+    />
+  );
 }

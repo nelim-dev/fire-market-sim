@@ -19,8 +19,8 @@ export function PortfolioScreen() {
 
   return (
     <div className="text-zinc-100">
-      <h1 className="text-2xl font-bold tracking-tight">Мой портфель</h1>
-      <nav className="mt-4 flex flex-wrap gap-4 border-b border-zinc-800 pb-2">
+      <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Мой портфель</h1>
+      <nav className="mt-3 flex flex-wrap gap-2 border-b border-zinc-800 pb-2 sm:mt-4 sm:gap-3">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -36,7 +36,7 @@ export function PortfolioScreen() {
           </button>
         ))}
       </nav>
-      <div className="mt-6">
+      <div className="mt-4 sm:mt-6">
         {tab === 'composition' && (
           <PortfolioCompositionTab portfolio={portfolio} />
         )}

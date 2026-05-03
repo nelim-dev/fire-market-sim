@@ -72,3 +72,13 @@ export function positionShareOfCategoryRub(
   if (categoryTotalRub === 0) return 0;
   return (positionMarketValueRub(p) / categoryTotalRub) * 100;
 }
+
+/** Доля стоимости позиции от всего NAV (кэш + бумаги). */
+export function positionShareOfTotalNavPct(
+  p: PortfolioPosition,
+  portfolio: PortfolioState
+): number {
+  const t = totalNavRub(portfolio);
+  if (t === 0) return 0;
+  return (positionMarketValueRub(p) / t) * 100;
+}

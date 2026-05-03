@@ -53,11 +53,7 @@ export function AssetCategorySection({
             <p className="py-4 text-sm text-zinc-500">Нет позиций</p>
           ) : (
             list.map((p) => (
-              <PositionRow
-                key={p.id}
-                position={p}
-                categoryTotalRub={catTotal}
-              />
+              <PositionRow key={p.id} position={p} portfolio={portfolio} />
             ))
           )}
         </div>
