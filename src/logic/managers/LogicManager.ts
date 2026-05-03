@@ -1,4 +1,15 @@
 import { EventBus } from '../systems/EventBus';
+import type { TradingDayRecord } from '@/data/domain/TradingDaySession';
+import tradingCalendarJson from '@/data/generated/tradingCalendar.json';
+import {
+  SIMULATION_MS_PER_LOGIC_SECOND_AT_1X,
+  type TimeScalePreset,
+} from '@/logic/simulation/simulationConfig';
+import { TRADING_DAY_CHANGED, type TradingDayChangedPayload } from '../logicEvents';
+import { SessionTimelineController, toSessionSnapshot, type TradingSessionSnapshot } from '../time/SessionTimelineController';
+import { TradingCalendar } from '../time/TradingCalendar';
+import { buildDemoPortfolio } from '@/data/portfolio/buildDemoPortfolio';
+import type { PortfolioState } from '@/logic/domain/portfolio';
 
 /**
  * Селектор — функция которая выбирает часть состояния
@@ -17,23 +28,45 @@ type StateSubscriber<T> = (value: T) => void;
  * Пока минимальный, будем расширять по мере разработки
  */
 export interface GameState {
+  /**
+   * Текущий момент симуляции (UTC, мс).
+   * Шаг по данным — минута; скорость продвижения задаётся в update() через
+   * SIMULATION_MS_PER_LOGIC_SECOND_AT_1X и timeScale.
+   */
+  simulationEpochMs: number;
+
+  /** Момент старта сессии (UTC, мс) — из файлов котировок с учётом 10:00 МСК */
+  simulationStartEpochMs: number;
+
+  /** Конец доступной симуляции (UTC, мс) — по «узкому месту» тикеров и 18:50 МСК */
+  simulationEndEpochMs: number;
+
+  /** Календарь торговых дней из generated/tradingCalendar.json */
+  tradingCalendarReady: boolean;
+
+  /** Индекс текущего дня в календаре (0 … dayCount-1) */
+  currentTradingDayIndex: number;
+
+  /** Текущая торговая сессия (день МСК) */
+  currentTradingSession: TradingSessionSnapshot | null;
+
+  /** Следующий торговый день (для UI / фоновой подготовки) */
+  nextTradingSession: TradingSessionSnapshot | null;
+
   // Игровое время (в секундах с начала игры)
   gameTime: number;
   
-  // Скорость симуляции (1.0 = нормальная, 2.0 = двойная, 0.5 = половинная)
-  timeScale: number;
+  /** Пресет скорости симуляции (ТЗ: только 1, 10, 100, 1000) */
+  timeScale: TimeScalePreset;
   
   // Игра на паузе?
   isPaused: boolean;
   
   // Текущий пользователь (null если не залогинен)
   currentUser: string | null;
-  
-  // Здесь будут данные модулей:
-  // market: { prices: {...}, ... }
-  // portfolio: { cash: 10000, stocks: {...}, ... }
-  // education: { completedLessons: [...], ... }
-  // и т.д.
+
+  /** Портфель (M2+): демо-сид, позже сделки и рыночные цены */
+  portfolio: PortfolioState;
 }
 
 /**
@@ -74,11 +107,17 @@ export class LogicManager {
    * Пока оставим пустым, добавим позже
    */
 
+  private readonly sessionTimeline: SessionTimelineController;
+
   constructor() {
     console.log('[LogicManager] Инициализация...');
 
     // Создаём EventBus
     this.eventBus = new EventBus();
+
+    const raw = tradingCalendarJson as { days: TradingDayRecord[] };
+    const calendar = TradingCalendar.fromRecords(raw.days ?? []);
+    this.sessionTimeline = new SessionTimelineController(calendar);
 
     // Инициализируем начальное состояние
     this.state = this.createInitialState();
@@ -95,11 +134,25 @@ export class LogicManager {
    * Создать начальное состояние приложения
    */
   private createInitialState(): GameState {
+    this.sessionTimeline.reset();
+    const ready = this.sessionTimeline.isReady();
+    const start = this.sessionTimeline.getGlobalStartEpochMs();
+    const end = this.sessionTimeline.getGlobalEndEpochMs();
+    const cur = toSessionSnapshot(this.sessionTimeline.getCurrentDay());
+    const nxt = toSessionSnapshot(this.sessionTimeline.getNextDay());
     return {
+      tradingCalendarReady: ready,
+      simulationStartEpochMs: start,
+      simulationEpochMs: start,
+      simulationEndEpochMs: end,
+      currentTradingDayIndex: 0,
+      currentTradingSession: cur,
+      nextTradingSession: nxt,
       gameTime: 0,
-      timeScale: 1.0,
+      timeScale: 1,
       isPaused: false,
       currentUser: null,
+      portfolio: buildDemoPortfolio(),
     };
   }
 
@@ -115,6 +168,12 @@ export class LogicManager {
       return;
     }
 
+    if (!this.state.tradingCalendarReady) {
+      this.eventBus.processQueue();
+      this.notifySubscribers();
+      return;
+    }
+
     // Применяем масштаб времени
     // Если timeScale = 2.0, то игровое время идёт в 2 раза быстрее
     const scaledDeltaTime = deltaTime * this.state.timeScale;
@@ -123,8 +182,35 @@ export class LogicManager {
     // Здесь обрабатываются команды пользователя и события от модулей
     this.eventBus.processQueue();
 
-    // ШАГ 2: Обновить игровое время
-    this.state.gameTime += scaledDeltaTime;
+    // ШАГ 2: Обновить игровое время (торговые сессии по дням, пропуск ночи)
+    const deltaSimMs =
+      scaledDeltaTime * SIMULATION_MS_PER_LOGIC_SECOND_AT_1X;
+    const { epochMs, dayChanged } = this.sessionTimeline.advance(
+      this.state.simulationEpochMs,
+      deltaSimMs
+    );
+    this.state.simulationEpochMs = epochMs;
+    this.state.currentTradingDayIndex = this.sessionTimeline.getDayIndex();
+    if (dayChanged) {
+      this.state.currentTradingSession = toSessionSnapshot(
+        this.sessionTimeline.getCurrentDay()
+      );
+      this.state.nextTradingSession = toSessionSnapshot(
+        this.sessionTimeline.getNextDay()
+      );
+      const cur = this.sessionTimeline.getCurrentDay();
+      const payload: TradingDayChangedPayload = {
+        mskDateYyyymmdd: cur?.mskDateYyyymmdd ?? '',
+        dayIndex: this.state.currentTradingDayIndex,
+      };
+      this.eventBus.emit(TRADING_DAY_CHANGED, payload);
+      this.sessionTimeline.schedulePrefetchNextSession();
+      this.eventBus.processQueue();
+    }
+    this.state.gameTime = Math.max(
+      0,
+      (this.state.simulationEpochMs - this.state.simulationStartEpochMs) / 1000
+    );
 
     // ШАГ 3: Обновить все модули
     // Здесь позже будем вызывать update() у всех модулей:
@@ -260,23 +346,12 @@ export class LogicManager {
   }
 
   /**
-   * Изменить скорость симуляции
-   * 
-   * @param scale - Множитель скорости:
-   *   0.5 = половинная скорость
-   *   1.0 = нормальная скорость
-   *   2.0 = двойная скорость
-   *   5.0 = пятикратная скорость
+   * Установить пресет скорости симуляции (только 1 | 10 | 100 | 1000).
    */
-  setTimeScale(scale: number): void {
-    if (scale < 0) {
-      console.warn('[LogicManager] TimeScale не может быть отрицательным');
-      return;
-    }
-    
-    this.state.timeScale = scale;
-    console.log(`[LogicManager] TimeScale изменён на ${scale}x`);
-    this.notifySubscribers(); // Уведомляем UI об изменении timeScale
+  setTimeScalePreset(preset: TimeScalePreset): void {
+    this.state.timeScale = preset;
+    console.log(`[LogicManager] TimeScale пресет: ${preset}x`);
+    this.notifySubscribers();
   }
 
   /**

@@ -4,6 +4,18 @@
   "private": true,
   "main": "electron/main.js",
   "scripts": {
+    "test:m1": "tsx tests/console/m1.test.ts",
+    "test:m2": "tsx tests/console/m2.test.ts",
+    "test:m3": "tsx tests/console/stub-milestone.ts M3",
+    "test:m4": "tsx tests/console/stub-milestone.ts M4",
+    "test:m5": "tsx tests/console/stub-milestone.ts M5",
+    "test:m6": "tsx tests/console/stub-milestone.ts M6",
+    "test:m7": "tsx tests/console/stub-milestone.ts M7",
+    "test:m8": "tsx tests/console/stub-milestone.ts M8",
+    "test:m9": "tsx tests/console/stub-milestone.ts M9",
+    "test:m10": "tsx tests/console/stub-milestone.ts M10",
+    "test:all": "npm run test:m1 && npm run test:m2 && npm run test:m3 && npm run test:m4 && npm run test:m5 && npm run test:m6 && npm run test:m7 && npm run test:m8 && npm run test:m9 && npm run test:m10",
+    "gen:calendar": "tsx scripts/build-trading-calendar.ts",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
@@ -12,6 +24,8 @@
     "electron:start": "electron ."
   },
   "dependencies": {
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
@@ -26,6 +40,7 @@
     "electron": "^40.4.1",
     "electron-builder": "^26.7.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "wait-on": "^9.0.4"
   },
