@@ -14,6 +14,12 @@ import {
   type TimeScalePreset,
 } from '@/logic/simulation/simulationConfig';
 import { formatRub } from '@/components/portfolio/formatRub';
+import {
+  selectIsPaused,
+  selectPortfolio,
+  selectSimulationEpochMs,
+  selectTimeScale,
+} from '@/logic/stateSelectors';
 
 function NavLink({
   href,
@@ -38,10 +44,10 @@ function NavLink({
 }
 
 export function AppHeader() {
-  const simulationEpochMs = useGameState((s) => s.simulationEpochMs);
-  const isPaused = useGameState((s) => s.isPaused);
-  const timeScale = useGameState((s) => s.timeScale);
-  const cashRub = useGameState((s) => s.portfolio.cashRub);
+  const simulationEpochMs = useGameState(selectSimulationEpochMs);
+  const isPaused = useGameState(selectIsPaused);
+  const timeScale = useGameState(selectTimeScale);
+  const cashRub = useGameState((s) => selectPortfolio(s).cashRub);
   const lm = gameLoop.getLogicManager();
 
   const dateStr = formatSimulationDateOnly(simulationEpochMs);
@@ -88,7 +94,11 @@ export function AppHeader() {
             <div className="flex items-center justify-center gap-0.5">
               <button
                 type="button"
-                onClick={() => (isPaused ? lm.resume() : lm.pause())}
+                onClick={() =>
+                  lm.dispatchCommand(
+                    isPaused ? { type: 'runtime/resume' } : { type: 'runtime/pause' }
+                  )
+                }
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-amber-600 text-[10px] font-medium text-white hover:bg-amber-500"
                 title={isPaused ? 'Продолжить' : 'Пауза'}
               >
@@ -100,7 +110,9 @@ export function AppHeader() {
                     key={p}
                     type="button"
                     disabled={timeScale === p}
-                    onClick={() => lm.setTimeScalePreset(p)}
+                    onClick={() =>
+                      lm.dispatchCommand({ type: 'runtime/set-time-scale', preset: p })
+                    }
                     className={`flex h-6 min-w-[1.4rem] items-center justify-center rounded px-0.5 text-[9px] font-medium tabular-nums sm:min-w-[1.5rem] sm:text-[10px] ${
                       timeScale === p
                         ? 'bg-sky-700 text-white'

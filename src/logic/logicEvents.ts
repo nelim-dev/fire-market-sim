@@ -5,3 +5,7 @@ export type TradingDayChangedPayload = {
   mskDateYyyymmdd: string;
   dayIndex: number;
 };
+
+export interface LogicEventMap {
+  [TRADING_DAY_CHANGED]: TradingDayChangedPayload;
+}

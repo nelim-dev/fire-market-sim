@@ -14,22 +14,27 @@
  * - События обрабатываются по порядку (детерминированность)
  */
 
-// Тип для callback функций (функция которая принимает любые данные)
-type EventCallback = (data?: any) => void;
+type EventKey<T> = Extract<keyof T, string>;
 
-export class EventBus {
+export class EventBus<TEventMap extends object = Record<string, unknown>> {
   /**
    * Хранилище всех подписчиков
    * Ключ: название события (например, 'PRICE_CHANGED')
    * Значение: массив callback функций, подписанных на это событие
    */
-  private events: Map<string, EventCallback[]> = new Map();
+  private events: Map<
+    EventKey<TEventMap>,
+    Array<(data: TEventMap[EventKey<TEventMap>]) => void>
+  > = new Map();
 
   /**
    * Очередь событий (FIFO — первым пришёл, первым вышел)
    * Все события сначала попадают сюда, потом обрабатываются в processQueue()
    */
-  private eventQueue: Array<{ event: string; data?: any }> = [];
+  private eventQueue: Array<{
+    event: EventKey<TEventMap>;
+    data: TEventMap[EventKey<TEventMap>];
+  }> = [];
 
   /**
    * Подписаться на событие
@@ -46,7 +51,10 @@ export class EventBus {
    *   // Позже можно отписаться:
    *   unsubscribe();
    */
-  on(event: string, callback: EventCallback): () => void {
+  on<K extends EventKey<TEventMap>>(
+    event: K,
+    callback: (data: TEventMap[K]) => void
+  ): () => void {
     // Если для этого события ещё нет массива подписчиков — создаём пустой массив
     if (!this.events.has(event)) {
       this.events.set(event, []);
@@ -54,7 +62,9 @@ export class EventBus {
     
     // Добавляем callback в массив подписчиков
     // "!" говорит TypeScript: "я уверен что массив существует (мы только что создали)"
-    this.events.get(event)!.push(callback);
+    this.events
+      .get(event)!
+      .push(callback as (data: TEventMap[EventKey<TEventMap>]) => void);
 
     // Возвращаем функцию для отписки (удобно для React useEffect cleanup)
     return () => this.off(event, callback);
@@ -69,7 +79,10 @@ export class EventBus {
    * Пример:
    *   eventBus.off('PRICE_CHANGED', myCallback);
    */
-  off(event: string, callback: EventCallback): void {
+  off<K extends EventKey<TEventMap>>(
+    event: K,
+    callback: (data: TEventMap[K]) => void
+  ): void {
     // Получаем массив подписчиков этого события
     const callbacks = this.events.get(event);
     
@@ -77,7 +90,9 @@ export class EventBus {
     if (!callbacks) return;
 
     // Находим позицию callback в массиве
-    const index = callbacks.indexOf(callback);
+    const index = callbacks.indexOf(
+      callback as (data: TEventMap[EventKey<TEventMap>]) => void
+    );
     
     // Если нашли — удаляем из массива
     if (index > -1) {
@@ -101,7 +116,7 @@ export class EventBus {
    *   // Цена изменилась
    *   eventBus.emit('PRICE_CHANGED', { AAPL: 151.5, TSLA: 201.2 });
    */
-  emit(event: string, data?: any): void {
+  emit<K extends EventKey<TEventMap>>(event: K, data: TEventMap[K]): void {
     // Добавляем событие в конец очереди
     this.eventQueue.push({ event, data });
   }
@@ -138,7 +153,10 @@ export class EventBus {
    * @param event - Название события
    * @param data - Данные для передачи в callback
    */
-  private trigger(event: string, data?: any): void {
+  private trigger<K extends EventKey<TEventMap>>(
+    event: K,
+    data: TEventMap[K]
+  ): void {
     // Получаем всех подписчиков этого события
     const callbacks = this.events.get(event);
     
@@ -147,7 +165,7 @@ export class EventBus {
 
     // Вызываем КАЖДЫЙ callback с данными события
     // Пример: если на 'PRICE_CHANGED' подписано 3 модуля — вызовутся все 3 callback
-    callbacks.forEach(callback => callback(data));
+    callbacks.forEach((callback) => callback(data));
   }
 
   /**
@@ -170,7 +188,7 @@ export class EventBus {
   /**
    * Получить количество подписчиков на событие (для отладки)
    */
-  getSubscriberCount(event: string): number {
+  getSubscriberCount(event: EventKey<TEventMap>): number {
     return this.events.get(event)?.length || 0;
   }
 }
