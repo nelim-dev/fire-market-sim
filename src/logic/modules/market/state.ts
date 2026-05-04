@@ -1,5 +1,106 @@
-export interface MarketModuleState {
-  // Placeholder до реализации M3/M6: источник котировок и срез рынка.
-  ready: boolean;
+import type {
+  AssetKind,
+  MarketInstrumentCatalogItem,
+  OrderBookSnapshot,
+} from './contracts';
+import type { ChartTimeframeId } from './chartTimeframes';
+import { sortInstrumentCatalog } from './catalogSort';
+import type { MarketMacroSnapshot } from './macro';
+import { STATIC_MARKET_MACRO_SNAPSHOT } from './macro';
+import type { MarketChartSeriesBundle } from './chartWindows';
+import { emptyChartLinesByTimeframe, emptyPeriodChangeByTimeframe } from './priceSeries';
+import type { MarketPriceBar } from './priceSeries';
+
+export type { OrderBookSnapshot } from './contracts';
+export type { MarketMacroSnapshot } from './macro';
+
+/**
+ * Состояние одного инструмента на рынке: метаданные, котировки по дневному ряду, стакан.
+ */
+export interface MarketAssetState {
+  symbol: string;
+  assetKind: AssetKind;
+  displayName: string;
+  isin: string;
+  /** Путь к файлу данных относительно корня репозитория (как в сгенерированном JSON). */
+  sourceFilePath: string;
+  currentPriceRub: number | null;
+  /** Изменение к предыдущему **дневному** закрытию (календарный день). */
+  dailyChangePct: number | null;
+  /** Изменение за выбранный горизонт графика (по первой/последней свече линии). */
+  periodChangePctByTimeframe: Record<ChartTimeframeId, number | null>;
+  /** Линия графика по таймфрейму, уже обрезана по `simulationEpochMs` (см. `quoteApply`). */
+  chartLineByTimeframe: Record<ChartTimeframeId, readonly MarketPriceBar[]>;
+  orderBook: OrderBookSnapshot;
 }
 
+export function createEmptyOrderBook(): OrderBookSnapshot {
+  return { bids: [], asks: [] };
+}
+
+export function buildAssetsBySymbol(
+  items: readonly MarketInstrumentCatalogItem[]
+): Record<string, MarketAssetState> {
+  const out: Record<string, MarketAssetState> = {};
+  for (const item of items) {
+    out[item.symbol] = {
+      symbol: item.symbol,
+      assetKind: item.assetKind,
+      displayName: item.displayName,
+      isin: item.isin,
+      sourceFilePath: item.sourceFilePath,
+      currentPriceRub: null,
+      dailyChangePct: null,
+      periodChangePctByTimeframe: emptyPeriodChangeByTimeframe(),
+      chartLineByTimeframe: emptyChartLinesByTimeframe(),
+      orderBook: createEmptyOrderBook(),
+    };
+  }
+  return out;
+}
+
+export interface MarketModuleState {
+  /** Каталог загружен (из сгенерированного JSON при сборке / после gen:market-catalog). */
+  ready: boolean;
+  instrumentCatalog: MarketInstrumentCatalogItem[];
+  assetsBySymbol: Record<string, MarketAssetState>;
+  /**
+   * Срезы рядов из `marketChartSlices.json` (`npm run gen:market-chart-data`).
+   */
+  chartSeries: MarketChartSeriesBundle;
+  /** Статичный макросрез до исторических рядов по макро. */
+  macroSnapshot: MarketMacroSnapshot;
+}
+
+function normalizeBarsRecord(
+  catalog: readonly MarketInstrumentCatalogItem[],
+  src: Record<string, readonly MarketPriceBar[]> | undefined
+): Record<string, readonly MarketPriceBar[]> {
+  const out: Record<string, readonly MarketPriceBar[]> = {};
+  for (const row of catalog) {
+    const key = row.symbol.toUpperCase();
+    out[key] = src?.[key] ?? [];
+  }
+  return out;
+}
+
+export function createMarketModuleState(
+  items: readonly MarketInstrumentCatalogItem[],
+  chartSeriesInput: Partial<MarketChartSeriesBundle> = {}
+): MarketModuleState {
+  const catalogSorted = sortInstrumentCatalog(items);
+  const chartSeries: MarketChartSeriesBundle = {
+    dailyClose: normalizeBarsRecord(catalogSorted, chartSeriesInput.dailyClose),
+    fiveMinute: normalizeBarsRecord(catalogSorted, chartSeriesInput.fiveMinute),
+    thirtyMinute: normalizeBarsRecord(catalogSorted, chartSeriesInput.thirtyMinute),
+    oneHour: normalizeBarsRecord(catalogSorted, chartSeriesInput.oneHour),
+    weekly: normalizeBarsRecord(catalogSorted, chartSeriesInput.weekly),
+  };
+  return {
+    ready: catalogSorted.length > 0,
+    instrumentCatalog: catalogSorted,
+    assetsBySymbol: buildAssetsBySymbol(catalogSorted),
+    chartSeries,
+    macroSnapshot: { ...STATIC_MARKET_MACRO_SNAPSHOT },
+  };
+}

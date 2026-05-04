@@ -42,3 +42,6 @@ next-env.d.ts
 
 # electron
 /dist/
+
+# устаревший тяжёлый артефакт (заменён на marketChartSlices.json)
+src/data/generated/marketChartData.json

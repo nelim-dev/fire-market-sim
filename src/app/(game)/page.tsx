@@ -1,5 +1,5 @@
 import { GameWorkspace } from '@/components/game/GameWorkspace';
-import { RightPanelPlaceholder } from '@/components/game/RightPanelPlaceholder';
+import { MarketAssetRightPanel } from '@/components/market/MarketAssetRightPanel';
 import { PortfolioScreen } from '@/components/portfolio/PortfolioScreen';
 
 /**
@@ -9,7 +9,7 @@ export default function GameHomePage() {
   return (
     <GameWorkspace
       left={<PortfolioScreen />}
-      right={<RightPanelPlaceholder />}
+      right={<MarketAssetRightPanel />}
     />
   );
 }

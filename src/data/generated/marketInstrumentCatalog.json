@@ -1,0 +1,36 @@
+{
+  "items": [
+    {
+      "assetKind": "index",
+      "ticker": "RGBI",
+      "symbol": "RGBI",
+      "displayName": "RGBI",
+      "isin": "TBD-RGBI",
+      "sourceFilePath": "indexes/RGBI.txt"
+    },
+    {
+      "assetKind": "index",
+      "ticker": "RTSI",
+      "symbol": "RTSI",
+      "displayName": "RTSI",
+      "isin": "TBD-RTSI",
+      "sourceFilePath": "indexes/RTSI.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "GAZP",
+      "symbol": "GAZP",
+      "displayName": "GAZP",
+      "isin": "TBD-GAZP",
+      "sourceFilePath": "tickers/GAZP.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "SBER",
+      "symbol": "SBER",
+      "displayName": "SBER",
+      "isin": "TBD-SBER",
+      "sourceFilePath": "tickers/SBER.txt"
+    }
+  ]
+}

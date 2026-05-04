@@ -1,5 +1,15 @@
 import type { GameState } from '@/logic/managers/LogicManager';
 import {
+  selectMarketCatalogGroupedByKind,
+  selectMarketCatalogSectionsOrdered,
+  selectMarketHasInstrumentsOfKind,
+  selectMarketInstrumentCatalog,
+  selectMarketInstrumentsByAssetKind,
+  selectMarketMacroSnapshot,
+  selectMarketModule,
+  selectMarketReady,
+} from '@/logic/modules/market/selectors';
+import {
   selectTimeIsPaused,
   selectTimeScalePreset,
   selectTimeSimulationEpochMs,
@@ -16,4 +26,19 @@ export const selectTimeScale = (state: GameState): GameState['timeScale'] =>
 
 export const selectPortfolio = (state: GameState): GameState['portfolio'] =>
   state.portfolio;
+
+export const selectMarket = selectMarketModule;
+
+export const selectMarketCatalog = selectMarketInstrumentCatalog;
+
+export { selectMarketReady };
+
+export const selectMacroSnapshot = selectMarketMacroSnapshot;
+
+export {
+  selectMarketCatalogGroupedByKind,
+  selectMarketCatalogSectionsOrdered,
+  selectMarketHasInstrumentsOfKind,
+  selectMarketInstrumentsByAssetKind,
+};
 

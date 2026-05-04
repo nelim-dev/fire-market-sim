@@ -6,7 +6,7 @@
   "scripts": {
     "test:m1": "tsx tests/console/m1.test.ts",
     "test:m2": "tsx tests/console/m2.test.ts",
-    "test:m3": "tsx tests/console/stub-milestone.ts M3",
+    "test:m3": "tsx tests/console/m3-catalog-selectors.test.ts && tsx tests/console/m3-market-quote-clip.test.ts",
     "test:m4": "tsx tests/console/stub-milestone.ts M4",
     "test:m5": "tsx tests/console/stub-milestone.ts M5",
     "test:m6": "tsx tests/console/stub-milestone.ts M6",
@@ -16,6 +16,9 @@
     "test:m10": "tsx tests/console/stub-milestone.ts M10",
     "test:all": "npm run test:m1 && npm run test:m2 && npm run test:m3 && npm run test:m4 && npm run test:m5 && npm run test:m6 && npm run test:m7 && npm run test:m8 && npm run test:m9 && npm run test:m10",
     "gen:calendar": "tsx scripts/build-trading-calendar.ts",
+    "gen:market-catalog": "tsx scripts/generate-market-instrument-catalog.ts",
+    "gen:market-chart-data": "tsx scripts/generate-market-chart-data.ts",
+    "gen:market-daily-bars": "tsx scripts/generate-market-chart-data.ts",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",

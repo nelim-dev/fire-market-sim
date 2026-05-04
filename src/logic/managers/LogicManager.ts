@@ -14,6 +14,8 @@ import type { RuntimeCommand } from '@/logic/runtimeCommands';
 import type { TimeModuleState } from '@/logic/modules/time/state';
 import { TimeModuleService } from '@/logic/modules/time/service';
 import { PortfolioModuleService } from '@/logic/modules/portfolio/service';
+import type { MarketModuleState } from '@/logic/modules/market/state';
+import { MarketModuleService } from '@/logic/modules/market/service';
 import type {
   LogicModule,
   ModuleContext,
@@ -41,6 +43,9 @@ export interface GameState extends TimeModuleState {
 
   /** Портфель (M2+): демо-сид, позже сделки и рыночные цены */
   portfolio: PortfolioState;
+
+  /** Рынок (M3+): каталог инструментов, котировки, стакан — модуль MarketSimulator. */
+  market: MarketModuleState;
 }
 
 /**
@@ -83,6 +88,7 @@ export class LogicManager {
 
   private readonly sessionTimeline: SessionTimelineController;
   private readonly timeModule: TimeModuleService;
+  private readonly marketModule: MarketModuleService;
   private readonly portfolioModule: PortfolioModuleService;
   private readonly modules: Array<LogicModule<GameState>>;
   private readonly commandAwareModules: Array<LogicModule<GameState>>;
@@ -98,8 +104,9 @@ export class LogicManager {
     const calendar = TradingCalendar.fromRecords(raw.days ?? []);
     this.sessionTimeline = new SessionTimelineController(calendar);
     this.timeModule = new TimeModuleService(this.sessionTimeline);
+    this.marketModule = new MarketModuleService();
     this.portfolioModule = new PortfolioModuleService();
-    this.modules = [this.timeModule, this.portfolioModule];
+    this.modules = [this.timeModule, this.marketModule, this.portfolioModule];
     this.commandAwareModules = this.modules.filter((m) =>
       Boolean(m.handleCommand)
     );
@@ -130,6 +137,7 @@ export class LogicManager {
       ...timeState,
       currentUser: null,
       portfolio: this.portfolioModule.createInitialState(),
+      market: this.marketModule.createInitialState(timeState.simulationEpochMs),
     };
   }
 

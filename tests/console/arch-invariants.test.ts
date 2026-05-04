@@ -8,6 +8,8 @@ import type { ModuleContext } from '../../src/logic/modules/contracts';
 import { TradingCalendar } from '../../src/logic/time/TradingCalendar';
 import { SessionTimelineController } from '../../src/logic/time/SessionTimelineController';
 import { EventBus } from '../../src/logic/systems/EventBus';
+import { LogicManager } from '../../src/logic/managers/LogicManager';
+import { STATIC_MARKET_MACRO_SNAPSHOT } from '../../src/logic/modules/market/macro';
 import { exitCode, printResult } from './runner';
 
 const M = 'ARCH';
@@ -97,6 +99,29 @@ run('EventBus<LogicEventMap>: принимает типизированный pa
   bus.processQueue();
   if (observedDayIndex !== 7) {
     throw new Error(`ожидали dayIndex=7, получили ${observedDayIndex}`);
+  }
+});
+
+run('MarketModule: макросрез статичен и совпадает с STATIC после тиков LogicManager', () => {
+  const lm = new LogicManager();
+  const macro0 = lm.getState().market.macroSnapshot;
+  if (
+    macro0.brentUsd !== STATIC_MARKET_MACRO_SNAPSHOT.brentUsd ||
+    macro0.usdRub !== STATIC_MARKET_MACRO_SNAPSHOT.usdRub ||
+    macro0.keyRatePct !== STATIC_MARKET_MACRO_SNAPSHOT.keyRatePct
+  ) {
+    throw new Error('начальный macroSnapshot не совпадает с STATIC_MARKET_MACRO_SNAPSHOT');
+  }
+  for (let i = 0; i < 10; i++) {
+    lm.update(0.05);
+  }
+  const macro1 = lm.getState().market.macroSnapshot;
+  if (
+    macro1.brentUsd !== macro0.brentUsd ||
+    macro1.usdRub !== macro0.usdRub ||
+    macro1.keyRatePct !== macro0.keyRatePct
+  ) {
+    throw new Error('macroSnapshot не должен меняться при update() рынка на этом этапе');
   }
 });
 
