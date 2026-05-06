@@ -43,7 +43,8 @@ export function buildAssetsBySymbol(
 ): Record<string, MarketAssetState> {
   const out: Record<string, MarketAssetState> = {};
   for (const item of items) {
-    out[item.symbol] = {
+    const key = item.symbol.toUpperCase();
+    out[key] = {
       symbol: item.symbol,
       assetKind: item.assetKind,
       displayName: item.displayName,
@@ -65,7 +66,7 @@ export interface MarketModuleState {
   instrumentCatalog: MarketInstrumentCatalogItem[];
   assetsBySymbol: Record<string, MarketAssetState>;
   /**
-   * Срезы рядов из `marketChartSlices.json` (`npm run gen:market-chart-data`).
+   * Срезы рядов (агрегаты по минутным данным из SQLite / `npm run build:market-db`).
    */
   chartSeries: MarketChartSeriesBundle;
   /** Статичный макросрез до исторических рядов по макро. */
@@ -90,6 +91,7 @@ export function createMarketModuleState(
 ): MarketModuleState {
   const catalogSorted = sortInstrumentCatalog(items);
   const chartSeries: MarketChartSeriesBundle = {
+    minute: normalizeBarsRecord(catalogSorted, chartSeriesInput.minute),
     dailyClose: normalizeBarsRecord(catalogSorted, chartSeriesInput.dailyClose),
     fiveMinute: normalizeBarsRecord(catalogSorted, chartSeriesInput.fiveMinute),
     thirtyMinute: normalizeBarsRecord(catalogSorted, chartSeriesInput.thirtyMinute),

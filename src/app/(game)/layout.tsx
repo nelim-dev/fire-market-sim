@@ -12,6 +12,10 @@ export default function GameLayout({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    void gameLoop.getLogicManager().hydrateMarketFromDatabase();
+  }, []);
+
   return (
     <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-[#121212] text-zinc-100">
       <AppHeader />

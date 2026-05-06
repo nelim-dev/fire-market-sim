@@ -13,7 +13,7 @@ export function applyMarketQuotesForSimulationEpoch(
   simulationEpochMs: number
 ): void {
   for (const item of market.instrumentCatalog) {
-    const sym = item.symbol;
+    const sym = item.symbol.toUpperCase();
     const daily = market.chartSeries.dailyClose[sym] ?? [];
     const asset = market.assetsBySymbol[sym];
     if (!asset) {
@@ -24,16 +24,37 @@ export function applyMarketQuotesForSimulationEpoch(
       daily,
       lastIdx
     );
-    asset.currentPriceRub = currentPriceRub;
-    asset.dailyChangePct = dailyChangePct;
     const lines = buildChartLineByTimeframeFromBundle(
       sym,
       market.chartSeries,
       simulationEpochMs
     );
-    asset.chartLineByTimeframe = lines;
+    let periodChanged = false;
+    const nextPeriod = { ...asset.periodChangePctByTimeframe };
     for (const id of CHART_TIMEFRAME_IDS) {
-      asset.periodChangePctByTimeframe[id] = computePeriodReturnPct(lines[id]);
+      const nextValue = computePeriodReturnPct(lines[id]);
+      if (nextValue !== asset.periodChangePctByTimeframe[id]) {
+        periodChanged = true;
+      }
+      nextPeriod[id] = nextValue;
     }
+    const chartChanged = CHART_TIMEFRAME_IDS.some(
+      (id) => asset.chartLineByTimeframe[id] !== lines[id]
+    );
+    if (
+      !chartChanged &&
+      !periodChanged &&
+      asset.currentPriceRub === currentPriceRub &&
+      asset.dailyChangePct === dailyChangePct
+    ) {
+      continue;
+    }
+    market.assetsBySymbol[sym] = {
+      ...asset,
+      currentPriceRub,
+      dailyChangePct,
+      chartLineByTimeframe: lines,
+      periodChangePctByTimeframe: nextPeriod,
+    };
   }
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { getISOWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -52,9 +53,14 @@ function buildIndexTicks(
   }
   const out: { idx: number; label: string }[] = [];
   const seenYears = new Set<string>();
+  const seenIdx = new Set<number>();
   const maxK = count - 1;
   for (let k = 0; k < count; k++) {
     const idx = maxK === 0 ? 0 : Math.round((k * (n - 1)) / maxK);
+    if (seenIdx.has(idx)) {
+      continue;
+    }
+    seenIdx.add(idx);
     const t = points[idx].t;
     const label = formatXTickLabel(t, tf);
     if (tf === 'all') {
@@ -80,13 +86,14 @@ function buildPriceTicks(minP: number, maxP: number, n: number): number[] {
  * Линия по цене; по горизонтали — равномерный шаг между свечами (без разрывов выходных/ночи),
  * подписи снизу — реальное время соответствующей свечи.
  */
-export function MarketCloseLineChart({ points, timeframe }: Props) {
+function MarketCloseLineChartImpl({ points, timeframe }: Props) {
   if (points.length === 0) {
     return (
       <div className="flex h-full min-h-[200px] w-full max-w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-zinc-700 bg-zinc-900/40 px-2 text-center text-xs text-zinc-500">
-        Нет данных в выбранном горизонте (выполните{' '}
-        <code className="text-zinc-400">npm run gen:market-chart-data</code> или сдвиньте
-        время симуляции).
+        Нет данных для графика: нет минутных рядов в SQLite для этого инструмента. Соберите БД
+        командой <code className="text-zinc-400">npm run build:market-db</code> и запустите
+        приложение через <code className="text-zinc-400">npm run electron:dev</code> (или
+        сдвиньте время симуляции в допустимый диапазон).
       </div>
     );
   }
@@ -99,26 +106,37 @@ export function MarketCloseLineChart({ points, timeframe }: Props) {
   const xAtIndex = (i: number) =>
     M_LEFT + (i / lastI) * innerW;
 
-  const closes = points.map((p) => p.c);
-  let pMin = Math.min(...closes);
-  let pMax = Math.max(...closes);
-  if (pMax <= pMin) {
-    pMin -= 0.01;
-    pMax += 0.01;
-  }
-  const pad = (pMax - pMin) * 0.06;
-  pMin -= pad;
-  pMax += pad;
+  const [pMin, pMax] = useMemo(() => {
+    const closes = points.map((p) => p.c);
+    let min = Math.min(...closes);
+    let max = Math.max(...closes);
+    if (max <= min) {
+      min -= 0.01;
+      max += 0.01;
+    }
+    const pad = (max - min) * 0.06;
+    min -= pad;
+    max += pad;
+    return [min, max] as const;
+  }, [points]);
 
   const yAt = (c: number) =>
     M_TOP + (1 - (c - pMin) / (pMax - pMin)) * innerH;
 
-  const pathD = points
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xAtIndex(i).toFixed(2)} ${yAt(p.c).toFixed(2)}`)
-    .join(' ');
+  const pathD = useMemo(
+    () =>
+      points
+        .map(
+          (p, i) =>
+            `${i === 0 ? 'M' : 'L'} ${xAtIndex(i).toFixed(2)} ${yAt(p.c).toFixed(2)}`
+        )
+        .join(' '),
+    [points, pMin, pMax]
+  );
 
-  const xTicks = buildIndexTicks(points, timeframe, 7);
-  const yTicks = buildPriceTicks(pMin, pMax, 5);
+  const xTicks = useMemo(() => buildIndexTicks(points, timeframe, 7), [points, timeframe]);
+  const yTicks = useMemo(() => buildPriceTicks(pMin, pMax, 5), [pMin, pMax]);
+  const shouldRenderDots = points.length <= 240;
 
   return (
     <div className="flex h-full min-h-[220px] w-full max-w-full flex-col overflow-hidden">
@@ -159,9 +177,9 @@ export function MarketCloseLineChart({ points, timeframe }: Props) {
             </text>
           </g>
         ))}
-        {xTicks.map(({ idx, label }) => (
+        {xTicks.map(({ idx, label }, xi) => (
           <text
-            key={`x-${idx}-${label}`}
+            key={`x-${xi}-${idx}`}
             x={xAtIndex(idx)}
             y={H - 10}
             textAnchor="middle"
@@ -177,15 +195,17 @@ export function MarketCloseLineChart({ points, timeframe }: Props) {
           strokeWidth={1.75}
           vectorEffect="non-scaling-stroke"
         />
-        {points.map((p, i) => (
-          <circle
-            key={`pt-${i}-${p.t}`}
-            cx={xAtIndex(i)}
-            cy={yAt(p.c)}
-            r={points.length <= 3 ? 3.5 : 2.2}
-            className="fill-sky-300"
-          />
-        ))}
+        {shouldRenderDots
+          ? points.map((p, i) => (
+              <circle
+                key={`pt-${i}-${p.t}`}
+                cx={xAtIndex(i)}
+                cy={yAt(p.c)}
+                r={points.length <= 3 ? 3.5 : 2.2}
+                className="fill-sky-300"
+              />
+            ))
+          : null}
       </svg>
       <p className="mt-0.5 text-center text-[10px] text-zinc-600">
         По горизонтали — порядок свечей без пустот вне торгов; слева — цена; подписи — время
@@ -194,3 +214,5 @@ export function MarketCloseLineChart({ points, timeframe }: Props) {
     </div>
   );
 }
+
+export const MarketCloseLineChart = memo(MarketCloseLineChartImpl);

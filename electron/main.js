@@ -1,5 +1,6 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const { buildSlicesPayload } = require('./market-db-slice.cjs');
 
 let mainWindow;
 
@@ -31,7 +32,27 @@ function createWindow() {
   });
 }
 
-app.on('ready', createWindow);
+function registerMarketIpc() {
+  ipcMain.removeHandler('market:get-slices');
+  ipcMain.handle('market:get-slices', async (_event, payload) => {
+    const epochMs = Number(payload?.epochMs);
+    const symbols = Array.isArray(payload?.symbols) ? payload.symbols : [];
+    const fromEpochMs = Number(payload?.fromEpochMs);
+    if (!Number.isFinite(epochMs) || symbols.length === 0) {
+      return { ok: false, error: 'invalid_payload' };
+    }
+    return await buildSlicesPayload({
+      epochMs,
+      symbols,
+      ...(Number.isFinite(fromEpochMs) ? { fromEpochMs } : {}),
+    });
+  });
+}
+
+app.on('ready', () => {
+  registerMarketIpc();
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

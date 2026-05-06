@@ -14,7 +14,7 @@ import type { RuntimeCommand } from '@/logic/runtimeCommands';
 import type { TimeModuleState } from '@/logic/modules/time/state';
 import { TimeModuleService } from '@/logic/modules/time/service';
 import { PortfolioModuleService } from '@/logic/modules/portfolio/service';
-import type { MarketModuleState } from '@/logic/modules/market/state';
+import { type MarketModuleState } from '@/logic/modules/market/state';
 import { MarketModuleService } from '@/logic/modules/market/service';
 import type {
   LogicModule,
@@ -32,6 +32,7 @@ type Selector<T> = (state: GameState) => T;
  * Например: (gameTime) => setState(gameTime)
  */
 type StateSubscriber<T> = (value: T) => void;
+type EqualityFn<T> = (a: T, b: T) => boolean;
 
 /**
  * Интерфейс состояния приложения
@@ -159,10 +160,15 @@ export class LogicManager {
     }
 
     this.eventBus.processQueue();
+    const epochBeforeModules = this.state.simulationEpochMs;
     this.modules.forEach((module) =>
       module.update(this.state, deltaTime, this.moduleContext)
     );
     this.eventBus.processQueue();
+
+    if (this.state.simulationEpochMs !== epochBeforeModules) {
+      this.scheduleMarketHydrateFromDatabase(epochBeforeModules);
+    }
 
     // ШАГ 3: Обновить все модули
     // Здесь позже будем вызывать update() у всех модулей:
@@ -181,7 +187,7 @@ export class LogicManager {
    * Подписаться на изменения ЧАСТИ состояния через селектор
    * 
    * Это профессиональный подход (используется в Redux, Zustand, Jotai)
-   * Компонент перерисуется ТОЛЬКО если его данные изменились
+   * React перерисует только если срез отличается от предыдущего (Object.is в setState)
    * 
    * @param selector - Функция выбирающая нужную часть состояния
    * @param subscriber - Callback который получит только выбранную часть
@@ -209,29 +215,19 @@ export class LogicManager {
    */
   subscribe<T>(
     selector: Selector<T>,
-    subscriber: StateSubscriber<T>
+    subscriber: StateSubscriber<T>,
+    equalityFn: EqualityFn<T> = Object.is
   ): () => void {
-    // Получаем начальное значение выбранной части состояния
     let previousValue = selector(this.state);
-    
-    // Отправляем начальное значение новому подписчику сразу
-    // Это нужно чтобы компонент не показывал "Загрузка..." до первого update()
     subscriber(previousValue);
-    
-    // Создаём wrapper который будет проверять изменения
+
     const wrapper = (state: GameState) => {
-      // Выбираем нужную часть состояния
-      const newValue = selector(state);
-      
-      // Сравниваем с предыдущим значением
-      // Вызываем subscriber ТОЛЬКО если значение изменилось
-      if (newValue !== previousValue) {
-        previousValue = newValue;
-        subscriber(newValue);
+      const nextValue = selector(state);
+      if (equalityFn(previousValue, nextValue)) {
+        return;
       }
-      
-      // Если значение не изменилось — ничего не делаем
-      // React компонент НЕ перерисуется
+      previousValue = nextValue;
+      subscriber(nextValue);
     };
     
     // Добавляем wrapper в массив подписчиков
@@ -250,8 +246,7 @@ export class LogicManager {
    * Уведомить всех подписчиков об изменении состояния
    * Вызывается в конце каждого update()
    * 
-   * Каждый wrapper проверит изменилось ли его значение
-   * и вызовет subscriber только при реальном изменении
+   * Каждый wrapper передаёт текущий срез подписчику; лишние обновления отсекает React
    */
   private notifySubscribers(): void {
     // Передаём текущее состояние каждому wrapper'у
@@ -339,11 +334,32 @@ export class LogicManager {
     
     // Уведомляем UI о новом состоянии
     this.notifySubscribers();
+    void this.hydrateMarketFromDatabase();
   }
 
   private broadcastTradingDayChanged(payload: TradingDayChangedPayload): void {
     for (const module of this.modules) {
       module.onTradingDayChanged?.(this.state, payload, this.moduleContext);
+    }
+  }
+
+  private scheduleMarketHydrateFromDatabase(previousEpochMs: number): void {
+    void this.marketModule
+      .hydrateFromDatabaseTick(this.state, previousEpochMs)
+      .then((changed) => {
+        if (changed) {
+          this.notifySubscribers();
+        }
+      });
+  }
+
+  async hydrateMarketFromDatabase(previousEpochMs?: number): Promise<void> {
+    const changed = await this.marketModule.hydrateFromDatabaseTick(
+      this.state,
+      previousEpochMs ?? this.state.simulationEpochMs - 1
+    );
+    if (changed) {
+      this.notifySubscribers();
     }
   }
 }

@@ -32,6 +32,13 @@ const CHANGE_LABEL_BY_TF: Record<ChartTimeframeId, string> = {
   all: 'за всё время',
 };
 
+function shallowEqSelected(
+  a: { asset: unknown; position: unknown },
+  b: { asset: unknown; position: unknown }
+): boolean {
+  return a.asset === b.asset && a.position === b.position;
+}
+
 function formatRub(n: number): string {
   return new Intl.NumberFormat('ru-RU', {
     maximumFractionDigits: n >= 100 ? 0 : 2,
@@ -88,17 +95,22 @@ export function MarketAssetRightPanel() {
     }
   }, [catalog, symbol]);
 
-  const asset = useGameState(
-    (s) => (symbol ? selectMarketAsset(symbol)(s) : undefined)
-  );
-
-  const position = useGameState((s) =>
-    symbol
-      ? s.portfolio.positions.find(
+  const selectedSlice = useGameState(
+    (s) => {
+      if (!symbol) {
+        return { asset: undefined, position: undefined };
+      }
+      return {
+        asset: selectMarketAsset(symbol)(s),
+        position: s.portfolio.positions.find(
           (p) => p.ticker.toUpperCase() === symbol.toUpperCase()
-        )
-      : undefined
+        ),
+      };
+    },
+    shallowEqSelected
   );
+  const asset = selectedSlice.asset;
+  const position = selectedSlice.position;
 
   const gameDateLabel = useMemo(
     () =>

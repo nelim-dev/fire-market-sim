@@ -6,7 +6,7 @@
   "scripts": {
     "test:m1": "tsx tests/console/m1.test.ts",
     "test:m2": "tsx tests/console/m2.test.ts",
-    "test:m3": "tsx tests/console/m3-catalog-selectors.test.ts && tsx tests/console/m3-market-quote-clip.test.ts",
+    "test:m3": "tsx tests/console/m3-catalog-selectors.test.ts && tsx tests/console/m3-market-quote-clip.test.ts && tsx tests/console/m3-minute-bar-aggregation.test.ts && tsx tests/console/m3-market-runtime-contract.test.ts",
     "test:m4": "tsx tests/console/stub-milestone.ts M4",
     "test:m5": "tsx tests/console/stub-milestone.ts M5",
     "test:m6": "tsx tests/console/stub-milestone.ts M6",
@@ -17,13 +17,12 @@
     "test:all": "npm run test:m1 && npm run test:m2 && npm run test:m3 && npm run test:m4 && npm run test:m5 && npm run test:m6 && npm run test:m7 && npm run test:m8 && npm run test:m9 && npm run test:m10",
     "gen:calendar": "tsx scripts/build-trading-calendar.ts",
     "gen:market-catalog": "tsx scripts/generate-market-instrument-catalog.ts",
-    "gen:market-chart-data": "tsx scripts/generate-market-chart-data.ts",
-    "gen:market-daily-bars": "tsx scripts/generate-market-chart-data.ts",
+    "build:market-db": "tsx scripts/build-market-sqlite.ts",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "electron:dev": "concurrently \"cross-env NODE_ENV=development npm run dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
-    "electron:build": "next build && electron-builder",
+    "electron:build": "next build && npm run build:market-db && electron-builder",
     "electron:start": "electron ."
   },
   "dependencies": {
@@ -31,10 +30,13 @@
     "date-fns-tz": "^3.2.0",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "sql.js": "^1.14.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^11.10.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -50,6 +52,16 @@
   "build": {
     "appId": "com.firemarketsim.app",
     "productName": "FIRE Market Simulator",
+    "extraResources": [
+      {
+        "from": "data/market.sqlite",
+        "to": "."
+      },
+      {
+        "from": "data/tradingCalendar.json",
+        "to": "."
+      }
+    ],
     "files": [
       "electron/**/*",
       "out/**/*"

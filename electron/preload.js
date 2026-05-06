@@ -1,11 +1,9 @@
-// Preload скрипт - мост между Electron и веб-приложением
-// Пока оставим пустым, но он нужен для безопасности
+const { contextBridge, ipcRenderer } = require('electron');
 
-const { contextBridge } = require('electron');
+contextBridge.exposeInMainWorld('electron', {});
 
-// В будущем здесь можно будет добавить API для взаимодействия
-// между Electron и React приложением
-
-contextBridge.exposeInMainWorld('electron', {
-  // Здесь будут функции для доступа к файловой системе, если понадобится
+contextBridge.exposeInMainWorld('marketData', {
+  getSlices(payload) {
+    return ipcRenderer.invoke('market:get-slices', payload);
+  },
 });

@@ -67,6 +67,7 @@ run('lastBarIndexAtOrBefore: граница включительно', () => {
 run('applyMarketQuotesForSimulationEpoch: цена и график не выходят за epoch', () => {
   const series = [...bars];
   const state = createMarketModuleState(demoItems, {
+    minute: { DEMO: series },
     dailyClose: { DEMO: series },
     fiveMinute: { DEMO: series },
     thirtyMinute: { DEMO: series },

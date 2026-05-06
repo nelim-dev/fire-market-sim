@@ -136,27 +136,30 @@ class GameLoop {
       return;
     }
 
-    // Вычисляем сколько времени прошло с последнего обновления
-    const deltaTime = currentTime - this.lastUpdateTime;
+    // Накопленное время с прошлого «логического» шага (мс)
+    let accumulatedMs = currentTime - this.lastUpdateTime;
 
-    // Обновляем логику только если прошло достаточно времени
-    if (deltaTime >= this.targetFrameTime) {
-      // Увеличиваем счётчик кадров
-      this.frameCount++;
+    // Несколько фиксированных шагов за один rAF, если кадры пропущены (фоновая вкладка,
+    // троттлинг rAF в Electron и т.д.) — иначе симуляция и UI «замирают» до внешнего события.
+    if (accumulatedMs >= this.targetFrameTime) {
+      const fixedDeltaTime = this.targetFrameTime / 1000;
+      const maxStepsPerFrame = 40;
 
-      // Вызываем обновление логики с ФИКСИРОВАННЫМ deltaTime
-      // Это гарантирует детерминированность (одинаковые результаты при повторе)
-      const fixedDeltaTime = this.targetFrameTime / 1000; // Переводим в секунды
-      
-      // Главное обновление логики
-      this.logicManager.update(fixedDeltaTime);
+      let steps = 0;
+      while (accumulatedMs >= this.targetFrameTime && steps < maxStepsPerFrame) {
+        this.logicManager.update(fixedDeltaTime);
+        accumulatedMs -= this.targetFrameTime;
+        steps++;
+        this.frameCount++;
+      }
 
-      // Обновляем время последнего обновления
-      this.lastUpdateTime = currentTime;
+      // Остаток < targetFrameTime — не теряем, чтобы не дрейфовала частота UPS
+      this.lastUpdateTime = currentTime - accumulatedMs;
 
-      // Логируем каждые 100 кадров (для отладки)
       if (this.frameCount % 100 === 0) {
-        console.log(`[GameLoop] Кадр ${this.frameCount}, deltaTime: ${deltaTime.toFixed(2)}мс`);
+        console.log(
+          `[GameLoop] Кадр ${this.frameCount}, шагов за rAF: ${steps}, остаток: ${accumulatedMs.toFixed(1)}мс`
+        );
       }
     }
 

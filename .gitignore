@@ -43,5 +43,10 @@ next-env.d.ts
 # electron
 /dist/
 
-# устаревший тяжёлый артефакт (заменён на marketChartSlices.json)
+# устаревший тяжёлый артефакт
 src/data/generated/marketChartData.json
+src/data/generated/marketChartSlices.json
+
+# SQLite и копия календаря для Electron (генерация: npm run build:market-db)
+/data/market.sqlite
+/data/tradingCalendar.json
