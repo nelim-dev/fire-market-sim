@@ -1,11 +1,11 @@
 import type { ChartTimeframeId } from './chartTimeframes';
 import {
-  CHART_6M_SLIDING_1H_BAR_COUNT,
-  CHART_ALL_SLIDING_WEEKLY_BAR_COUNT,
-  CHART_DAY_SLIDING_1M_BAR_COUNT,
-  CHART_MONTH_SLIDING_30M_BAR_COUNT,
-  CHART_WEEK_SLIDING_5M_BAR_COUNT,
-  CHART_YEAR_SLIDING_DAILY_BAR_COUNT,
+  CHART_6M_MIN_1H_BAR_COUNT,
+  CHART_ALL_MIN_DAILY_BAR_COUNT,
+  CHART_DAY_MIN_1M_BAR_COUNT,
+  CHART_MONTH_MIN_30M_BAR_COUNT,
+  CHART_WEEK_MIN_5M_BAR_COUNT,
+  CHART_YEAR_MIN_DAILY_BAR_COUNT,
 } from './chartTimeframes';
 import {
   emptyChartLinesByTimeframe,
@@ -61,19 +61,23 @@ function filterByTimeRange(
   return out;
 }
 
-function tailBars(
-  bars: readonly MarketPriceBar[],
-  max: number
+function withMinBarsFloor(
+  fullClipped: readonly MarketPriceBar[],
+  ranged: readonly MarketPriceBar[],
+  minBars: number
 ): readonly MarketPriceBar[] {
-  if (bars.length <= max) {
-    return bars;
+  if (minBars <= 0 || ranged.length >= minBars) {
+    return ranged;
   }
-  return bars.slice(bars.length - max);
+  if (fullClipped.length <= minBars) {
+    return fullClipped;
+  }
+  return fullClipped.slice(fullClipped.length - minBars);
 }
 
 /**
- * Срезы линии графика по таймфрейму (см. план M3 п.6.2): обрезка по epoch и выбор ряда.
- * Каждый таймфрейм — скользящее окно последних N свечей внутри календарного горизонта.
+ * Срезы линии графика по таймфрейму: обрезка по epoch и выбор агрегата по горизонту.
+ * Каноника: 1d->1m, 1w->5m, 1m->30m, 6m->1h, 1y/all->1d.
  */
 export function buildChartLineByTimeframeFromBundle(
   symbol: string,
@@ -86,40 +90,49 @@ export function buildChartLineByTimeframeFromBundle(
   const m5 = bundle.fiveMinute[sym] ?? [];
   const m30 = bundle.thirtyMinute[sym] ?? [];
   const h1 = bundle.oneHour[sym] ?? [];
-  const wk = bundle.weekly[sym] ?? [];
 
   const out = emptyChartLinesByTimeframe();
 
   const clipped1m = clipToEpochSorted(minute, epochMs);
-  out['1d'] = tailBars(clipped1m, CHART_DAY_SLIDING_1M_BAR_COUNT);
+  out['1d'] = withMinBarsFloor(
+    clipped1m,
+    filterByTimeRange(clipped1m, epochMs - DAY_MS, epochMs),
+    CHART_DAY_MIN_1M_BAR_COUNT
+  );
 
   const clipped5 = clipToEpochSorted(m5, epochMs);
-
-  const wFrom = epochMs - 10 * DAY_MS;
-  out['1w'] = tailBars(
+  const wFrom = epochMs - 7 * DAY_MS;
+  out['1w'] = withMinBarsFloor(
+    clipped5,
     filterByTimeRange(clipped5, wFrom, epochMs),
-    CHART_WEEK_SLIDING_5M_BAR_COUNT
+    CHART_WEEK_MIN_5M_BAR_COUNT
   );
 
+  const clipped30 = clipToEpochSorted(m30, epochMs);
   const mFrom = epochMs - 30 * DAY_MS;
-  out['1m'] = tailBars(
-    filterByTimeRange(clipToEpochSorted(m30, epochMs), mFrom, epochMs),
-    CHART_MONTH_SLIDING_30M_BAR_COUNT
+  out['1m'] = withMinBarsFloor(
+    clipped30,
+    filterByTimeRange(clipped30, mFrom, epochMs),
+    CHART_MONTH_MIN_30M_BAR_COUNT
   );
 
+  const clipped1h = clipToEpochSorted(h1, epochMs);
   const hFrom = epochMs - 180 * DAY_MS;
-  out['6m'] = tailBars(
-    filterByTimeRange(clipToEpochSorted(h1, epochMs), hFrom, epochMs),
-    CHART_6M_SLIDING_1H_BAR_COUNT
+  out['6m'] = withMinBarsFloor(
+    clipped1h,
+    filterByTimeRange(clipped1h, hFrom, epochMs),
+    CHART_6M_MIN_1H_BAR_COUNT
   );
 
+  const clippedDaily = clipToEpochSorted(daily, epochMs);
   const yFrom = epochMs - 365 * DAY_MS;
-  out['1y'] = tailBars(
-    filterByTimeRange(clipToEpochSorted(daily, epochMs), yFrom, epochMs),
-    CHART_YEAR_SLIDING_DAILY_BAR_COUNT
+  out['1y'] = withMinBarsFloor(
+    clippedDaily,
+    filterByTimeRange(clippedDaily, yFrom, epochMs),
+    CHART_YEAR_MIN_DAILY_BAR_COUNT
   );
 
-  out.all = tailBars(clipToEpochSorted(wk, epochMs), CHART_ALL_SLIDING_WEEKLY_BAR_COUNT);
+  out.all = withMinBarsFloor(clippedDaily, clippedDaily, CHART_ALL_MIN_DAILY_BAR_COUNT);
 
   return out;
 }

@@ -10,6 +10,7 @@ import {
   selectMarketReady,
 } from '@/logic/modules/market/selectors';
 import {
+  selectSimulationStepPreset,
   selectTimeIsPaused,
   selectTimeScalePreset,
   selectTimeSimulationEpochMs,
@@ -23,6 +24,10 @@ export const selectIsPaused = (state: GameState): boolean =>
 
 export const selectTimeScale = (state: GameState): GameState['timeScale'] =>
   selectTimeScalePreset(state);
+
+export const selectSimulationStep = (
+  state: GameState
+): GameState['simulationStep'] => selectSimulationStepPreset(state);
 
 export const selectPortfolio = (state: GameState): GameState['portfolio'] =>
   state.portfolio;

@@ -4,7 +4,11 @@ import { CHART_TIMEFRAME_IDS } from './chartTimeframes';
 /** Одна точка дневного ряда (время — конец торговой сессии по календарю, цена — закрытие). */
 export type MarketPriceBar = {
   readonly t: number;
+  readonly o: number;
+  readonly h: number;
+  readonly l: number;
   readonly c: number;
+  readonly v: number;
 };
 
 export function emptyChartLinesByTimeframe(): Record<

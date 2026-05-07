@@ -32,8 +32,8 @@ run('aggregateMinuteRowsToBundles: два бара в один день', () => 
     ['20240601', 1_717_243_200_000],
   ]);
   const rows = [
-    { t: 1_717_198_800_000, c: 100 },
-    { t: 1_717_199_460_000, c: 102 },
+    { t: 1_717_198_800_000, o: 99, h: 101, l: 98, c: 100, v: 1_000 },
+    { t: 1_717_199_460_000, o: 101, h: 103, l: 100, c: 102, v: 900 },
   ];
   const out = aggregateMinuteRowsToBundles(rows, sessionEndByDate);
   if (out.dailyClose.length !== 1) {

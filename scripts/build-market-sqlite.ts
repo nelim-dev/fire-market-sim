@@ -80,27 +80,61 @@ async function main(): Promise<void> {
     CREATE TABLE IF NOT EXISTS minute_bars (
       symbol TEXT NOT NULL,
       ts_ms INTEGER NOT NULL,
+      open REAL NOT NULL,
+      high REAL NOT NULL,
+      low REAL NOT NULL,
       close REAL NOT NULL,
+      volume REAL NOT NULL DEFAULT 0,
       PRIMARY KEY (symbol, ts_ms)
     );
     CREATE INDEX IF NOT EXISTS idx_minute_symbol_ts ON minute_bars(symbol, ts_ms);
   `);
+  for (const alter of [
+    'ALTER TABLE minute_bars ADD COLUMN open REAL',
+    'ALTER TABLE minute_bars ADD COLUMN high REAL',
+    'ALTER TABLE minute_bars ADD COLUMN low REAL',
+    'ALTER TABLE minute_bars ADD COLUMN volume REAL DEFAULT 0',
+  ]) {
+    try {
+      db.exec(alter);
+    } catch {
+      // Колонка уже есть — это нормальный случай при повторном запуске.
+    }
+  }
 
   const insertStmt = db.prepare(
-    `INSERT OR REPLACE INTO minute_bars (symbol, ts_ms, close) VALUES (?, ?, ?)`
+    `INSERT OR REPLACE INTO minute_bars (symbol, ts_ms, open, high, low, close, volume) VALUES (?, ?, ?, ?, ?, ?, ?)`
   );
 
   const insertMany = db.transaction(
-    (rows: Array<{ sym: string; ts: number; c: number }>) => {
+    (
+      rows: Array<{
+        sym: string;
+        ts: number;
+        o: number;
+        h: number;
+        l: number;
+        c: number;
+        v: number;
+      }>
+    ) => {
       for (const r of rows) {
-        insertStmt.run(r.sym, r.ts, r.c);
+        insertStmt.run(r.sym, r.ts, r.o, r.h, r.l, r.c, r.v);
       }
     }
   );
 
   /** Пакетная вставка для скорости: накапливаем батч. */
   const BATCH = 5000;
-  let batch: Array<{ sym: string; ts: number; c: number }> = [];
+  let batch: Array<{
+    sym: string;
+    ts: number;
+    o: number;
+    h: number;
+    l: number;
+    c: number;
+    v: number;
+  }> = [];
 
   const flush = () => {
     if (batch.length === 0) {
@@ -110,8 +144,16 @@ async function main(): Promise<void> {
     batch = [];
   };
 
-  const insertOne = (sym: string, ts: number, c: number) => {
-    batch.push({ sym, ts, c });
+  const insertOne = (
+    sym: string,
+    ts: number,
+    o: number,
+    h: number,
+    l: number,
+    c: number,
+    v: number
+  ) => {
+    batch.push({ sym, ts, o, h, l, c, v });
     if (batch.length >= BATCH) {
       flush();
     }
@@ -139,8 +181,19 @@ async function main(): Promise<void> {
       const date = parts[2]?.trim();
       const timeRaw = parts[3]?.trim() ?? '';
       const time = timeRaw.padStart(6, '0');
+      const open = Number(parts[4]);
+      const high = Number(parts[5]);
+      const low = Number(parts[6]);
       const close = Number(parts[7]);
-      if (!/^\d{8}$/.test(date) || !/^\d{6}$/.test(time) || !Number.isFinite(close)) {
+      const volume = Number(parts[8] ?? 0);
+      if (
+        !/^\d{8}$/.test(date) ||
+        !/^\d{6}$/.test(time) ||
+        !Number.isFinite(open) ||
+        !Number.isFinite(high) ||
+        !Number.isFinite(low) ||
+        !Number.isFinite(close)
+      ) {
         continue;
       }
 
@@ -152,7 +205,7 @@ async function main(): Promise<void> {
         continue;
       }
 
-      insertOne(sym, tBar, close);
+      insertOne(sym, tBar, open, high, low, close, Number.isFinite(volume) ? volume : 0);
       count += 1;
     }
     flush();

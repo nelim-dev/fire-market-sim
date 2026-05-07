@@ -41,9 +41,9 @@ const demoItems: MarketInstrumentCatalogItem[] = [
 ];
 
 const bars = [
-  { t: 1000, c: 10 },
-  { t: 2000, c: 12 },
-  { t: 3000, c: 11 },
+  { t: 1000, o: 10, h: 10, l: 10, c: 10, v: 100 },
+  { t: 2000, o: 12, h: 12, l: 12, c: 12, v: 120 },
+  { t: 3000, o: 11, h: 11, l: 11, c: 11, v: 110 },
 ] as const;
 
 run('lastBarIndexAtOrBefore: граница включительно', () => {
@@ -95,6 +95,28 @@ run('applyMarketQuotesForSimulationEpoch: цена и график не выхо
     throw new Error(
       `ожидали ~20% за видимый день (10→12), получили periodChangePct 1d=${p1d}`
     );
+  }
+});
+
+run('1d floor: после календарного разрыва окно не схлопывается', () => {
+  const longSeries = Array.from({ length: 700 }, (_, i) => {
+    const t = (i + 1) * 60_000;
+    const c = 100 + i * 0.1;
+    return { t, o: c, h: c, l: c, c, v: 1 };
+  });
+  const state = createMarketModuleState(demoItems, {
+    minute: { DEMO: longSeries },
+    dailyClose: { DEMO: longSeries },
+    fiveMinute: { DEMO: longSeries },
+    thirtyMinute: { DEMO: longSeries },
+    oneHour: { DEMO: longSeries },
+    weekly: { DEMO: longSeries },
+  });
+  // Симулируем «разрыв»: текущая дата далеко, календарный диапазон даёт 0 точек.
+  applyMarketQuotesForSimulationEpoch(state, 10_000_000_000);
+  const pts = state.assetsBySymbol.DEMO.chartLineByTimeframe['1d'];
+  if (pts.length !== 540) {
+    throw new Error(`ожидали floor=540 точек, получили ${pts.length}`);
   }
 });
 

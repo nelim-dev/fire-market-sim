@@ -1,6 +1,10 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const { buildSlicesPayload } = require('./market-db-slice.cjs');
+const {
+  buildSlicesPayload,
+  prefetchNextDayPayload,
+  prefetchDayPayload,
+} = require('./market-db-slice.cjs');
 
 let mainWindow;
 
@@ -46,6 +50,16 @@ function registerMarketIpc() {
       symbols,
       ...(Number.isFinite(fromEpochMs) ? { fromEpochMs } : {}),
     });
+  });
+
+  ipcMain.removeHandler('market:prefetch-next-day');
+  ipcMain.handle('market:prefetch-next-day', async (_event, payload) => {
+    return await prefetchNextDayPayload(payload ?? {});
+  });
+
+  ipcMain.removeHandler('market:prefetch-day');
+  ipcMain.handle('market:prefetch-day', async (_event, payload) => {
+    return await prefetchDayPayload(payload ?? {});
   });
 }
 

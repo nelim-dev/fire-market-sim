@@ -20,11 +20,30 @@ export class PortfolioModuleService
   }
 
   handleCommand(
-    _state: { portfolio: PortfolioState },
-    _command: LogicCommand,
+    state: { portfolio: PortfolioState },
+    command: LogicCommand,
     _context: ModuleContext
   ): boolean {
-    return false;
+    if (command.type !== 'market/sync-prices') {
+      return false;
+    }
+    // Команда обработана всегда; changed отвечает только за факт мутации state.
+    let changed = false;
+    const nextPositions = state.portfolio.positions.map((position) => {
+      const nextPrice = command.pricesBySymbol[position.ticker.toUpperCase()];
+      if (!Number.isFinite(nextPrice) || position.lastPriceRub === nextPrice) {
+        return position;
+      }
+      changed = true;
+      return { ...position, lastPriceRub: nextPrice };
+    });
+    if (changed) {
+      state.portfolio = {
+        ...state.portfolio,
+        positions: nextPositions,
+      };
+    }
+    return true;
   }
 }
 

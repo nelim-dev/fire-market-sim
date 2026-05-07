@@ -36,7 +36,7 @@ function buildWeeklyFromDaily(dailies: readonly MarketPriceBar[]): MarketPriceBa
     const key = `${getISOWeekYear(dt)}-W${String(getISOWeek(dt)).padStart(2, '0')}`;
     const prev = byWeek.get(key);
     if (!prev || b.t >= prev.t) {
-      byWeek.set(key, { t: b.t, c: b.c });
+      byWeek.set(key, { ...b });
     }
   }
   return [...byWeek.values()].sort((a, b) => a.t - b.t);
@@ -47,7 +47,7 @@ function buildWeeklyFromDaily(dailies: readonly MarketPriceBar[]): MarketPriceBa
  * по той же логике, что и потоковый импорт из .txt.
  */
 export function aggregateMinuteRowsToBundles(
-  sortedMinutes: readonly { t: number; c: number }[],
+  sortedMinutes: readonly MarketPriceBar[],
   sessionEndByDate: Map<string, number>
 ): {
   minute: MarketPriceBar[];
@@ -57,7 +57,18 @@ export function aggregateMinuteRowsToBundles(
   oneHour: MarketPriceBar[];
   weekly: MarketPriceBar[];
 } {
-  const dayTo = new Map<string, { close: number; maxTime: string }>();
+  const dayTo = new Map<
+    string,
+    {
+      open: number;
+      high: number;
+      low: number;
+      close: number;
+      volume: number;
+      maxTime: string;
+      startTime: string;
+    }
+  >();
   const b5 = new Map<number, MarketPriceBar>();
   const b30 = new Map<number, MarketPriceBar>();
   const b1h = new Map<number, MarketPriceBar>();
@@ -69,18 +80,75 @@ export function aggregateMinuteRowsToBundles(
     const time = formatInTimeZone(tBar, 'Europe/Moscow', 'HHmmss');
 
     const prevD = dayTo.get(date);
-    if (!prevD || time >= prevD.maxTime) {
-      dayTo.set(date, { close, maxTime: time });
+    if (!prevD) {
+      dayTo.set(date, {
+        open: row.o,
+        high: row.h,
+        low: row.l,
+        close: row.c,
+        volume: row.v,
+        maxTime: time,
+        startTime: time,
+      });
+    } else {
+      dayTo.set(date, {
+        open: time < prevD.startTime ? row.o : prevD.open,
+        high: Math.max(prevD.high, row.h),
+        low: Math.min(prevD.low, row.l),
+        close: time >= prevD.maxTime ? row.c : prevD.close,
+        volume: prevD.volume + row.v,
+        maxTime: time >= prevD.maxTime ? time : prevD.maxTime,
+        startTime: time < prevD.startTime ? time : prevD.startTime,
+      });
     }
 
     const k5 = Math.floor(tBar / FIVE_MS) * FIVE_MS;
-    b5.set(k5, { t: k5, c: close });
+    const prev5 = b5.get(k5);
+    b5.set(
+      k5,
+      prev5
+        ? {
+            t: k5,
+            o: prev5.o,
+            h: Math.max(prev5.h, row.h),
+            l: Math.min(prev5.l, row.l),
+            c: row.c,
+            v: prev5.v + row.v,
+          }
+        : { t: k5, o: row.o, h: row.h, l: row.l, c: close, v: row.v }
+    );
 
     const k30 = Math.floor(tBar / THIRTY_MS) * THIRTY_MS;
-    b30.set(k30, { t: k30, c: close });
+    const prev30 = b30.get(k30);
+    b30.set(
+      k30,
+      prev30
+        ? {
+            t: k30,
+            o: prev30.o,
+            h: Math.max(prev30.h, row.h),
+            l: Math.min(prev30.l, row.l),
+            c: row.c,
+            v: prev30.v + row.v,
+          }
+        : { t: k30, o: row.o, h: row.h, l: row.l, c: close, v: row.v }
+    );
 
     const k1h = Math.floor(tBar / HOUR_MS) * HOUR_MS;
-    b1h.set(k1h, { t: k1h, c: close });
+    const prev1h = b1h.get(k1h);
+    b1h.set(
+      k1h,
+      prev1h
+        ? {
+            t: k1h,
+            o: prev1h.o,
+            h: Math.max(prev1h.h, row.h),
+            l: Math.min(prev1h.l, row.l),
+            c: row.c,
+            v: prev1h.v + row.v,
+          }
+        : { t: k1h, o: row.o, h: row.h, l: row.l, c: close, v: row.v }
+    );
   }
 
   const dates = [...dayTo.keys()].sort();
@@ -92,7 +160,11 @@ export function aggregateMinuteRowsToBundles(
     }
     dailyClose.push({
       t: sessionEndEpochForDate(sessionEndByDate, date),
+      o: row.open,
+      h: row.high,
+      l: row.low,
       c: row.close,
+      v: row.volume,
     });
   }
 
@@ -105,7 +177,7 @@ export function aggregateMinuteRowsToBundles(
   const weekly = buildWeeklyFromDaily(dailyClose);
 
   return {
-    minute: sortedMinutes.map((row) => ({ t: row.t, c: row.c })),
+    minute: sortedMinutes.map((row) => ({ ...row })),
     dailyClose,
     fiveMinute,
     thirtyMinute,

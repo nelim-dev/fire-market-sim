@@ -10,3 +10,7 @@ export const selectTimeScalePreset = (
   state: TimeModuleState
 ): TimeModuleState['timeScale'] => state.timeScale;
 
+export const selectSimulationStepPreset = (
+  state: TimeModuleState
+): TimeModuleState['simulationStep'] => state.simulationStep;
+

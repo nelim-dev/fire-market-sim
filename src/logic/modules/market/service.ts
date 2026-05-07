@@ -4,10 +4,15 @@ import type {
   LogicModule,
   ModuleContext,
 } from '@/logic/modules/contracts';
+import type { TradingDayChangedPayload } from '@/logic/logicEvents';
 import type { GameState } from '@/logic/managers/LogicManager';
 import type { MarketInstrumentCatalogItem } from './contracts';
 import { emptyChartSeriesBundle } from './chartWindows';
-import { fetchMarketSlicesFromElectron } from './marketElectronBridge';
+import {
+  fetchMarketSlicesFromElectron,
+  prefetchDayFromElectron,
+  prefetchNextDayFromElectron,
+} from './marketElectronBridge';
 import type { MarketPriceBar } from './priceSeries';
 import { applyMarketQuotesForSimulationEpoch } from './quoteApply';
 import {
@@ -39,6 +44,16 @@ export class MarketModuleService implements LogicModule<GameState> {
     maxMs: 0,
     lastReportAtMs: 0,
   };
+  private prefetchedDays = new Set<string>();
+  private waitingDayForBoundary: string | null = null;
+
+  shouldHoldSimulationAtBoundary(state: GameState): boolean {
+    const currentDay = state.currentTradingSession?.mskDateYyyymmdd;
+    if (!currentDay) {
+      return false;
+    }
+    return this.waitingDayForBoundary === currentDay;
+  }
 
   createInitialState(simulationEpochMs: number): MarketModuleState {
     const items = readCatalogItems();
@@ -46,6 +61,8 @@ export class MarketModuleService implements LogicModule<GameState> {
     applyMarketQuotesForSimulationEpoch(state, simulationEpochMs);
     this.lastQuotedSimulationEpochMs = simulationEpochMs;
     this.lastHydratedEpochMs = null;
+    this.prefetchedDays.clear();
+    this.waitingDayForBoundary = null;
     return state;
   }
 
@@ -78,16 +95,16 @@ export class MarketModuleService implements LogicModule<GameState> {
     if (firstDeltaTs > lastPrevTs) {
       return [...prev, ...delta];
     }
-    const byT = new Map<number, number>();
+    const byT = new Map<number, MarketPriceBar>();
     for (const b of prev) {
-      byT.set(b.t, b.c);
+      byT.set(b.t, b);
     }
     for (const b of delta) {
-      byT.set(b.t, b.c);
+      byT.set(b.t, b);
     }
     return [...byT.entries()]
       .sort((a, b) => a[0] - b[0])
-      .map(([t, c]) => ({ t, c }));
+      .map(([, bar]) => ({ ...bar }));
   }
 
   private reportHydrateProbeIfNeeded(): void {
@@ -282,6 +299,34 @@ export class MarketModuleService implements LogicModule<GameState> {
     }
     this.lastQuotedSimulationEpochMs = epoch;
     applyMarketQuotesForSimulationEpoch(state.market, epoch);
+  }
+
+  onTradingDayChanged(state: GameState, _payload: TradingDayChangedPayload): void {
+    const symbols = this.pickHydrateSymbols(state);
+    if (symbols.length === 0) {
+      return;
+    }
+    const currentDay = state.currentTradingSession?.mskDateYyyymmdd;
+    if (currentDay && !this.prefetchedDays.has(currentDay)) {
+      this.waitingDayForBoundary = currentDay;
+      void prefetchDayFromElectron(currentDay, symbols).then((res) => {
+        if (res?.ok && res.prefetched) {
+          if (res.mskDateYyyymmdd) {
+            this.prefetchedDays.add(res.mskDateYyyymmdd);
+          } else {
+            this.prefetchedDays.add(currentDay);
+          }
+        }
+        if (this.waitingDayForBoundary === currentDay) {
+          this.waitingDayForBoundary = null;
+        }
+      });
+    }
+    void prefetchNextDayFromElectron(state.simulationEpochMs, symbols).then((res) => {
+      if (res?.ok && res.prefetched && res.mskDateYyyymmdd) {
+        this.prefetchedDays.add(res.mskDateYyyymmdd);
+      }
+    });
   }
 
   handleCommand(

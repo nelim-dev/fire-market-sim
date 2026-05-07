@@ -1,5 +1,8 @@
 import type { TradingSessionSnapshot } from '@/logic/time/SessionTimelineController';
-import type { TimeScalePreset } from '@/logic/simulation/simulationConfig';
+import type {
+  SimulationStepPreset,
+  TimeScalePreset,
+} from '@/logic/simulation/simulationConfig';
 
 export interface TimeModuleState {
   simulationEpochMs: number;
@@ -11,6 +14,7 @@ export interface TimeModuleState {
   nextTradingSession: TradingSessionSnapshot | null;
   gameTime: number;
   timeScale: TimeScalePreset;
+  simulationStep: SimulationStepPreset;
   isPaused: boolean;
 }
 

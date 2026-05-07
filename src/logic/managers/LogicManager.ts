@@ -1,7 +1,10 @@
 import { EventBus } from '../systems/EventBus';
 import type { TradingDayRecord } from '@/data/domain/TradingDaySession';
 import tradingCalendarJson from '@/data/generated/tradingCalendar.json';
-import { type TimeScalePreset } from '@/logic/simulation/simulationConfig';
+import {
+  type SimulationStepPreset,
+  type TimeScalePreset,
+} from '@/logic/simulation/simulationConfig';
 import {
   TRADING_DAY_CHANGED,
   type LogicEventMap,
@@ -10,13 +13,13 @@ import {
 import { SessionTimelineController } from '../time/SessionTimelineController';
 import { TradingCalendar } from '../time/TradingCalendar';
 import type { PortfolioState } from '@/logic/domain/portfolio';
-import type { RuntimeCommand } from '@/logic/runtimeCommands';
 import type { TimeModuleState } from '@/logic/modules/time/state';
 import { TimeModuleService } from '@/logic/modules/time/service';
 import { PortfolioModuleService } from '@/logic/modules/portfolio/service';
 import { type MarketModuleState } from '@/logic/modules/market/state';
 import { MarketModuleService } from '@/logic/modules/market/service';
 import type {
+  LogicCommand,
   LogicModule,
   ModuleContext,
 } from '@/logic/modules/contracts';
@@ -159,12 +162,20 @@ export class LogicManager {
       return;
     }
 
+    if (this.marketModule.shouldHoldSimulationAtBoundary(this.state)) {
+      this.eventBus.processQueue();
+      this.notifySubscribers();
+      return;
+    }
+
     this.eventBus.processQueue();
     const epochBeforeModules = this.state.simulationEpochMs;
     this.modules.forEach((module) =>
       module.update(this.state, deltaTime, this.moduleContext)
     );
     this.eventBus.processQueue();
+
+    this.syncPortfolioWithMarketPrices();
 
     if (this.state.simulationEpochMs !== epochBeforeModules) {
       this.scheduleMarketHydrateFromDatabase(epochBeforeModules);
@@ -277,7 +288,7 @@ export class LogicManager {
    * Единая командная точка для runtime-действий из UI.
    * Сохраняет текущее поведение, но фиксирует типизированную границу команд.
    */
-  dispatchCommand(command: RuntimeCommand): void {
+  dispatchCommand(command: LogicCommand): void {
     for (const module of this.commandAwareModules) {
       if (module.handleCommand?.(this.state, command, this.moduleContext)) {
         if (command.type === 'runtime/pause') {
@@ -286,6 +297,8 @@ export class LogicManager {
           console.log('[LogicManager] Возобновление');
         } else if (command.type === 'runtime/set-time-scale') {
           console.log(`[LogicManager] TimeScale пресет: ${command.preset}x`);
+        } else if (command.type === 'runtime/set-simulation-step') {
+          console.log(`[LogicManager] Simulation step preset: ${command.preset}`);
         }
         this.notifySubscribers();
         return;
@@ -314,6 +327,27 @@ export class LogicManager {
    */
   setTimeScalePreset(preset: TimeScalePreset): void {
     this.dispatchCommand({ type: 'runtime/set-time-scale', preset });
+  }
+
+  /**
+   * Установить шаг симуляции рыночного времени (1m или 5m).
+   */
+  setSimulationStepPreset(preset: SimulationStepPreset): void {
+    this.dispatchCommand({ type: 'runtime/set-simulation-step', preset });
+  }
+
+  private syncPortfolioWithMarketPrices(): void {
+    const pricesBySymbol: Record<string, number> = {};
+    for (const p of this.state.portfolio.positions) {
+      const price = this.state.market.assetsBySymbol[p.ticker.toUpperCase()]?.currentPriceRub;
+      if (typeof price === 'number' && Number.isFinite(price)) {
+        pricesBySymbol[p.ticker.toUpperCase()] = price;
+      }
+    }
+    if (Object.keys(pricesBySymbol).length === 0) {
+      return;
+    }
+    this.dispatchCommand({ type: 'market/sync-prices', pricesBySymbol });
   }
 
   /**

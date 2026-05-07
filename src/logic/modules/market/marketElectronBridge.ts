@@ -7,6 +7,16 @@ export type MarketSlicesIpcPayload = {
   fromEpochMs?: number;
 };
 
+export type MarketPrefetchIpcPayload = {
+  epochMs: number;
+  symbols: readonly string[];
+};
+
+export type MarketPrefetchDayIpcPayload = {
+  mskDateYyyymmdd: string;
+  symbols: readonly string[];
+};
+
 export type MarketSlicesIpcOk = {
   ok: true;
   minuteBySymbol: Record<string, MarketPriceBar[]>;
@@ -21,13 +31,21 @@ export type MarketSlicesIpcResult =
   | MarketSlicesIpcOk
   | { ok: false; error: string; path?: string };
 
+export type MarketPrefetchIpcResult =
+  | { ok: true; prefetched?: boolean; mskDateYyyymmdd?: string }
+  | { ok: false; error: string; path?: string };
+
 function asBarList(v: unknown): MarketPriceBar[] {
   if (!Array.isArray(v)) {
     return [];
   }
   return v.map((row) => ({
     t: Number((row as { t: unknown }).t),
+    o: Number((row as { o: unknown }).o),
+    h: Number((row as { h: unknown }).h),
+    l: Number((row as { l: unknown }).l),
     c: Number((row as { c: unknown }).c),
+    v: Number((row as { v: unknown }).v),
   }));
 }
 
@@ -82,4 +100,49 @@ export async function fetchMarketSlicesFromElectron(
     return null;
   }
   return bundleFromOkPayload(res);
+}
+
+export async function prefetchNextDayFromElectron(
+  epochMs: number,
+  symbols: readonly string[]
+): Promise<MarketPrefetchIpcResult | null> {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  const w = window as unknown as {
+    marketData?: {
+      prefetchNextDay: (p: { epochMs: number; symbols: string[] }) => Promise<MarketPrefetchIpcResult>;
+    };
+  };
+  if (!w.marketData?.prefetchNextDay) {
+    return null;
+  }
+  return w.marketData.prefetchNextDay({
+    epochMs,
+    symbols: symbols.map((s) => s.toUpperCase()),
+  });
+}
+
+export async function prefetchDayFromElectron(
+  mskDateYyyymmdd: string,
+  symbols: readonly string[]
+): Promise<MarketPrefetchIpcResult | null> {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  const w = window as unknown as {
+    marketData?: {
+      prefetchDay: (p: {
+        mskDateYyyymmdd: string;
+        symbols: string[];
+      }) => Promise<MarketPrefetchIpcResult>;
+    };
+  };
+  if (!w.marketData?.prefetchDay) {
+    return null;
+  }
+  return w.marketData.prefetchDay({
+    mskDateYyyymmdd,
+    symbols: symbols.map((s) => s.toUpperCase()),
+  });
 }

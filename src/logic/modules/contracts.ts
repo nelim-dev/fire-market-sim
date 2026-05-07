@@ -1,7 +1,12 @@
 import type { LogicEventMap } from '@/logic/logicEvents';
 import type { RuntimeCommand } from '@/logic/runtimeCommands';
 
-export type LogicCommand = RuntimeCommand;
+export type MarketSyncPricesCommand = {
+  type: 'market/sync-prices';
+  pricesBySymbol: Readonly<Record<string, number>>;
+};
+
+export type LogicCommand = RuntimeCommand | MarketSyncPricesCommand;
 
 export interface ModuleContext {
   emit<K extends keyof LogicEventMap>(event: K, payload: LogicEventMap[K]): void;
