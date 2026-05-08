@@ -6,6 +6,7 @@
 export type PortfolioAssetKind = 'stock' | 'index' | 'fund' | 'bond';
 
 export type UpcomingPaymentKind = 'dividend' | 'coupon';
+export type TradeAction = 'buy' | 'sell';
 
 export interface PortfolioPosition {
   id: string;
@@ -31,8 +32,19 @@ export interface UpcomingPayment {
   dueSimulationEpochMs: number;
 }
 
+export interface TradeLedgerEntry {
+  id: string;
+  simulationEpochMs: number;
+  ticker: string;
+  action: TradeAction;
+  priceRub: number;
+  quantity: number;
+  amountRub: number;
+}
+
 export interface PortfolioState {
   cashRub: number;
   positions: PortfolioPosition[];
   upcomingPayments: UpcomingPayment[];
+  tradeLedger: TradeLedgerEntry[];
 }

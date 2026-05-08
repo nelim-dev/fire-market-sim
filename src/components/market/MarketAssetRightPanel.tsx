@@ -3,6 +3,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
+import { gameLoop } from '@/logic/runners/GameLoop';
 import type { AssetKind } from '@/logic/modules/market/contracts';
 import type { ChartTimeframeId } from '@/logic/modules/market/chartTimeframes';
 import {
@@ -86,8 +87,15 @@ function payoutNote(assetKind: AssetKind): string | null {
 export function MarketAssetRightPanel() {
   const catalog = useGameState(selectMarketInstrumentCatalog);
   const simulationEpochMs = useGameState((s) => s.simulationEpochMs);
+  const cashRub = useGameState((s) => s.portfolio.cashRub);
+  const tradingState = useGameState((s) => s.trading);
   const [symbol, setSymbol] = useState('');
   const [timeframe, setTimeframe] = useState<ChartTimeframeId>('1d');
+  const [tradeModal, setTradeModal] = useState<{
+    side: 'buy' | 'sell';
+    quantity: number;
+  } | null>(null);
+  const lm = gameLoop.getLogicManager();
 
   useEffect(() => {
     if (symbol === '' && catalog.length > 0) {
@@ -135,6 +143,37 @@ export function MarketAssetRightPanel() {
   const priceRub = asset?.currentPriceRub;
   const changePct = asset?.periodChangePctByTimeframe[timeframe];
   const orderBook = asset?.orderBook;
+  const maxBuyByCash = priceRub ? Math.max(0, Math.floor(cashRub / priceRub)) : 0;
+  const maxBuyByBook = orderBook?.asks[0]?.qty ?? 0;
+  const maxSellByBook = orderBook?.bids[0]?.qty ?? 0;
+  const maxSellByPosition = position?.quantity ?? 0;
+  const maxBuyQty = Math.min(maxBuyByCash, maxBuyByBook);
+  const maxSellQty = Math.min(maxSellByPosition, maxSellByBook);
+  const lastRejection =
+    tradingState.lastRejection &&
+    tradingState.lastRejection.symbol.toUpperCase() === symbol.toUpperCase()
+      ? tradingState.lastRejection
+      : null;
+  const rejectionText = useMemo(() => {
+    if (!lastRejection) {
+      return null;
+    }
+    switch (lastRejection.reason) {
+      case 'INSUFFICIENT_FUNDS':
+        return 'Недостаточно средств для покупки по текущей цене.';
+      case 'INSUFFICIENT_POSITION_QTY':
+        return 'Недостаточно актива в портфеле для продажи.';
+      case 'INSUFFICIENT_ORDERBOOK_LIQUIDITY':
+        return 'Недостаточный объём заявок в псевдостакане.';
+      case 'PRICE_UNAVAILABLE':
+        return 'Текущая цена недоступна.';
+      case 'ASSET_NOT_FOUND':
+        return 'Инструмент не найден.';
+      case 'INVALID_QUANTITY':
+      default:
+        return 'Некорректное количество для сделки.';
+    }
+  }, [lastRejection]);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 text-zinc-100">
@@ -265,6 +304,181 @@ export function MarketAssetRightPanel() {
           payoutNote={asset ? payoutNote(asset.assetKind) : null}
         />
       </section>
+
+      <section className="space-y-3">
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setTradeModal({ side: 'buy', quantity: Math.max(1, Math.min(1, maxBuyQty)) })}
+            disabled={!asset || maxBuyQty <= 0}
+            className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
+          >
+            Купить
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setTradeModal({
+                side: 'sell',
+                quantity: Math.max(1, Math.min(1, maxSellQty)),
+              })
+            }
+            disabled={!asset || maxSellQty <= 0}
+            className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
+          >
+            Продать
+          </button>
+        </div>
+        {rejectionText ? (
+          <p className="rounded-md border border-red-900/50 bg-red-950/30 px-3 py-2 text-xs text-red-300">
+            {rejectionText}
+          </p>
+        ) : null}
+      </section>
+
+      {tradeModal && asset ? (
+        <TradeModal
+          side={tradeModal.side}
+          symbol={symbol}
+          displayName={displayName}
+          priceRub={priceRub ?? null}
+          cashRub={cashRub}
+          averagePriceRub={position?.avgPriceRub}
+          maxQty={tradeModal.side === 'buy' ? maxBuyQty : maxSellQty}
+          quantity={tradeModal.quantity}
+          onQuantityChange={(next) =>
+            setTradeModal((prev) => (prev ? { ...prev, quantity: next } : prev))
+          }
+          onClose={() => setTradeModal(null)}
+          onSubmit={() => {
+            lm.dispatchCommand({
+              type: 'trading/submit-market-order',
+              side: tradeModal.side,
+              symbol,
+              quantity: tradeModal.quantity,
+              source: 'modal',
+            });
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function TradeModal({
+  side,
+  symbol,
+  displayName,
+  priceRub,
+  cashRub,
+  averagePriceRub,
+  maxQty,
+  quantity,
+  onQuantityChange,
+  onClose,
+  onSubmit,
+}: {
+  side: 'buy' | 'sell';
+  symbol: string;
+  displayName: string;
+  priceRub: number | null;
+  cashRub: number;
+  averagePriceRub: number | undefined;
+  maxQty: number;
+  quantity: number;
+  onQuantityChange: (next: number) => void;
+  onClose: () => void;
+  onSubmit: () => void;
+}) {
+  const safePrice = Number.isFinite(priceRub) ? (priceRub as number) : 0;
+  const safeQty = Math.max(1, Math.min(quantity, Math.max(1, maxQty)));
+  const amountRub = safePrice * safeQty;
+  const balanceAfterBuy = cashRub - amountRub;
+  const pnlRub =
+    side === 'sell' && averagePriceRub != null
+      ? (safePrice - averagePriceRub) * safeQty
+      : null;
+  const canSubmit = maxQty > 0 && safeQty <= maxQty && safePrice > 0;
+  const title = side === 'buy' ? 'Купить' : 'Продать';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-900 p-5 text-zinc-100 shadow-2xl">
+        <h3 className="text-lg font-semibold">
+          {title} {symbol} - {displayName}
+        </h3>
+        <p className="mt-2 text-sm text-zinc-400">
+          Текущая цена: <span className="font-mono text-zinc-200">{formatRub(safePrice)} ₽</span>
+        </p>
+        <div className="mt-4 space-y-2">
+          <label className="block text-sm text-zinc-300">
+            Количество
+            <input
+              type="number"
+              min={1}
+              max={Math.max(1, maxQty)}
+              value={safeQty}
+              onChange={(e) => onQuantityChange(Number(e.target.value))}
+              className="mt-1 w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-sky-600"
+            />
+          </label>
+          <input
+            type="range"
+            min={1}
+            max={Math.max(1, maxQty)}
+            value={safeQty}
+            onChange={(e) => onQuantityChange(Number(e.target.value))}
+            className="w-full accent-sky-500"
+          />
+          <p className="text-xs text-zinc-500">
+            Диапазон: 1 - {maxQty} шт
+          </p>
+        </div>
+        <div className="mt-4 space-y-1 text-sm text-zinc-300">
+          <p>
+            Сумма сделки:{' '}
+            <span className="font-mono text-zinc-100">{formatRub(amountRub)} ₽</span>
+          </p>
+          {side === 'buy' ? (
+            <p>
+              Баланс после покупки:{' '}
+              <span className="font-mono text-zinc-100">{formatRub(balanceAfterBuy)} ₽</span>
+            </p>
+          ) : (
+            <p>
+              PnL сделки:{' '}
+              <span
+                className={`font-mono ${
+                  pnlRub == null ? 'text-zinc-400' : pnlRub >= 0 ? 'text-emerald-400' : 'text-red-400'
+                }`}
+              >
+                {pnlRub == null ? '—' : `${pnlRub >= 0 ? '+' : ''}${formatRub(pnlRub)} ₽`}
+              </span>
+            </p>
+          )}
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md bg-zinc-700 px-4 py-2 text-sm text-zinc-100 hover:bg-zinc-600"
+          >
+            Отмена
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={!canSubmit}
+            className={`rounded-md px-4 py-2 text-sm font-semibold text-white ${
+              side === 'buy'
+                ? 'bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-700'
+                : 'bg-red-600 hover:bg-red-500 disabled:bg-zinc-700'
+            }`}
+          >
+            {title}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

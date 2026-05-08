@@ -7,7 +7,10 @@ import {
 } from '@/logic/simulation/simulationConfig';
 import {
   TRADING_DAY_CHANGED,
+  TRADE_EXECUTED,
+  TRADE_REJECTED,
   type LogicEventMap,
+  type TradeExecutionPayload,
   type TradingDayChangedPayload,
 } from '../logicEvents';
 import { SessionTimelineController } from '../time/SessionTimelineController';
@@ -18,6 +21,8 @@ import { TimeModuleService } from '@/logic/modules/time/service';
 import { PortfolioModuleService } from '@/logic/modules/portfolio/service';
 import { type MarketModuleState } from '@/logic/modules/market/state';
 import { MarketModuleService } from '@/logic/modules/market/service';
+import type { TradingModuleState } from '@/logic/modules/trading/state';
+import { TradingModuleService } from '@/logic/modules/trading/service';
 import type {
   LogicCommand,
   LogicModule,
@@ -50,6 +55,7 @@ export interface GameState extends TimeModuleState {
 
   /** Рынок (M3+): каталог инструментов, котировки, стакан — модуль MarketSimulator. */
   market: MarketModuleState;
+  trading: TradingModuleState;
 }
 
 /**
@@ -94,6 +100,7 @@ export class LogicManager {
   private readonly timeModule: TimeModuleService;
   private readonly marketModule: MarketModuleService;
   private readonly portfolioModule: PortfolioModuleService;
+  private readonly tradingModule: TradingModuleService;
   private readonly modules: Array<LogicModule<GameState>>;
   private readonly commandAwareModules: Array<LogicModule<GameState>>;
   private readonly moduleContext: ModuleContext;
@@ -110,7 +117,13 @@ export class LogicManager {
     this.timeModule = new TimeModuleService(this.sessionTimeline);
     this.marketModule = new MarketModuleService();
     this.portfolioModule = new PortfolioModuleService();
-    this.modules = [this.timeModule, this.marketModule, this.portfolioModule];
+    this.tradingModule = new TradingModuleService();
+    this.modules = [
+      this.timeModule,
+      this.marketModule,
+      this.tradingModule,
+      this.portfolioModule,
+    ];
     this.commandAwareModules = this.modules.filter((m) =>
       Boolean(m.handleCommand)
     );
@@ -123,6 +136,8 @@ export class LogicManager {
     this.eventBus.on(TRADING_DAY_CHANGED, (payload) =>
       this.broadcastTradingDayChanged(payload)
     );
+    this.eventBus.on(TRADE_EXECUTED, (payload) => this.onTradeExecuted(payload));
+    this.eventBus.on(TRADE_REJECTED, () => this.notifySubscribers());
 
     // Здесь позже будем создавать модули:
     // this.marketSimulator = new MarketSimulator(this.eventBus);
@@ -142,6 +157,7 @@ export class LogicManager {
       currentUser: null,
       portfolio: this.portfolioModule.createInitialState(),
       market: this.marketModule.createInitialState(timeState.simulationEpochMs),
+      trading: this.tradingModule.createInitialState(),
     };
   }
 
@@ -365,6 +381,8 @@ export class LogicManager {
     this.eventBus.on(TRADING_DAY_CHANGED, (payload) =>
       this.broadcastTradingDayChanged(payload)
     );
+    this.eventBus.on(TRADE_EXECUTED, (payload) => this.onTradeExecuted(payload));
+    this.eventBus.on(TRADE_REJECTED, () => this.notifySubscribers());
     
     // Уведомляем UI о новом состоянии
     this.notifySubscribers();
@@ -375,6 +393,13 @@ export class LogicManager {
     for (const module of this.modules) {
       module.onTradingDayChanged?.(this.state, payload, this.moduleContext);
     }
+  }
+
+  private onTradeExecuted(payload: TradeExecutionPayload): void {
+    this.dispatchCommand({
+      type: 'portfolio/apply-trade-execution',
+      execution: payload,
+    });
   }
 
   private scheduleMarketHydrateFromDatabase(previousEpochMs: number): void {

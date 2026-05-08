@@ -121,5 +121,6 @@ export function buildDemoPortfolio(): PortfolioState {
     cashRub: DEMO_INITIAL_CASH_RUB,
     positions,
     upcomingPayments,
+    tradeLedger: [],
   };
 }

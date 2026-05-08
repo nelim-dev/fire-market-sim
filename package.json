@@ -7,7 +7,7 @@
     "test:m1": "tsx tests/console/m1.test.ts",
     "test:m2": "tsx tests/console/m2.test.ts",
     "test:m3": "tsx tests/console/m3-catalog-selectors.test.ts && tsx tests/console/m3-market-quote-clip.test.ts && tsx tests/console/m3-minute-bar-aggregation.test.ts && tsx tests/console/m3-market-runtime-contract.test.ts",
-    "test:m4": "tsx tests/console/stub-milestone.ts M4",
+    "test:m4": "tsx tests/console/m4-trading-and-ui-contract.test.ts",
     "test:m5": "tsx tests/console/stub-milestone.ts M5",
     "test:m6": "tsx tests/console/stub-milestone.ts M6",
     "test:m7": "tsx tests/console/stub-milestone.ts M7",

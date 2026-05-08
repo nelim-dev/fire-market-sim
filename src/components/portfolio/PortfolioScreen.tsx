@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { PortfolioCompositionTab } from './PortfolioCompositionTab';
 import { PortfolioPlaceholderTab } from './PortfolioPlaceholderTab';
+import { TradeHistoryTab } from './TradeHistoryTab';
 
 type MainTab = 'composition' | 'history' | 'stats';
 
@@ -40,7 +41,9 @@ export function PortfolioScreen() {
         {tab === 'composition' && (
           <PortfolioCompositionTab portfolio={portfolio} />
         )}
-        {tab === 'history' && <PortfolioPlaceholderTab tab="history" />}
+        {tab === 'history' && (
+          <TradeHistoryTab entries={portfolio.tradeLedger} />
+        )}
         {tab === 'stats' && <PortfolioPlaceholderTab tab="stats" />}
       </div>
     </div>

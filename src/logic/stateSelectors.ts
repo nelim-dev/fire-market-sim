@@ -9,6 +9,7 @@ import {
   selectMarketModule,
   selectMarketReady,
 } from '@/logic/modules/market/selectors';
+import { selectPortfolioTradeLedger } from '@/logic/modules/portfolio/selectors';
 import {
   selectSimulationStepPreset,
   selectTimeIsPaused,
@@ -31,6 +32,11 @@ export const selectSimulationStep = (
 
 export const selectPortfolio = (state: GameState): GameState['portfolio'] =>
   state.portfolio;
+
+export const selectTradeLedger = (state: GameState) =>
+  selectPortfolioTradeLedger(state.portfolio);
+
+export const selectTradingState = (state: GameState) => state.trading;
 
 export const selectMarket = selectMarketModule;
 

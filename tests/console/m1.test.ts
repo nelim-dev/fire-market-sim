@@ -77,7 +77,7 @@ run('SessionTimeline: глобальный cap на последнем дне', 
 run('LogicManager: симуляционное время растёт без паузы', () => {
   const lm = new LogicManager();
   const t0 = lm.getState().simulationEpochMs;
-  lm.update(0.05);
+  lm.update(1);
   const t1 = lm.getState().simulationEpochMs;
   if (!(t1 > t0)) {
     throw new Error(`время не выросло: ${t0} -> ${t1}`);
@@ -100,13 +100,13 @@ run('LogicManager: пауза останавливает время', () => {
 run('LogicManager: пресет timeScale ×100 ускоряет рост относительно 1x', () => {
   const lm1 = new LogicManager();
   const a0 = lm1.getState().simulationEpochMs;
-  lm1.update(0.05);
+  lm1.update(1);
   const inc1 = lm1.getState().simulationEpochMs - a0;
 
   const lm2 = new LogicManager();
   lm2.setTimeScalePreset(100);
   const b0 = lm2.getState().simulationEpochMs;
-  lm2.update(0.05);
+  lm2.update(1);
   const inc100 = lm2.getState().simulationEpochMs - b0;
 
   if (inc1 === 0) throw new Error('при 1x прирост не ожидается 0');

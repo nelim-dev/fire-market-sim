@@ -138,21 +138,12 @@ export class MarketModuleService implements LogicModule<GameState> {
     if (catalog.length === 0) {
       return [];
     }
-    const set = new Set<string>();
-    const primary = catalog[0]?.symbol?.toUpperCase();
-    if (primary) {
-      set.add(primary);
-    }
-    for (const p of state.portfolio.positions) {
-      const ticker = p.ticker.toUpperCase();
-      if (state.market.assetsBySymbol[ticker]) {
-        set.add(ticker);
-      }
-    }
-    if (set.size === 0 && primary) {
-      set.add(primary);
-    }
-    return [...set];
+    // Важно: рынок не должен зависеть от состава портфеля пользователя.
+    // Подгружаем по каталогу рынка, чтобы котировки и графики обновлялись
+    // независимо от наличия позиции в PortfolioModule.
+    return catalog
+      .map((item) => item.symbol.toUpperCase())
+      .filter((symbol, index, arr) => arr.indexOf(symbol) === index);
   }
 
   private applyHydratedBundle(
