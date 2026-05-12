@@ -1,30 +1,35 @@
 import type { PortfolioState } from '@/logic/domain/portfolio';
+import { totalNavRub } from '@/logic/portfolio/portfolioDerived';
 import {
-  portfolioProfitPct,
-  portfolioProfitRub,
-  totalNavRub,
-} from '@/logic/portfolio/portfolioDerived';
+  type PortfolioPeriodId,
+  selectPortfolioProfitForPeriod,
+} from '@/logic/modules/portfolio/selectors';
 import { formatRub, formatRubSigned, formatPctSigned } from './formatRub';
 
-const PERIODS = [
+const PERIODS: ReadonlyArray<{ id: PortfolioPeriodId; label: string }> = [
   { id: 'week', label: 'неделя' },
   { id: 'month', label: 'месяц' },
   { id: 'year', label: 'год' },
   { id: 'all', label: 'всё время' },
-] as const;
+];
 
 export function PortfolioSummaryBar({
   portfolio,
   periodId,
   onPeriodChange,
+  simulationEpochMs,
 }: {
   portfolio: PortfolioState;
-  periodId: (typeof PERIODS)[number]['id'];
-  onPeriodChange: (id: (typeof PERIODS)[number]['id']) => void;
+  periodId: PortfolioPeriodId;
+  onPeriodChange: (id: PortfolioPeriodId) => void;
+  simulationEpochMs: number;
 }) {
   const total = totalNavRub(portfolio);
-  const profit = portfolioProfitRub(portfolio);
-  const profitPct = portfolioProfitPct(portfolio);
+  const { profitRub: profit, profitPct } = selectPortfolioProfitForPeriod(
+    portfolio,
+    periodId,
+    simulationEpochMs
+  );
   const profitPositive = profit >= 0;
 
   return (

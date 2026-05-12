@@ -4,13 +4,25 @@ import type {
   PortfolioState,
 } from '@/logic/domain/portfolio';
 import { DEMO_INITIAL_DEPOSIT_RUB } from '@/data/portfolio/demoPortfolioConstants';
+import {
+  positionAvgPriceRub,
+  positionTotalQuantity,
+} from '@/logic/modules/portfolio/selectors';
+
+export function positionQuantity(p: PortfolioPosition): number {
+  return positionTotalQuantity(p);
+}
+
+export function positionAveragePriceRub(p: PortfolioPosition): number {
+  return positionAvgPriceRub(p);
+}
 
 export function positionMarketValueRub(p: PortfolioPosition): number {
-  return p.quantity * p.lastPriceRub;
+  return positionTotalQuantity(p) * p.lastPriceRub;
 }
 
 export function positionCostRub(p: PortfolioPosition): number {
-  return p.quantity * p.avgPriceRub;
+  return positionTotalQuantity(p) * positionAvgPriceRub(p);
 }
 
 export function positionPnlRub(p: PortfolioPosition): number {

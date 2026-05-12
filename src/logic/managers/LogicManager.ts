@@ -7,10 +7,8 @@ import {
 } from '@/logic/simulation/simulationConfig';
 import {
   TRADING_DAY_CHANGED,
-  TRADE_EXECUTED,
   TRADE_REJECTED,
   type LogicEventMap,
-  type TradeExecutionPayload,
   type TradingDayChangedPayload,
 } from '../logicEvents';
 import { SessionTimelineController } from '../time/SessionTimelineController';
@@ -26,6 +24,7 @@ import { TradingModuleService } from '@/logic/modules/trading/service';
 import type {
   LogicCommand,
   LogicModule,
+  ModuleAttachContext,
   ModuleContext,
 } from '@/logic/modules/contracts';
 
@@ -104,18 +103,19 @@ export class LogicManager {
   private readonly modules: Array<LogicModule<GameState>>;
   private readonly commandAwareModules: Array<LogicModule<GameState>>;
   private readonly moduleContext: ModuleContext;
+  /** Глубина вложенной диспетчеризации: notifySubscribers — только на нулевой глубине. */
+  private commandDepth = 0;
 
   constructor() {
     console.log('[LogicManager] Инициализация...');
 
-    // Создаём EventBus
     this.eventBus = new EventBus<LogicEventMap>();
 
     const raw = tradingCalendarJson as { days: TradingDayRecord[] };
     const calendar = TradingCalendar.fromRecords(raw.days ?? []);
     this.sessionTimeline = new SessionTimelineController(calendar);
     this.timeModule = new TimeModuleService(this.sessionTimeline);
-    this.marketModule = new MarketModuleService();
+    this.marketModule = new MarketModuleService(calendar);
     this.portfolioModule = new PortfolioModuleService();
     this.tradingModule = new TradingModuleService();
     this.modules = [
@@ -129,15 +129,23 @@ export class LogicManager {
     );
     this.moduleContext = {
       emit: (event, payload) => this.eventBus.emit(event, payload),
+      dispatchCommand: (command) => this.dispatchCommand(command),
     };
 
-    // Инициализируем начальное состояние
     this.state = this.createInitialState();
     this.eventBus.on(TRADING_DAY_CHANGED, (payload) =>
       this.broadcastTradingDayChanged(payload)
     );
-    this.eventBus.on(TRADE_EXECUTED, (payload) => this.onTradeExecuted(payload));
     this.eventBus.on(TRADE_REJECTED, () => this.notifySubscribers());
+
+    const attachContext: ModuleAttachContext = {
+      emit: this.moduleContext.emit,
+      dispatchCommand: this.moduleContext.dispatchCommand,
+      subscribe: (event, handler) => this.eventBus.on(event, handler),
+    };
+    for (const module of this.modules) {
+      module.attach?.(attachContext);
+    }
 
     // Здесь позже будем создавать модули:
     // this.marketSimulator = new MarketSimulator(this.eventBus);
@@ -305,22 +313,29 @@ export class LogicManager {
    * Сохраняет текущее поведение, но фиксирует типизированную границу команд.
    */
   dispatchCommand(command: LogicCommand): void {
-    for (const module of this.commandAwareModules) {
-      if (module.handleCommand?.(this.state, command, this.moduleContext)) {
-        if (command.type === 'runtime/pause') {
-          console.log('[LogicManager] Пауза');
-        } else if (command.type === 'runtime/resume') {
-          console.log('[LogicManager] Возобновление');
-        } else if (command.type === 'runtime/set-time-scale') {
-          console.log(`[LogicManager] TimeScale пресет: ${command.preset}x`);
-        } else if (command.type === 'runtime/set-simulation-step') {
-          console.log(`[LogicManager] Simulation step preset: ${command.preset}`);
+    this.commandDepth += 1;
+    try {
+      for (const module of this.commandAwareModules) {
+        if (module.handleCommand?.(this.state, command, this.moduleContext)) {
+          if (command.type === 'runtime/pause') {
+            console.log('[LogicManager] Пауза');
+          } else if (command.type === 'runtime/resume') {
+            console.log('[LogicManager] Возобновление');
+          } else if (command.type === 'runtime/set-time-scale') {
+            console.log(`[LogicManager] TimeScale пресет: ${command.preset}x`);
+          } else if (command.type === 'runtime/set-simulation-step') {
+            console.log(`[LogicManager] Simulation step preset: ${command.preset}`);
+          }
+          return;
         }
+      }
+      console.warn(`[LogicManager] Команда не обработана: ${command.type}`);
+    } finally {
+      this.commandDepth -= 1;
+      if (this.commandDepth === 0) {
         this.notifySubscribers();
-        return;
       }
     }
-    console.warn(`[LogicManager] Команда не обработана: ${command.type}`);
   }
 
   /**
@@ -381,10 +396,17 @@ export class LogicManager {
     this.eventBus.on(TRADING_DAY_CHANGED, (payload) =>
       this.broadcastTradingDayChanged(payload)
     );
-    this.eventBus.on(TRADE_EXECUTED, (payload) => this.onTradeExecuted(payload));
     this.eventBus.on(TRADE_REJECTED, () => this.notifySubscribers());
-    
-    // Уведомляем UI о новом состоянии
+
+    const attachContext: ModuleAttachContext = {
+      emit: this.moduleContext.emit,
+      dispatchCommand: this.moduleContext.dispatchCommand,
+      subscribe: (event, handler) => this.eventBus.on(event, handler),
+    };
+    for (const module of this.modules) {
+      module.attach?.(attachContext);
+    }
+
     this.notifySubscribers();
     void this.hydrateMarketFromDatabase();
   }
@@ -393,13 +415,6 @@ export class LogicManager {
     for (const module of this.modules) {
       module.onTradingDayChanged?.(this.state, payload, this.moduleContext);
     }
-  }
-
-  private onTradeExecuted(payload: TradeExecutionPayload): void {
-    this.dispatchCommand({
-      type: 'portfolio/apply-trade-execution',
-      execution: payload,
-    });
   }
 
   private scheduleMarketHydrateFromDatabase(previousEpochMs: number): void {

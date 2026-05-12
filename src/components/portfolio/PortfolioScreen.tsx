@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
+import { selectUpcomingPayments } from '@/logic/modules/portfolio/selectors';
 import { PortfolioCompositionTab } from './PortfolioCompositionTab';
 import { PortfolioPlaceholderTab } from './PortfolioPlaceholderTab';
 import { TradeHistoryTab } from './TradeHistoryTab';
@@ -16,6 +17,19 @@ const tabs: { id: MainTab; label: string }[] = [
 
 export function PortfolioScreen() {
   const portfolio = useGameState((s) => s.portfolio);
+  const simulationEpochMs = useGameState((s) => s.simulationEpochMs);
+  const marketDetails = useGameState((s) => s.market.details);
+  const instrumentCatalog = useGameState((s) => s.market.instrumentCatalog);
+  const upcomingPayments = useMemo(
+    () =>
+      selectUpcomingPayments(
+        portfolio,
+        marketDetails,
+        instrumentCatalog,
+        simulationEpochMs
+      ),
+    [portfolio, marketDetails, instrumentCatalog, simulationEpochMs]
+  );
   const [tab, setTab] = useState<MainTab>('composition');
 
   return (
@@ -39,10 +53,14 @@ export function PortfolioScreen() {
       </nav>
       <div className="mt-4 sm:mt-6">
         {tab === 'composition' && (
-          <PortfolioCompositionTab portfolio={portfolio} />
+          <PortfolioCompositionTab
+            portfolio={portfolio}
+            simulationEpochMs={simulationEpochMs}
+            upcomingPayments={upcomingPayments}
+          />
         )}
         {tab === 'history' && (
-          <TradeHistoryTab entries={portfolio.tradeLedger} />
+          <TradeHistoryTab entries={portfolio.ledger} />
         )}
         {tab === 'stats' && <PortfolioPlaceholderTab tab="stats" />}
       </div>

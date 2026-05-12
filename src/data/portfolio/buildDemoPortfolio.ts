@@ -1,26 +1,60 @@
 import type {
   PortfolioPosition,
   PortfolioState,
+  PositionLot,
   UpcomingPayment,
 } from '@/logic/domain/portfolio';
 import { DEMO_INITIAL_CASH_RUB } from './demoPortfolioConstants';
 
 const PRICE_SCALE = 1.2;
 
-function position(
-  p: Omit<PortfolioPosition, 'avgPriceRub'> & { avgPriceRub?: number }
-): PortfolioPosition {
-  const avg =
-    p.avgPriceRub ?? Math.round((p.lastPriceRub / PRICE_SCALE) * 100) / 100;
+/**
+ * Демо-партия: один лот с заданным количеством и средней ценой.
+ * Используется только в сиде — реальные сделки создают лоты в TradingModule.
+ */
+function demoLot(
+  id: string,
+  quantity: number,
+  pricePerUnitRub: number
+): PositionLot {
   return {
-    ...p,
-    avgPriceRub: avg,
+    id,
+    purchaseEpochMs: 0,
+    quantity,
+    pricePerUnitRub,
+    nkdPaidAtBuyPerUnit: 0,
+  };
+}
+
+function position(args: {
+  id: string;
+  kind: PortfolioPosition['kind'];
+  ticker: string;
+  displayName: string;
+  secondaryId?: string;
+  quantity: number;
+  lastPriceRub: number;
+  avgPriceRub?: number;
+}): PortfolioPosition {
+  const avg =
+    args.avgPriceRub ??
+    Math.round((args.lastPriceRub / PRICE_SCALE) * 100) / 100;
+  return {
+    id: args.id,
+    kind: args.kind,
+    ticker: args.ticker,
+    displayName: args.displayName,
+    secondaryId: args.secondaryId,
+    lastPriceRub: args.lastPriceRub,
+    lots: [demoLot(`${args.id}-lot-0`, args.quantity, avg)],
   };
 }
 
 /**
- * Демо-портфель: акции, индексы, облигации, фонды + ближайшие выплаты.
- * Цены зашиты (M2); после появления рынка будут пересчитываться из market.
+ * Демо-портфель: три реальных актива (SBER/SU26227RMFS7/SBMM) + кэш.
+ * Цены и avg — это исторические ориентиры на момент старта симуляции;
+ * `lastPriceRub` будет перезаписан `applyMarketQuotesForSimulationEpoch` после
+ * первой пары шагов рынка.
  */
 export function buildDemoPortfolio(): PortfolioState {
   const positions: PortfolioPosition[] = [
@@ -28,99 +62,41 @@ export function buildDemoPortfolio(): PortfolioState {
       id: 'pos-sber',
       kind: 'stock',
       ticker: 'SBER',
-      displayName: 'Севербанк',
-      quantity: 100,
-      lastPriceRub: 213.05,
+      displayName: 'Сбербанк',
+      quantity: 10,
+      lastPriceRub: 280,
+      avgPriceRub: 200,
     }),
     position({
-      id: 'pos-yst',
-      kind: 'stock',
-      ticker: 'NLMK',
-      displayName: 'ЮСталь',
-      quantity: 426,
-      lastPriceRub: 100,
-    }),
-    position({
-      id: 'pos-roil',
-      kind: 'stock',
-      ticker: 'ROSN',
-      displayName: 'РеОил',
-      quantity: 3610,
-      lastPriceRub: 10,
-    }),
-    position({
-      id: 'pos-rgbi',
-      kind: 'index',
-      ticker: 'RGBI',
-      displayName: 'Индекс RGBI',
-      quantity: 1,
-      lastPriceRub: 10_658,
-    }),
-    position({
-      id: 'pos-rtsi',
-      kind: 'index',
-      ticker: 'RTSI',
-      displayName: 'Индекс RTSI',
-      quantity: 5,
-      lastPriceRub: 1_280.5,
-    }),
-    position({
-      id: 'pos-ofz',
+      id: 'pos-ofz-26227',
       kind: 'bond',
-      ticker: 'ОГЗ 512',
-      displayName: 'ОГЗ 512',
-      secondaryId: 'CH9876543210',
-      quantity: 296,
-      lastPriceRub: 270.05,
+      ticker: 'SU26227RMFS7',
+      displayName: 'ОФЗ 26227',
+      secondaryId: 'RU000A1007F4',
+      quantity: 2,
+      lastPriceRub: 950,
+      avgPriceRub: 900,
     }),
     position({
-      id: 'pos-sv-b12',
-      kind: 'bond',
-      ticker: 'СеверБ12Р',
-      displayName: 'СеверБ12Р',
-      secondaryId: 'IE9876543217',
-      quantity: 42,
-      lastPriceRub: 475.9,
-    }),
-    position({
-      id: 'pos-tmos',
+      id: 'pos-sbmm',
       kind: 'fund',
-      ticker: 'TMOS',
-      displayName: 'Сбер — фонд TMOS',
-      quantity: 50,
-      /** Доводит сумму бумаг до ~300k при кэше 150k → «Всего» ~450k */
-      lastPriceRub: 1660.24,
+      ticker: 'SBMM',
+      displayName: 'SBMM (фонд денежного рынка)',
+      quantity: 10,
+      lastPriceRub: 14,
+      avgPriceRub: 13,
     }),
   ];
 
-  const upcomingPayments: UpcomingPayment[] = [
-    {
-      id: 'pay-1',
-      kind: 'dividend',
-      assetName: 'ЮСталь',
-      amountRub: 2_419,
-      dueSimulationEpochMs: Date.UTC(2021, 3, 24),
-    },
-    {
-      id: 'pay-2',
-      kind: 'dividend',
-      assetName: 'ОГЗ 512',
-      amountRub: 1_428,
-      dueSimulationEpochMs: Date.UTC(2021, 4, 6),
-    },
-    {
-      id: 'pay-3',
-      kind: 'coupon',
-      assetName: 'СеверБ12Р',
-      amountRub: 452,
-      dueSimulationEpochMs: Date.UTC(2021, 5, 27),
-    },
-  ];
+  // upcomingPayments — будут заполняться реальными MARKET_*_DECLARED событиями
+  // (dividend/coupon) при движении симуляции.
+  const upcomingPayments: UpcomingPayment[] = [];
 
   return {
     cashRub: DEMO_INITIAL_CASH_RUB,
     positions,
     upcomingPayments,
-    tradeLedger: [],
+    ledger: [],
+    navHistory: [],
   };
 }

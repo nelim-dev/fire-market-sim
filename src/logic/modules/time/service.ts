@@ -1,6 +1,7 @@
 import type { TradingDayChangedPayload } from '@/logic/logicEvents';
 import { TRADING_DAY_CHANGED } from '@/logic/logicEvents';
 import {
+  DEBUG_SIMULATION_START_EPOCH_MS,
   SIMULATION_MS_PER_LOGIC_SECOND_AT_1X,
   SIMULATION_STEP_MS_BY_PRESET,
 } from '@/logic/simulation/simulationConfig';
@@ -25,16 +26,31 @@ export class TimeModuleService implements LogicModule<TimeModuleState> {
     this.pendingSimMs = 0;
     this.sessionTimeline.reset();
     const ready = this.sessionTimeline.isReady();
-    const start = this.sessionTimeline.getGlobalStartEpochMs();
+    const globalStart = this.sessionTimeline.getGlobalStartEpochMs();
     const end = this.sessionTimeline.getGlobalEndEpochMs();
+
+    let effectiveStart = globalStart;
+    let dayIndex = 0;
+    if (
+      ready &&
+      DEBUG_SIMULATION_START_EPOCH_MS != null &&
+      DEBUG_SIMULATION_START_EPOCH_MS > globalStart
+    ) {
+      const seek = this.sessionTimeline.seekToFirstDayAtOrAfter(
+        DEBUG_SIMULATION_START_EPOCH_MS
+      );
+      effectiveStart = seek.sessionStartEpochMs;
+      dayIndex = seek.dayIndex;
+    }
+
     const cur = toSessionSnapshot(this.sessionTimeline.getCurrentDay());
     const nxt = toSessionSnapshot(this.sessionTimeline.getNextDay());
     return {
       tradingCalendarReady: ready,
-      simulationStartEpochMs: start,
-      simulationEpochMs: start,
+      simulationStartEpochMs: effectiveStart,
+      simulationEpochMs: effectiveStart,
       simulationEndEpochMs: end,
-      currentTradingDayIndex: 0,
+      currentTradingDayIndex: dayIndex,
       currentTradingSession: cur,
       nextTradingSession: nxt,
       gameTime: 0,

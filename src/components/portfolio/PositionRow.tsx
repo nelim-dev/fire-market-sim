@@ -3,6 +3,7 @@ import {
   positionMarketValueRub,
   positionPnlPct,
   positionPnlRub,
+  positionQuantity,
   positionShareOfTotalNavPct,
 } from '@/logic/portfolio/portfolioDerived';
 import {
@@ -53,7 +54,7 @@ export function PositionRow({
 
         <div className="truncate text-zinc-500">{line2Col1}</div>
         <div className="text-right tabular-nums text-zinc-500">
-          {p.quantity.toLocaleString('ru-RU')} шт.
+          {positionQuantity(p).toLocaleString('ru-RU')} шт.
         </div>
         <div
           className={`text-right tabular-nums ${

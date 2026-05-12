@@ -2,7 +2,10 @@
 export const DEMO_INITIAL_CASH_RUB = 150_000;
 
 /**
- * Условный «взнос» для отображения П/У в M2 (до учёта реальной истории сделок).
- * totalNav − INITIAL_DEPOSIT = прибыль (как на макете ~+50k при total ~450k).
+ * Условный «взнос» игрока на момент старта симуляции.
+ * Подобран как `cash + Σ(cost_basis позиций демо-сида)`:
+ * 150 000 (кэш) + 2 000 (SBER 10×200) + 1 800 (SU26227RMFS7 2×900) + 130 (SBMM 10×13) = 153 930 ₽.
+ * `portfolioProfitRub = totalNav − DEMO_INITIAL_DEPOSIT_RUB` поэтому отражает
+ * чистый прирост курсовой стоимости позиций относительно средних цен покупки.
  */
-export const DEMO_INITIAL_DEPOSIT_RUB = 400_000;
+export const DEMO_INITIAL_DEPOSIT_RUB = 153_930;

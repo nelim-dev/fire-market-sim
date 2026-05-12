@@ -1,6 +1,22 @@
 {
   "items": [
     {
+      "assetKind": "bond",
+      "ticker": "SU26227RMFS7",
+      "symbol": "SU26227RMFS7",
+      "displayName": "SU26227RMFS7",
+      "isin": "TBD-SU26227RMFS7",
+      "sourceFilePath": "bonds/SU26227RMFS7.txt"
+    },
+    {
+      "assetKind": "fund",
+      "ticker": "SBMM",
+      "symbol": "SBMM",
+      "displayName": "SBMM",
+      "isin": "TBD-SBMM",
+      "sourceFilePath": "fonds/SBMM.txt"
+    },
+    {
       "assetKind": "index",
       "ticker": "RGBI",
       "symbol": "RGBI",
@@ -15,14 +31,6 @@
       "displayName": "RTSI",
       "isin": "TBD-RTSI",
       "sourceFilePath": "indexes/RTSI.txt"
-    },
-    {
-      "assetKind": "stock",
-      "ticker": "GAZP",
-      "symbol": "GAZP",
-      "displayName": "GAZP",
-      "isin": "TBD-GAZP",
-      "sourceFilePath": "tickers/GAZP.txt"
     },
     {
       "assetKind": "stock",

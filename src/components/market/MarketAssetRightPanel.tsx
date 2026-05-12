@@ -11,6 +11,10 @@ import {
   selectMarketInstrumentCatalog,
 } from '@/logic/modules/market/selectors';
 import type { PortfolioPosition } from '@/logic/domain/portfolio';
+import {
+  positionAvgPriceRub,
+  positionTotalQuantity,
+} from '@/logic/modules/portfolio/selectors';
 import { MarketCloseLineChart } from '@/components/market/MarketCloseLineChart';
 
 export type { ChartTimeframeId };
@@ -143,10 +147,11 @@ export function MarketAssetRightPanel() {
   const priceRub = asset?.currentPriceRub;
   const changePct = asset?.periodChangePctByTimeframe[timeframe];
   const orderBook = asset?.orderBook;
+  const isTradable = asset ? asset.assetKind !== 'index' : false;
   const maxBuyByCash = priceRub ? Math.max(0, Math.floor(cashRub / priceRub)) : 0;
   const maxBuyByBook = orderBook?.asks[0]?.qty ?? 0;
   const maxSellByBook = orderBook?.bids[0]?.qty ?? 0;
-  const maxSellByPosition = position?.quantity ?? 0;
+  const maxSellByPosition = position ? positionTotalQuantity(position) : 0;
   const maxBuyQty = Math.min(maxBuyByCash, maxBuyByBook);
   const maxSellQty = Math.min(maxSellByPosition, maxSellByBook);
   const lastRejection =
@@ -169,6 +174,10 @@ export function MarketAssetRightPanel() {
         return 'Текущая цена недоступна.';
       case 'ASSET_NOT_FOUND':
         return 'Инструмент не найден.';
+      case 'INVALID_LOT_QUANTITY':
+        return `Количество должно быть кратно лоту (${lastRejection.lotSize ?? 1}).`;
+      case 'NON_TRADABLE_INSTRUMENT':
+        return 'Инструмент недоступен для торговли (только просмотр).';
       case 'INVALID_QUANTITY':
       default:
         return 'Некорректное количество для сделки.';
@@ -306,29 +315,36 @@ export function MarketAssetRightPanel() {
       </section>
 
       <section className="space-y-3">
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => setTradeModal({ side: 'buy', quantity: Math.max(1, Math.min(1, maxBuyQty)) })}
-            disabled={!asset || maxBuyQty <= 0}
-            className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
-          >
-            Купить
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setTradeModal({
-                side: 'sell',
-                quantity: Math.max(1, Math.min(1, maxSellQty)),
-              })
-            }
-            disabled={!asset || maxSellQty <= 0}
-            className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
-          >
-            Продать
-          </button>
-        </div>
+        {isTradable ? (
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setTradeModal({ side: 'buy', quantity: Math.max(1, Math.min(1, maxBuyQty)) })}
+              disabled={!asset || maxBuyQty <= 0}
+              className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
+            >
+              Купить
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setTradeModal({
+                  side: 'sell',
+                  quantity: Math.max(1, Math.min(1, maxSellQty)),
+                })
+              }
+              disabled={!asset || maxSellQty <= 0}
+              className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
+            >
+              Продать
+            </button>
+          </div>
+        ) : (
+          <p className="rounded-md border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-xs text-zinc-400">
+            Инструмент доступен только для просмотра. Торговля фьючерсами/индексами
+            появится в следующих итерациях.
+          </p>
+        )}
         {rejectionText ? (
           <p className="rounded-md border border-red-900/50 bg-red-950/30 px-3 py-2 text-xs text-red-300">
             {rejectionText}
@@ -336,14 +352,14 @@ export function MarketAssetRightPanel() {
         ) : null}
       </section>
 
-      {tradeModal && asset ? (
+      {tradeModal && asset && isTradable ? (
         <TradeModal
           side={tradeModal.side}
           symbol={symbol}
           displayName={displayName}
           priceRub={priceRub ?? null}
           cashRub={cashRub}
-          averagePriceRub={position?.avgPriceRub}
+          averagePriceRub={position ? positionAvgPriceRub(position) : undefined}
           maxQty={tradeModal.side === 'buy' ? maxBuyQty : maxSellQty}
           quantity={tradeModal.quantity}
           onQuantityChange={(next) =>
@@ -492,8 +508,8 @@ function PositionStatsBlock({
   position: PortfolioPosition | undefined;
   payoutNote: string | null;
 }) {
-  const qty = position?.quantity ?? 0;
-  const avg = position?.avgPriceRub;
+  const qty = position ? positionTotalQuantity(position) : 0;
+  const avg = position ? positionAvgPriceRub(position) : undefined;
   const last = position?.lastPriceRub;
 
   const pnlRub =

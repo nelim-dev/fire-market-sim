@@ -6,6 +6,8 @@ import { applyMarketQuotesForSimulationEpoch } from '../../src/logic/modules/mar
 import { lastBarIndexAtOrBefore } from '../../src/logic/modules/market/priceSeries';
 import type { MarketInstrumentCatalogItem } from '../../src/logic/modules/market/contracts';
 import { createMarketModuleState } from '../../src/logic/modules/market/state';
+import { CHART_DAY_1M_BAR_COUNT } from '../../src/logic/modules/market/chartTimeframes';
+import { TradingCalendar } from '../../src/logic/time/TradingCalendar';
 import { exitCode, printResult } from './runner';
 
 const M = 'M3';
@@ -98,7 +100,7 @@ run('applyMarketQuotesForSimulationEpoch: цена и график не выхо
   }
 });
 
-run('1d floor: после календарного разрыва окно не схлопывается', () => {
+run('1d fallback (без TradingCalendar): окно = N последних 1m-баров', () => {
   const longSeries = Array.from({ length: 700 }, (_, i) => {
     const t = (i + 1) * 60_000;
     const c = 100 + i * 0.1;
@@ -112,12 +114,85 @@ run('1d floor: после календарного разрыва окно не 
     oneHour: { DEMO: longSeries },
     weekly: { DEMO: longSeries },
   });
-  // Симулируем «разрыв»: текущая дата далеко, календарный диапазон даёт 0 точек.
   applyMarketQuotesForSimulationEpoch(state, 10_000_000_000);
   const pts = state.assetsBySymbol.DEMO.chartLineByTimeframe['1d'];
-  if (pts.length !== 540) {
-    throw new Error(`ожидали floor=540 точек, получили ${pts.length}`);
+  if (pts.length !== CHART_DAY_1M_BAR_COUNT) {
+    throw new Error(
+      `ожидали ${CHART_DAY_1M_BAR_COUNT} точек (fallback без calendar), получили ${pts.length}`
+    );
   }
 });
+
+run(
+  '1d forward-fill: редкие бары растягиваются до полной сессии (calendar-based)',
+  () => {
+    const DAY = 86_400_000;
+    const sessionStart = Date.UTC(2024, 5, 3, 7, 0); // 10:00 МСК (UTC+3) → 07:00 UTC
+    const sessionEnd = sessionStart + 8 * 60 * 60_000 + 50 * 60_000; // 530 мин = +8ч 50м
+    const calendar = TradingCalendar.fromRecords([
+      {
+        mskDateYyyymmdd: '20240531',
+        sessionStartEpochMs: sessionStart - 3 * DAY,
+        sessionEndEpochMs: sessionStart - 3 * DAY + 8 * 60 * 60_000 + 50 * 60_000,
+        tickersWithData: ['DEMO'],
+      },
+      {
+        mskDateYyyymmdd: '20240603',
+        sessionStartEpochMs: sessionStart,
+        sessionEndEpochMs: sessionEnd,
+        tickersWithData: ['DEMO'],
+      },
+    ]);
+    // Всего 3 реальных бара за сессию (редкие сделки) + 1 за день до неё:
+    const sparseBars = [
+      {
+        t: sessionStart - 3 * DAY + 2 * 60_000,
+        o: 100,
+        h: 100,
+        l: 100,
+        c: 100,
+        v: 10,
+      },
+      { t: sessionStart + 5 * 60_000, o: 101, h: 101, l: 101, c: 101, v: 5 },
+      { t: sessionStart + 60 * 60_000, o: 102, h: 102, l: 102, c: 102, v: 5 },
+      { t: sessionEnd - 30 * 60_000, o: 103, h: 103, l: 103, c: 103, v: 5 },
+    ];
+    const state = createMarketModuleState(demoItems, {
+      minute: { DEMO: sparseBars },
+      dailyClose: { DEMO: sparseBars },
+      fiveMinute: { DEMO: sparseBars },
+      thirtyMinute: { DEMO: sparseBars },
+      oneHour: { DEMO: sparseBars },
+      weekly: { DEMO: sparseBars },
+    });
+    applyMarketQuotesForSimulationEpoch(state, sessionEnd, calendar);
+    const pts = state.assetsBySymbol.DEMO.chartLineByTimeframe['1d'];
+    if (pts.length !== CHART_DAY_1M_BAR_COUNT) {
+      throw new Error(
+        `1d: ожидали ${CHART_DAY_1M_BAR_COUNT} слотов forward-fill, получили ${pts.length}`
+      );
+    }
+    // Все слоты должны попадать в текущую торговую сессию (sessionStart..sessionEnd).
+    for (const p of pts) {
+      if (p.t < sessionStart || p.t > sessionEnd) {
+        throw new Error(
+          `слот вне сессии: t=${p.t}, sessionStart=${sessionStart}, sessionEnd=${sessionEnd}`
+        );
+      }
+    }
+    // Последний слот = последний реальный бар (sessionEnd-30m, c=103).
+    if (pts[pts.length - 1].c !== 103) {
+      throw new Error(
+        `последний слот должен быть последним реальным close=103, получили ${pts[pts.length - 1].c}`
+      );
+    }
+    // До первого реального бара (sessionStart+5m) carry-init = 100 (из предыдущей сессии).
+    if (pts[0].c !== 100) {
+      throw new Error(
+        `первый слот должен carry-forward'нуть close=100 из предыдущей сессии, получили ${pts[0].c}`
+      );
+    }
+  }
+);
 
 exitCode(failures);

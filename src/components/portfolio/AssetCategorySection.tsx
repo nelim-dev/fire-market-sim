@@ -12,7 +12,9 @@ import { PositionRow } from './PositionRow';
 
 const META: Record<PortfolioAssetKind, { title: string; emoji: string }> = {
   stock: { title: 'Акции', emoji: '📈' },
-  index: { title: 'Индексы', emoji: '📊' },
+  // Индексы в игре можно только наблюдать (фьючерсы реализуем позже),
+  // поэтому в UI секция называется «Фьючерсы».
+  index: { title: 'Фьючерсы', emoji: '📊' },
   bond: { title: 'Облигации', emoji: '📜' },
   fund: { title: 'Фонды', emoji: '🏛️' },
 };

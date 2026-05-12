@@ -10,6 +10,10 @@ import { STATIC_MARKET_MACRO_SNAPSHOT } from './macro';
 import type { MarketChartSeriesBundle } from './chartWindows';
 import { emptyChartLinesByTimeframe, emptyPeriodChangeByTimeframe } from './priceSeries';
 import type { MarketPriceBar } from './priceSeries';
+import {
+  loadInstrumentDetailsCatalog,
+  type InstrumentDetailsCatalog,
+} from './instrumentDetails';
 
 export type { OrderBookSnapshot } from './contracts';
 export type { MarketMacroSnapshot } from './macro';
@@ -32,6 +36,16 @@ export interface MarketAssetState {
   /** Линия графика по таймфрейму, уже обрезана по `simulationEpochMs` (см. `quoteApply`). */
   chartLineByTimeframe: Record<ChartTimeframeId, readonly MarketPriceBar[]>;
   orderBook: OrderBookSnapshot;
+  /** Минимальный лот: для торговли — quantity должно быть кратно. По умолчанию 1. */
+  lotSize: number;
+  /** Признак облигации: триггер для НКД/купонов/погашения. */
+  isBond: boolean;
+  /** Номинал (₽), nullable для не-бондов. */
+  faceValueRub: number | null;
+  /** Дата погашения для бондов, ms (Europe/Moscow midnight). */
+  maturityEpochMs: number | null;
+  /** Текущий НКД за облигацию, ₽. 0 для не-бондов и до подключения сабсервиса corporateActions. */
+  nkdPerBondRub: number;
 }
 
 export function createEmptyOrderBook(): OrderBookSnapshot {
@@ -39,11 +53,15 @@ export function createEmptyOrderBook(): OrderBookSnapshot {
 }
 
 export function buildAssetsBySymbol(
-  items: readonly MarketInstrumentCatalogItem[]
+  items: readonly MarketInstrumentCatalogItem[],
+  details?: InstrumentDetailsCatalog
 ): Record<string, MarketAssetState> {
   const out: Record<string, MarketAssetState> = {};
   for (const item of items) {
     const key = item.symbol.toUpperCase();
+    const meta = details?.instrumentMetaBySymbol[key];
+    const lotSize = details?.lotSizeBySymbol[key] ?? 1;
+    const isBond = meta?.isBond ?? item.assetKind === 'bond';
     out[key] = {
       symbol: item.symbol,
       assetKind: item.assetKind,
@@ -55,6 +73,11 @@ export function buildAssetsBySymbol(
       periodChangePctByTimeframe: emptyPeriodChangeByTimeframe(),
       chartLineByTimeframe: emptyChartLinesByTimeframe(),
       orderBook: createEmptyOrderBook(),
+      lotSize: Math.max(1, Math.floor(lotSize)),
+      isBond,
+      faceValueRub: meta?.initialFaceValueRub ?? null,
+      maturityEpochMs: meta?.maturityEpochMs ?? null,
+      nkdPerBondRub: 0,
     };
   }
   return out;
@@ -71,6 +94,12 @@ export interface MarketModuleState {
   chartSeries: MarketChartSeriesBundle;
   /** Статичный макросрез до исторических рядов по макро. */
   macroSnapshot: MarketMacroSnapshot;
+  /**
+   * Декларативные не-ценовые данные инструментов (lotSize, дивиденды, купоны, амортизации).
+   * Используется сабсервисами MarketModule (corporateActions) и быстрыми вычислениями nkdPerBondRub.
+   * Все сущности — read-only snapshot за время жизни процесса.
+   */
+  details: InstrumentDetailsCatalog;
 }
 
 function normalizeBarsRecord(
@@ -90,6 +119,7 @@ export function createMarketModuleState(
   chartSeriesInput: Partial<MarketChartSeriesBundle> = {}
 ): MarketModuleState {
   const catalogSorted = sortInstrumentCatalog(items);
+  const details = loadInstrumentDetailsCatalog();
   const chartSeries: MarketChartSeriesBundle = {
     minute: normalizeBarsRecord(catalogSorted, chartSeriesInput.minute),
     dailyClose: normalizeBarsRecord(catalogSorted, chartSeriesInput.dailyClose),
@@ -101,8 +131,9 @@ export function createMarketModuleState(
   return {
     ready: catalogSorted.length > 0,
     instrumentCatalog: catalogSorted,
-    assetsBySymbol: buildAssetsBySymbol(catalogSorted),
+    assetsBySymbol: buildAssetsBySymbol(catalogSorted, details),
     chartSeries,
     macroSnapshot: { ...STATIC_MARKET_MACRO_SNAPSHOT },
+    details,
   };
 }

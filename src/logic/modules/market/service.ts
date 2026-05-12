@@ -6,6 +6,7 @@ import type {
 } from '@/logic/modules/contracts';
 import type { TradingDayChangedPayload } from '@/logic/logicEvents';
 import type { GameState } from '@/logic/managers/LogicManager';
+import type { TradingCalendar } from '@/logic/time/TradingCalendar';
 import type { MarketInstrumentCatalogItem } from './contracts';
 import { emptyChartSeriesBundle } from './chartWindows';
 import {
@@ -19,6 +20,12 @@ import {
   createMarketModuleState,
   type MarketModuleState,
 } from './state';
+import {
+  createCorporateActionsState,
+  type CorporateActionsState,
+} from './corporateActions/state';
+import { scanScheduleWindow } from './corporateActions/scheduleScanner';
+import { emitDeclarations } from './corporateActions/emitter';
 
 type CatalogFileShape = { items: MarketInstrumentCatalogItem[] };
 
@@ -30,6 +37,17 @@ function readCatalogItems(): MarketInstrumentCatalogItem[] {
 export class MarketModuleService implements LogicModule<GameState> {
   readonly id = 'market';
 
+  /**
+   * Торговый календарь для построения окна графика в торговом времени
+   * (`buildChartLineByTimeframeFromBundle`). Опционально: при отсутствии
+   * chart-провайдер делает безопасный fallback на «последние N баров».
+   */
+  constructor(private readonly tradingCalendar: TradingCalendar | null = null) {}
+
+  /** Сабсервис corporateActions: сканер расписаний + дедуп processedPaymentIds. */
+  private readonly corporateActions: CorporateActionsState = createCorporateActionsState();
+  /** Прошлый `simulationEpochMs`, до которого мы уже сканировали корпоративные действия. */
+  private lastScannedEpochMs: number | null = null;
   private lastQuotedSimulationEpochMs: number | null = null;
   private marketHydrateInFlight = false;
   private lastHydratedEpochMs: number | null = null;
@@ -58,17 +76,21 @@ export class MarketModuleService implements LogicModule<GameState> {
   createInitialState(simulationEpochMs: number): MarketModuleState {
     const items = readCatalogItems();
     const state = createMarketModuleState(items, emptyChartSeriesBundle());
-    applyMarketQuotesForSimulationEpoch(state, simulationEpochMs);
+    applyMarketQuotesForSimulationEpoch(state, simulationEpochMs, this.tradingCalendar);
     this.lastQuotedSimulationEpochMs = simulationEpochMs;
     this.lastHydratedEpochMs = null;
     this.prefetchedDays.clear();
     this.waitingDayForBoundary = null;
+    // Сбрасываем сабсервис corporateActions. Все события до текущей эпохи
+    // считаем «уже произошедшими» (без эмиссии): начинаем сканировать с simulationEpochMs.
+    this.corporateActions.processedPaymentIds.clear();
+    this.lastScannedEpochMs = simulationEpochMs;
     return state;
   }
 
   /** После загрузки рядов из SQLite (Electron) пересчитать котировки и сбросить кэш эпохи. */
   afterExternalHydrate(state: MarketModuleState, simulationEpochMs: number): void {
-    applyMarketQuotesForSimulationEpoch(state, simulationEpochMs);
+    applyMarketQuotesForSimulationEpoch(state, simulationEpochMs, this.tradingCalendar);
     this.lastQuotedSimulationEpochMs = simulationEpochMs;
   }
 
@@ -280,7 +302,7 @@ export class MarketModuleService implements LogicModule<GameState> {
     }
   }
 
-  update(state: GameState, _deltaTime: number, _context: ModuleContext): void {
+  update(state: GameState, _deltaTime: number, context: ModuleContext): void {
     if (!state.tradingCalendarReady) {
       return;
     }
@@ -288,8 +310,23 @@ export class MarketModuleService implements LogicModule<GameState> {
     if (this.lastQuotedSimulationEpochMs === epoch) {
       return;
     }
+    const prevEpoch = this.lastScannedEpochMs ?? epoch;
     this.lastQuotedSimulationEpochMs = epoch;
-    applyMarketQuotesForSimulationEpoch(state.market, epoch);
+    applyMarketQuotesForSimulationEpoch(state.market, epoch, this.tradingCalendar);
+    // Сабсервис corporateActions: scan & emit (слой A) — после обновления котировок,
+    // чтобы консьюмеры могли уже опираться на актуальные позиции/цены.
+    // Передаём календарь: для дивидендов scanner вычисляет cut-off реестра
+    // (T-N торговых дней по эре settlement-цикла Мосбиржи).
+    const declarations = scanScheduleWindow(
+      state.market.details,
+      prevEpoch,
+      epoch,
+      this.tradingCalendar
+    );
+    if (declarations.length > 0) {
+      emitDeclarations(this.corporateActions, declarations, context);
+    }
+    this.lastScannedEpochMs = epoch;
   }
 
   onTradingDayChanged(state: GameState, _payload: TradingDayChangedPayload): void {

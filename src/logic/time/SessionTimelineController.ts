@@ -53,6 +53,33 @@ export class SessionTimelineController {
     return d ? d.sessionEndEpochMs : 0;
   }
 
+  /**
+   * Перемотать «курсор дня» на первый день, у которого `sessionStartEpochMs >= epochMs`.
+   * Возвращает индекс выбранного дня и его стартовый эпох-мс.
+   * Если такого дня нет (все дни раньше) — выберет последний доступный.
+   * Если календарь пуст — вернёт `{ dayIndex: 0, sessionStartEpochMs: 0 }`.
+   */
+  seekToFirstDayAtOrAfter(epochMs: number): {
+    dayIndex: number;
+    sessionStartEpochMs: number;
+  } {
+    const n = this.calendar.dayCount;
+    if (n <= 0) {
+      this.dayIndex = 0;
+      return { dayIndex: 0, sessionStartEpochMs: 0 };
+    }
+    for (let i = 0; i < n; i++) {
+      const d = this.calendar.getDay(i);
+      if (d && d.sessionStartEpochMs >= epochMs) {
+        this.dayIndex = i;
+        return { dayIndex: i, sessionStartEpochMs: d.sessionStartEpochMs };
+      }
+    }
+    const last = this.calendar.getDay(n - 1)!;
+    this.dayIndex = n - 1;
+    return { dayIndex: n - 1, sessionStartEpochMs: last.sessionStartEpochMs };
+  }
+
   getCurrentDay(): TradingDaySession | undefined {
     return this.calendar.getDay(this.dayIndex);
   }

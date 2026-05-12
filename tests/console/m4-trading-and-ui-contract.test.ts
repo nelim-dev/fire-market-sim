@@ -1,4 +1,5 @@
 import { LogicManager } from '../../src/logic/managers/LogicManager';
+import { positionTotalQuantity } from '../../src/logic/modules/portfolio/selectors';
 import { exitCode, printResult } from './runner';
 
 const M = 'M4';
@@ -23,14 +24,20 @@ function run(description: string, fn: () => void): void {
 }
 
 function pickTradableSymbolForBuy(lm: LogicManager): string {
+  // Берём актив, у которого:
+  // — kind не 'index' (индексы непокупаемы → reject NON_TRADABLE_INSTRUMENT, тест не про это),
+  // — цена > 0 (бонды могут стартовать с 0₽ до асинхронной hydration минутных баров),
+  // — есть ликвидность ask.
   const state = lm.getState();
   const symbol = state.market.instrumentCatalog
+    .filter((row) => row.assetKind !== 'index')
     .map((row) => row.symbol.toUpperCase())
     .find((sym) => {
       const asset = state.market.assetsBySymbol[sym];
       return (
         asset &&
         Number.isFinite(asset.currentPriceRub) &&
+        (asset.currentPriceRub ?? 0) > 0 &&
         (asset.orderBook.asks[0]?.qty ?? 0) > 0
       );
     });
@@ -41,6 +48,7 @@ function pickTradableSymbolForBuy(lm: LogicManager): string {
 }
 
 function pickTradableSymbolForSell(lm: LogicManager): string {
+  // Те же требования: kind ≠ index, цена > 0, есть bid-ликвидность.
   const state = lm.getState();
   const symbol = state.portfolio.positions
     .map((p) => p.ticker.toUpperCase())
@@ -48,7 +56,9 @@ function pickTradableSymbolForSell(lm: LogicManager): string {
       const asset = state.market.assetsBySymbol[sym];
       return (
         asset &&
+        asset.assetKind !== 'index' &&
         Number.isFinite(asset.currentPriceRub) &&
+        (asset.currentPriceRub ?? 0) > 0 &&
         (asset.orderBook.bids[0]?.qty ?? 0) > 0
       );
     });
@@ -56,6 +66,13 @@ function pickTradableSymbolForSell(lm: LogicManager): string {
     throw new Error('не найден инструмент для продажи');
   }
   return symbol;
+}
+
+function qtyOf(state: ReturnType<LogicManager['getState']>, symbol: string): number {
+  const pos = state.portfolio.positions.find(
+    (p) => p.ticker.toUpperCase() === symbol
+  );
+  return pos ? positionTotalQuantity(pos) : 0;
 }
 
 run('Псевдостакан содержит 2 строки по текущей цене', () => {
@@ -76,17 +93,15 @@ run('Псевдостакан содержит 2 строки по текуще�
   }
 });
 
-run('Успешная покупка: уменьшается cash, меняется позиция, добавляется запись', () => {
+run('Успешная покупка: cash уменьшается на (price+commission), позиция растёт, журнал пополняется', () => {
   const lm = new LogicManager();
   const symbol = pickTradableSymbolForBuy(lm);
   const before = lm.getState();
   const price = before.market.assetsBySymbol[symbol].currentPriceRub as number;
   const qty = 1;
-  const positionBefore = before.portfolio.positions.find(
-    (p) => p.ticker.toUpperCase() === symbol
-  );
+  const qtyBefore = qtyOf(before, symbol);
   const cashBefore = before.portfolio.cashRub;
-  const ledgerBefore = before.portfolio.tradeLedger.length;
+  const ledgerBefore = before.portfolio.ledger.length;
 
   lm.dispatchCommand({
     type: 'trading/submit-market-order',
@@ -98,39 +113,34 @@ run('Успешная покупка: уменьшается cash, меняет�
   lm.update(1);
 
   const after = lm.getState();
-  const positionAfter = after.portfolio.positions.find(
-    (p) => p.ticker.toUpperCase() === symbol
-  );
-  if (!positionAfter) {
-    throw new Error('после покупки позиция отсутствует');
-  }
-  if (after.portfolio.cashRub >= cashBefore) {
-    throw new Error('cash не уменьшился после покупки');
-  }
-  if (positionAfter.quantity !== (positionBefore?.quantity ?? 0) + qty) {
+  if (qtyOf(after, symbol) !== qtyBefore + qty) {
     throw new Error('количество позиции не увеличилось на qty');
   }
-  if (after.portfolio.tradeLedger.length !== ledgerBefore + 1) {
-    throw new Error('запись не добавлена в trade ledger');
+  const expectedCashDelta = price * qty + Math.round(price * qty * 0.001 * 100) / 100;
+  const actualCashDelta = cashBefore - after.portfolio.cashRub;
+  if (Math.abs(actualCashDelta - expectedCashDelta) > 0.011) {
+    throw new Error(
+      `cash delta ожидалось ${expectedCashDelta}, получено ${actualCashDelta}`
+    );
   }
-  const top = after.portfolio.tradeLedger[0];
-  if (top.action !== 'buy' || top.ticker !== symbol || top.priceRub !== price) {
-    throw new Error('верхняя запись ledger не соответствует покупке');
+  if (after.portfolio.ledger.length < ledgerBefore + 1) {
+    throw new Error('журнал не пополнился записями сделки');
+  }
+  const top = after.portfolio.ledger[0];
+  if (top.kind !== 'trade-buy' || top.ticker !== symbol || top.priceRub !== price) {
+    throw new Error('верхняя запись журнала не соответствует покупке');
   }
 });
 
-run('Успешная продажа: растёт cash, уменьшается позиция, запись в истории', () => {
+run('Успешная продажа: cash растёт на (price-commission), позиция уменьшается', () => {
   const lm = new LogicManager();
   const symbol = pickTradableSymbolForSell(lm);
   const before = lm.getState();
-  const posBefore = before.portfolio.positions.find(
-    (p) => p.ticker.toUpperCase() === symbol
-  );
-  if (!posBefore || posBefore.quantity < 1) {
+  const qtyBefore = qtyOf(before, symbol);
+  if (qtyBefore < 1) {
     throw new Error('нет позиции для продажи');
   }
   const cashBefore = before.portfolio.cashRub;
-  const ledgerBefore = before.portfolio.tradeLedger.length;
 
   lm.dispatchCommand({
     type: 'trading/submit-market-order',
@@ -142,27 +152,19 @@ run('Успешная продажа: растёт cash, уменьшается 
   lm.update(1);
 
   const after = lm.getState();
-  const posAfter = after.portfolio.positions.find(
-    (p) => p.ticker.toUpperCase() === symbol
-  );
-  if (!posAfter) {
-    throw new Error('позиция полностью исчезла при продаже 1 шт');
-  }
-  if (posAfter.quantity !== posBefore.quantity - 1) {
+  if (qtyOf(after, symbol) !== qtyBefore - 1) {
     throw new Error('количество позиции не уменьшилось на 1');
   }
   if (after.portfolio.cashRub <= cashBefore) {
     throw new Error('cash не увеличился после продажи');
   }
-  if (after.portfolio.tradeLedger.length !== ledgerBefore + 1) {
-    throw new Error('продажа не добавлена в историю');
-  }
-  if (after.portfolio.tradeLedger[0].action !== 'sell') {
-    throw new Error('верхняя запись history должна быть sell');
+  const topSell = after.portfolio.ledger.find((e) => e.kind === 'trade-sell');
+  if (!topSell) {
+    throw new Error('в журнале нет записи trade-sell');
   }
 });
 
-run('Отказ buy при недостатке средств (TRADE_REJECTED в trading state)', () => {
+run('Отказ buy при недостатке средств (TRADE_REJECTED, журнал не меняется)', () => {
   const lm = new LogicManager();
   const mutableState = lm.getState() as unknown as {
     portfolio: { cashRub: number };
@@ -186,8 +188,8 @@ run('Отказ buy при недостатке средств (TRADE_REJECTED �
       `ожидали INSUFFICIENT_FUNDS, получили ${after.trading.lastRejection?.reason ?? 'none'}`
     );
   }
-  if (after.portfolio.tradeLedger.length !== 0) {
-    throw new Error('ledger не должен пополняться при reject');
+  if (after.portfolio.ledger.length !== 0) {
+    throw new Error('журнал не должен пополняться при reject');
   }
   if (after.portfolio.cashRub !== 1) {
     throw new Error('cash неожиданно изменился');
@@ -198,11 +200,11 @@ run('Отказ sell при недостатке количества', () => {
   const lm = new LogicManager();
   const symbol = pickTradableSymbolForSell(lm);
   const state = lm.getState();
-  const pos = state.portfolio.positions.find((p) => p.ticker.toUpperCase() === symbol);
-  if (!pos) {
+  const qty = qtyOf(state, symbol);
+  if (qty < 1) {
     throw new Error('нет позиции для sell reject');
   }
-  const requested = pos.quantity + 1;
+  const requested = qty + 1;
 
   lm.dispatchCommand({
     type: 'trading/submit-market-order',
@@ -246,8 +248,7 @@ run('На паузе ордера не исполняются; за шаг ис�
   if (askQty <= 0) {
     throw new Error('ожидали положительную ликвидность ask');
   }
-  const posBeforeQty =
-    before.portfolio.positions.find((p) => p.ticker.toUpperCase() === symbol)?.quantity ?? 0;
+  const posBeforeQty = qtyOf(before, symbol);
   const cashBefore = before.portfolio.cashRub;
 
   lm.pause();
@@ -261,11 +262,9 @@ run('На паузе ордера не исполняются; за шаг ис�
     });
   }
 
-  // На паузе update не двигает время и не должен исполнять очередь.
   lm.update(1);
   let state = lm.getState();
-  const posPausedQty =
-    state.portfolio.positions.find((p) => p.ticker.toUpperCase() === symbol)?.quantity ?? 0;
+  const posPausedQty = qtyOf(state, symbol);
   if (posPausedQty !== posBeforeQty) {
     throw new Error('на паузе позиция не должна меняться');
   }
@@ -274,10 +273,9 @@ run('На паузе ордера не исполняются; за шаг ис�
   }
 
   lm.resume();
-  lm.update(1); // первый торговый шаг после паузы
+  lm.update(1);
   state = lm.getState();
-  const posAfterQty =
-    state.portfolio.positions.find((p) => p.ticker.toUpperCase() === symbol)?.quantity ?? 0;
+  const posAfterQty = qtyOf(state, symbol);
   const executedQty = posAfterQty - posBeforeQty;
   if (executedQty !== askQty) {
     throw new Error(

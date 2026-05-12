@@ -65,9 +65,11 @@ run('TimeModuleService: одинаковый delta даёт детерминир
   const eventBusB = new EventBus<LogicEventMap>();
   const contextA: ModuleContext = {
     emit: (event, payload) => eventBusA.emit(event, payload),
+    dispatchCommand: () => {},
   };
   const contextB: ModuleContext = {
     emit: (event, payload) => eventBusB.emit(event, payload),
+    dispatchCommand: () => {},
   };
 
   serviceA.update(stateA, 0.05, contextA);
@@ -81,8 +83,8 @@ run('TimeModuleService: одинаковый delta даёт детерминир
 run('PortfolioModuleService: инициализация сохраняет текущий объём демо-позиций', () => {
   const service = new PortfolioModuleService();
   const portfolio = service.createInitialState();
-  if (portfolio.positions.length !== 8) {
-    throw new Error(`ожидали 8 позиций, получили ${portfolio.positions.length}`);
+  if (portfolio.positions.length !== 3) {
+    throw new Error(`ожидали 3 позиции, получили ${portfolio.positions.length}`);
   }
 });
 

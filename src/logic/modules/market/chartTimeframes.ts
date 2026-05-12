@@ -17,13 +17,24 @@ export const CHART_TIMEFRAME_IDS: readonly ChartTimeframeId[] = [
 ] as const;
 
 /**
- * Минимальный размер окна по числу свечей.
- * Используется как floor поверх time-range, чтобы график не «схлопывался»
- * на выходных/праздниках и при редких пропусках данных.
+ * Размер окна графика — число «торговых слотов» по каждому таймфрейму.
+ *
+ * Окно строится в **торговом времени** через `TradingCalendar`:
+ * ночи и выходные пропускаются, длина окна одинакова для любой даты симуляции.
+ * Пропущенные слоты (редкие сделки) заполняются forward-fill последним
+ * известным close — это лечит баг растяжения окна для редко торгуемых
+ * инструментов (например, ОФЗ с длинными пропусками).
+ *
+ * Числа подобраны под «одно полноценное торговое окно»:
+ *  - 1d  ≈ 1 торговая сессия Мосбиржи (≈ 530 поминутных баров).
+ *  - 1w  ≈ 5 сессий × 106 (5-минутных баров в сессии) = 530.
+ *  - 1m  ≈ 21 сессия × 18 (30-минутных баров) ≈ 380.
+ *  - 6m  ≈ 125 сессий × 9 (часовых баров) ≈ 1125.
+ *  - 1y  ≈ 250 торговых дней.
+ *  - all — без forward-fill, отдаём всю дневную историю до текущего epoch.
  */
-export const CHART_DAY_MIN_1M_BAR_COUNT = 540;
-export const CHART_WEEK_MIN_5M_BAR_COUNT = 360;
-export const CHART_MONTH_MIN_30M_BAR_COUNT = 160;
-export const CHART_6M_MIN_1H_BAR_COUNT = 900;
-export const CHART_YEAR_MIN_DAILY_BAR_COUNT = 220;
-export const CHART_ALL_MIN_DAILY_BAR_COUNT = 400;
+export const CHART_DAY_1M_BAR_COUNT = 530;
+export const CHART_WEEK_5M_BAR_COUNT = 530;
+export const CHART_MONTH_30M_BAR_COUNT = 380;
+export const CHART_6M_1H_BAR_COUNT = 1125;
+export const CHART_YEAR_DAILY_BAR_COUNT = 250;

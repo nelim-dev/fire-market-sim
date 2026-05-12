@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { PortfolioState } from '@/logic/domain/portfolio';
+import type { PortfolioState, UpcomingPayment } from '@/logic/domain/portfolio';
+import type { PortfolioPeriodId } from '@/logic/modules/portfolio/selectors';
 import {
   AssetCategorySection,
   PORTFOLIO_CATEGORY_ORDER,
@@ -9,14 +10,16 @@ import {
 import { PortfolioSummaryBar } from './PortfolioSummaryBar';
 import { UpcomingPayments } from './UpcomingPayments';
 
-type PeriodId = 'week' | 'month' | 'year' | 'all';
-
 export function PortfolioCompositionTab({
   portfolio,
+  simulationEpochMs,
+  upcomingPayments,
 }: {
   portfolio: PortfolioState;
+  simulationEpochMs: number;
+  upcomingPayments: UpcomingPayment[];
 }) {
-  const [periodId, setPeriodId] = useState<PeriodId>('month');
+  const [periodId, setPeriodId] = useState<PortfolioPeriodId>('month');
 
   return (
     <div className="space-y-6">
@@ -24,13 +27,14 @@ export function PortfolioCompositionTab({
         portfolio={portfolio}
         periodId={periodId}
         onPeriodChange={setPeriodId}
+        simulationEpochMs={simulationEpochMs}
       />
       <div className="space-y-4">
         {PORTFOLIO_CATEGORY_ORDER.map((kind) => (
           <AssetCategorySection key={kind} kind={kind} portfolio={portfolio} />
         ))}
       </div>
-      <UpcomingPayments items={portfolio.upcomingPayments} />
+      <UpcomingPayments items={upcomingPayments} />
     </div>
   );
 }

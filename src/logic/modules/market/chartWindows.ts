@@ -1,11 +1,15 @@
+import type { TradingCalendar } from '@/logic/time/TradingCalendar';
+import {
+  buildBackwardDailySlots,
+  buildBackwardIntradaySlots,
+} from '@/logic/time/tradingTimeSlots';
 import type { ChartTimeframeId } from './chartTimeframes';
 import {
-  CHART_6M_MIN_1H_BAR_COUNT,
-  CHART_ALL_MIN_DAILY_BAR_COUNT,
-  CHART_DAY_MIN_1M_BAR_COUNT,
-  CHART_MONTH_MIN_30M_BAR_COUNT,
-  CHART_WEEK_MIN_5M_BAR_COUNT,
-  CHART_YEAR_MIN_DAILY_BAR_COUNT,
+  CHART_6M_1H_BAR_COUNT,
+  CHART_DAY_1M_BAR_COUNT,
+  CHART_MONTH_30M_BAR_COUNT,
+  CHART_WEEK_5M_BAR_COUNT,
+  CHART_YEAR_DAILY_BAR_COUNT,
 } from './chartTimeframes';
 import {
   emptyChartLinesByTimeframe,
@@ -13,7 +17,22 @@ import {
   type MarketPriceBar,
 } from './priceSeries';
 
-const DAY_MS = 86_400_000;
+const MINUTE_MS = 60_000;
+const HOUR_MS = 3_600_000;
+
+const TF_INTRADAY_STEP_MS: Record<'1d' | '1w' | '1m' | '6m', number> = {
+  '1d': 1 * MINUTE_MS,
+  '1w': 5 * MINUTE_MS,
+  '1m': 30 * MINUTE_MS,
+  '6m': HOUR_MS,
+};
+const TF_BAR_COUNT: Record<'1d' | '1w' | '1m' | '6m' | '1y', number> = {
+  '1d': CHART_DAY_1M_BAR_COUNT,
+  '1w': CHART_WEEK_5M_BAR_COUNT,
+  '1m': CHART_MONTH_30M_BAR_COUNT,
+  '6m': CHART_6M_1H_BAR_COUNT,
+  '1y': CHART_YEAR_DAILY_BAR_COUNT,
+};
 
 /** Срезы рядов рынка (из SQLite через Electron или пусто до гидрации). */
 export type MarketChartSeriesBundle = {
@@ -41,48 +60,88 @@ function clipToEpochSorted(
   epochMs: number
 ): readonly MarketPriceBar[] {
   const hi = lastBarIndexAtOrBefore(bars, epochMs);
-  if (hi < 0) {
-    return [];
-  }
+  if (hi < 0) return [];
   return bars.slice(0, hi + 1);
 }
 
-function filterByTimeRange(
+/**
+ * Заполнить набор слотов реальными барами + forward-fill последним известным close.
+ *
+ * Для каждого `slotT`:
+ *  - Если в (prevSlotT, slotT] есть реальные бары — берём последний из них (его OHLCV
+ *    и собственный `t`); это сохраняет реальные ценовые данные неизменными.
+ *  - Если нет — синтезируем бар `{ t: slotT, o=h=l=c=lastClose, v=0 }` (carry-forward).
+ *  - Если до этого момента вообще не было ни одного известного close — слот пропускаем
+ *    (инструмент ещё не торговался).
+ *
+ * Carry-init: берём `lastBarIndexAtOrBefore(bars, slots[0] - 1)`, чтобы первый слот
+ * мог быть «занят» баром ровно с `t == slots[0]`.
+ */
+export function buildForwardFilledLine(
   bars: readonly MarketPriceBar[],
-  fromT: number,
-  toT: number
-): MarketPriceBar[] {
+  slots: readonly number[]
+): readonly MarketPriceBar[] {
+  if (slots.length === 0) return [];
+  const firstSlot = slots[0];
+  let lastClose: number | null = null;
+  let cursor = 0;
+  while (cursor < bars.length && bars[cursor].t < firstSlot) {
+    lastClose = bars[cursor].c;
+    cursor++;
+  }
   const out: MarketPriceBar[] = [];
-  for (const b of bars) {
-    if (b.t >= fromT && b.t <= toT) {
-      out.push(b);
+  let prevSlot = firstSlot - 1;
+  for (const t of slots) {
+    let realIdx = -1;
+    while (cursor < bars.length && bars[cursor].t <= t) {
+      if (bars[cursor].t > prevSlot) {
+        realIdx = cursor;
+      } else {
+        lastClose = bars[cursor].c;
+      }
+      cursor++;
     }
+    if (realIdx >= 0) {
+      out.push(bars[realIdx]);
+      lastClose = bars[realIdx].c;
+    } else if (lastClose !== null) {
+      out.push({
+        t,
+        o: lastClose,
+        h: lastClose,
+        l: lastClose,
+        c: lastClose,
+        v: 0,
+      });
+    }
+    prevSlot = t;
   }
   return out;
 }
 
-function withMinBarsFloor(
-  fullClipped: readonly MarketPriceBar[],
-  ranged: readonly MarketPriceBar[],
-  minBars: number
-): readonly MarketPriceBar[] {
-  if (minBars <= 0 || ranged.length >= minBars) {
-    return ranged;
-  }
-  if (fullClipped.length <= minBars) {
-    return fullClipped;
-  }
-  return fullClipped.slice(fullClipped.length - minBars);
-}
-
 /**
- * Срезы линии графика по таймфрейму: обрезка по epoch и выбор агрегата по горизонту.
- * Каноника: 1d->1m, 1w->5m, 1m->30m, 6m->1h, 1y/all->1d.
+ * Срезы линии графика по таймфрейму.
+ *
+ * Окно строится в **торговом времени** через `TradingCalendar` (ночи/выходные
+ * пропускаются). Пустые слоты заполняются forward-fill последним известным
+ * close, чтобы график редко торгуемых инструментов не растягивался на месяц.
+ *
+ * Каноника таймфреймов:
+ *  1d → 530 слотов по 1 мин (≈ одна сессия);
+ *  1w → 530 по 5 мин (≈ 5 сессий);
+ *  1m → 380 по 30 мин (≈ 21 сессия);
+ *  6m → 1125 по 1 ч (≈ 125 сессий);
+ *  1y → 250 дневных закрытий;
+ *  all → вся дневная история до epoch (без forward-fill).
+ *
+ * Если `calendar` не передан (например, до готовности календаря) — даём безопасный
+ * fallback на «последние N баров clipped к epoch», чтобы UI не падал.
  */
 export function buildChartLineByTimeframeFromBundle(
   symbol: string,
   bundle: MarketChartSeriesBundle,
-  epochMs: number
+  epochMs: number,
+  calendar: TradingCalendar | null = null
 ): Record<ChartTimeframeId, readonly MarketPriceBar[]> {
   const sym = symbol.toUpperCase();
   const minute = bundle.minute[sym] ?? [];
@@ -92,47 +151,58 @@ export function buildChartLineByTimeframeFromBundle(
   const h1 = bundle.oneHour[sym] ?? [];
 
   const out = emptyChartLinesByTimeframe();
-
-  const clipped1m = clipToEpochSorted(minute, epochMs);
-  out['1d'] = withMinBarsFloor(
-    clipped1m,
-    filterByTimeRange(clipped1m, epochMs - DAY_MS, epochMs),
-    CHART_DAY_MIN_1M_BAR_COUNT
-  );
-
-  const clipped5 = clipToEpochSorted(m5, epochMs);
-  const wFrom = epochMs - 7 * DAY_MS;
-  out['1w'] = withMinBarsFloor(
-    clipped5,
-    filterByTimeRange(clipped5, wFrom, epochMs),
-    CHART_WEEK_MIN_5M_BAR_COUNT
-  );
-
-  const clipped30 = clipToEpochSorted(m30, epochMs);
-  const mFrom = epochMs - 30 * DAY_MS;
-  out['1m'] = withMinBarsFloor(
-    clipped30,
-    filterByTimeRange(clipped30, mFrom, epochMs),
-    CHART_MONTH_MIN_30M_BAR_COUNT
-  );
-
-  const clipped1h = clipToEpochSorted(h1, epochMs);
-  const hFrom = epochMs - 180 * DAY_MS;
-  out['6m'] = withMinBarsFloor(
-    clipped1h,
-    filterByTimeRange(clipped1h, hFrom, epochMs),
-    CHART_6M_MIN_1H_BAR_COUNT
-  );
-
   const clippedDaily = clipToEpochSorted(daily, epochMs);
-  const yFrom = epochMs - 365 * DAY_MS;
-  out['1y'] = withMinBarsFloor(
-    clippedDaily,
-    filterByTimeRange(clippedDaily, yFrom, epochMs),
-    CHART_YEAR_MIN_DAILY_BAR_COUNT
-  );
 
-  out.all = withMinBarsFloor(clippedDaily, clippedDaily, CHART_ALL_MIN_DAILY_BAR_COUNT);
+  if (!calendar || calendar.dayCount === 0) {
+    out['1d'] = clipToEpochSorted(minute, epochMs).slice(-TF_BAR_COUNT['1d']);
+    out['1w'] = clipToEpochSorted(m5, epochMs).slice(-TF_BAR_COUNT['1w']);
+    out['1m'] = clipToEpochSorted(m30, epochMs).slice(-TF_BAR_COUNT['1m']);
+    out['6m'] = clipToEpochSorted(h1, epochMs).slice(-TF_BAR_COUNT['6m']);
+    out['1y'] = clippedDaily.slice(-TF_BAR_COUNT['1y']);
+    out['all'] = clippedDaily;
+    return out;
+  }
+
+  const slots1m = buildBackwardIntradaySlots(
+    calendar,
+    epochMs,
+    TF_INTRADAY_STEP_MS['1d'],
+    TF_BAR_COUNT['1d']
+  );
+  out['1d'] = buildForwardFilledLine(minute, slots1m);
+
+  const slots5m = buildBackwardIntradaySlots(
+    calendar,
+    epochMs,
+    TF_INTRADAY_STEP_MS['1w'],
+    TF_BAR_COUNT['1w']
+  );
+  out['1w'] = buildForwardFilledLine(m5, slots5m);
+
+  const slots30m = buildBackwardIntradaySlots(
+    calendar,
+    epochMs,
+    TF_INTRADAY_STEP_MS['1m'],
+    TF_BAR_COUNT['1m']
+  );
+  out['1m'] = buildForwardFilledLine(m30, slots30m);
+
+  const slots1h = buildBackwardIntradaySlots(
+    calendar,
+    epochMs,
+    TF_INTRADAY_STEP_MS['6m'],
+    TF_BAR_COUNT['6m']
+  );
+  out['6m'] = buildForwardFilledLine(h1, slots1h);
+
+  const slotsDaily = buildBackwardDailySlots(
+    calendar,
+    epochMs,
+    TF_BAR_COUNT['1y']
+  );
+  out['1y'] = buildForwardFilledLine(daily, slotsDaily);
+
+  out['all'] = clippedDaily;
 
   return out;
 }
