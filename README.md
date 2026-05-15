@@ -1,42 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FIRE Market Sim — Симулятор начинающего инвестора
 
-## Getting Started
+Десктоп-приложение (Next.js + React + Electron + SQLite) для обучения новичков
+азам инвестиций на исторических данных Московской биржи (2013–2026).
 
-First, run the development server:
+> Полная UI/UX-спецификация — `docs/TZ_MARKET.txt`. Этот README — краткий вход
+> для разработчика. Подробная документация — в [`docs/project/`](docs/project/).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Документация проекта
+
+| Файл | О чём |
+|---|---|
+| [`docs/project/01-architecture.md`](docs/project/01-architecture.md) | Текущее устройство кодовой базы: слои, модули, подмодули, ключевые файлы и их назначение. |
+| [`docs/project/02-commands.md`](docs/project/02-commands.md) | Все команды: запуск, релизная сборка, добавление активов, генерация каталогов и SQLite, тесты. |
+| [`docs/project/03-status-vs-tz.md`](docs/project/03-status-vs-tz.md) | Что реализовано, что — нет: статус каждого пункта ТЗ + словесный итог «что осталось до полноценного симулятора». |
+
+---
+
+## Быстрый старт
+
+```powershell
+# 1. Зависимости
+npm install
+npm --prefix downloadStockData install
+
+# 2. Запуск (Electron + Next + SQLite)
+npm run electron:dev
+
+# 3. Тесты
+npm run test:all
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> Полноценный режим — только через **Electron** (`electron:dev`).
+> Чистый `npm run dev` в браузере не видит SQLite и рынок останется пустым.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-## Рыночные данные (Electron + SQLite)
+## Стек
 
-- Исходные минутные ряды лежат в репозитории как `.txt` (см. каталог `marketInstrumentCatalog.json` после `npm run gen:market-catalog`). Рантайм приложения читает **только SQLite** (`data/market.sqlite`), собираемую скриптом **`npm run build:market-db`** (в `data/` также копируется `tradingCalendar.json` для Electron main). Скрипт сборки БД использует **`better-sqlite3`** (devDependency); окно Electron читает тот же файл через **`sql.js`** (WASM), чтобы не зависеть от ABI нативного модуля под версию Node в Electron.
-- Полный рынок и график: **`npm run electron:dev`** (Next + окно Electron с IPC к SQLite). Чистый `npm run dev` в браузере рыночные ряды не подгружает (до гидратации график пустой).
-- Релиз: `npm run electron:build` (перед упаковкой автоматически вызывается `build:market-db`). В установщик через `extraResources` попадают `market.sqlite` и `tradingCalendar.json`; исходные `.txt` в релиз не включаются.
+- **Frontend:** TypeScript, React 19, Next.js 16, Tailwind CSS 4
+- **Desktop:** Electron 40 (NSIS-инсталлятор под Windows)
+- **БД:** SQLite — `better-sqlite3` для сборки, `sql.js` (WASM) в окне
+- **Время / даты:** `date-fns`, `date-fns-tz` (всё в Europe/Moscow)
+- **Тесты:** свой консольный runner (`tests/console/`) на `tsx`
+- **Загрузчик:** отдельный пакет `downloadStockData/` к MOEX ISS API
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Структура верхнего уровня
 
-To learn more about Next.js, take a look at the following resources:
+```
+fire-market-sim/
+├── src/
+│   ├── app/          ← Next.js страницы (game / learn / achievements / settings)
+│   ├── components/   ← React-компоненты (header, portfolio, market)
+│   ├── hooks/        ← useGameState (подписка на LogicManager)
+│   ├── logic/        ← ядро: GameLoop, LogicManager, EventBus, модули
+│   └── data/         ← модели данных, сгенерированные каталоги
+├── scripts/          ← gen:catalog, gen:details, gen:calendar, build:market-db
+├── electron/         ← main.js, IPC к SQLite
+├── downloadStockData/← пакет-загрузчик MOEX ISS
+├── tickers/, bonds/, fonds/, indexes/   ← Finam-формат .txt свечей
+├── data/             ← market.sqlite, tradingCalendar.json (артефакты сборки)
+├── tests/console/    ← M1–M4 + arch-инварианты
+└── docs/             ← TZ_MARKET.txt + docs/project/* (этот README ссылается сюда)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Что уже работает
 
-## Deploy on Vercel
+- Симуляция исторических минутных котировок MOEX с детерминированным циклом (20 UPS).
+- Покупка/продажа акций, облигаций (с НКД), фондов — комиссии, лотность, FIFO.
+- НДФЛ 13% на дивиденды, купоны, реализованную прибыль и погашение бондов.
+- Cut-off для участия в реестре дивидендов по реальному правилу Мосбиржи (T+0/T+2/T+1).
+- Единый финансовый журнал (`LedgerEntry`) с фильтром по типу операций.
+- Графики цены в **торговом времени** (без растягивания на ночь/выходные) + forward-fill для редких серий.
+- 60+ автотестов (`test:m1..m4` + `arch-invariants`).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Чего пока нет
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Вкладки «Обучение», «Достижения», «Настройки» — только заглушки.
+- Локальное сохранение прогресса.
+- Тепловая карта рынка, статистика портфеля (волатильность, Шарп, α).
+- Свечные кэндлы (есть только линейный график).
+- Туториал и модальные окна из ТЗ §10–§11.
+- Светлая тема.
+
+Полный разбор — в [`docs/project/03-status-vs-tz.md`](docs/project/03-status-vs-tz.md).

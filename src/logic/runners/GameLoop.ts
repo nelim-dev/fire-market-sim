@@ -33,7 +33,7 @@ class GameLoop {
    * Целевая частота обновлений логики (Updates Per Second)
    * По умолчанию 20 UPS = 50мс между обновлениями
    */
-  private targetUPS: number = 20;
+  private targetUPS: number = 60;
 
   /**
    * Целевое время одного кадра в миллисекундах
