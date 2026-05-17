@@ -1,15 +1,13 @@
 'use client';
 
 import { formatInTimeZone } from 'date-fns-tz';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { gameLoop } from '@/logic/runners/GameLoop';
 import type { AssetKind } from '@/logic/modules/market/contracts';
 import type { ChartTimeframeId } from '@/logic/modules/market/chartTimeframes';
-import {
-  selectMarketAsset,
-  selectMarketInstrumentCatalog,
-} from '@/logic/modules/market/selectors';
+import { selectMarketAsset } from '@/logic/modules/market/selectors';
+import { selectMarketInstrumentCatalog } from '@/logic/modules/market/selectors';
 import type { PortfolioPosition } from '@/logic/domain/portfolio';
 import {
   positionAvgPriceRub,
@@ -88,24 +86,17 @@ function payoutNote(assetKind: AssetKind): string | null {
   }
 }
 
-export function MarketAssetRightPanel() {
+export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
   const catalog = useGameState(selectMarketInstrumentCatalog);
   const simulationEpochMs = useGameState((s) => s.simulationEpochMs);
   const cashRub = useGameState((s) => s.portfolio.cashRub);
   const tradingState = useGameState((s) => s.trading);
-  const [symbol, setSymbol] = useState('');
   const [timeframe, setTimeframe] = useState<ChartTimeframeId>('1d');
   const [tradeModal, setTradeModal] = useState<{
     side: 'buy' | 'sell';
     quantity: number;
   } | null>(null);
   const lm = gameLoop.getLogicManager();
-
-  useEffect(() => {
-    if (symbol === '' && catalog.length > 0) {
-      setSymbol(catalog[0].symbol);
-    }
-  }, [catalog, symbol]);
 
   const selectedSlice = useGameState(
     (s) => {
@@ -186,27 +177,13 @@ export function MarketAssetRightPanel() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 text-zinc-100">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
-            {displayName}
-          </h2>
-          <p className="mt-0.5 font-mono text-xs text-zinc-500">ISIN {isin}</p>
-        </div>
-        <label className="flex flex-col gap-1 text-xs text-zinc-500">
-          Инструмент
-          <select
-            value={symbol}
-            onChange={(e) => setSymbol(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-sky-600"
-          >
-            {catalog.map((row) => (
-              <option key={row.symbol} value={row.symbol}>
-                {row.symbol} · {row.assetKind}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
+          {displayName}
+        </h2>
+        <p className="mt-0.5 font-mono text-xs text-zinc-500">
+          {symbol} · ISIN {isin}
+        </p>
       </div>
 
       <div>

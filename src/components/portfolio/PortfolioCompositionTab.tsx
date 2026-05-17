@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useGameState } from '@/hooks/useGameState';
+import { selectUiSelectedSymbol } from '@/logic/modules/uiState/selectors';
 import type { PortfolioState, UpcomingPayment } from '@/logic/domain/portfolio';
 import type { PortfolioPeriodId } from '@/logic/modules/portfolio/selectors';
 import {
@@ -20,6 +22,7 @@ export function PortfolioCompositionTab({
   upcomingPayments: UpcomingPayment[];
 }) {
   const [periodId, setPeriodId] = useState<PortfolioPeriodId>('month');
+  const selectedSymbol = useGameState(selectUiSelectedSymbol);
 
   return (
     <div className="space-y-6">
@@ -31,7 +34,12 @@ export function PortfolioCompositionTab({
       />
       <div className="space-y-4">
         {PORTFOLIO_CATEGORY_ORDER.map((kind) => (
-          <AssetCategorySection key={kind} kind={kind} portfolio={portfolio} />
+          <AssetCategorySection
+            key={kind}
+            kind={kind}
+            portfolio={portfolio}
+            selectedSymbol={selectedSymbol}
+          />
         ))}
       </div>
       <UpcomingPayments items={upcomingPayments} />

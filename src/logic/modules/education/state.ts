@@ -1,5 +1,9 @@
 export interface EducationModuleState {
-  // Placeholder до реализации M8: прогресс лекций/тестов и unlock-правила.
+  /** Символы (UPPERCASE), доступные для торговли и просмотра без теста. */
+  unlockedSymbols: readonly string[];
   ready: boolean;
 }
 
+export function normalizeEducationSymbol(symbol: string): string {
+  return symbol.trim().toUpperCase();
+}

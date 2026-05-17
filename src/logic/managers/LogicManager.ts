@@ -21,6 +21,10 @@ import { type MarketModuleState } from '@/logic/modules/market/state';
 import { MarketModuleService } from '@/logic/modules/market/service';
 import type { TradingModuleState } from '@/logic/modules/trading/state';
 import { TradingModuleService } from '@/logic/modules/trading/service';
+import type { EducationModuleState } from '@/logic/modules/education/state';
+import { EducationModuleService } from '@/logic/modules/education/service';
+import type { UiStateModuleState } from '@/logic/modules/uiState/state';
+import { UiStateModuleService } from '@/logic/modules/uiState/service';
 import type {
   LogicCommand,
   LogicModule,
@@ -55,6 +59,12 @@ export interface GameState extends TimeModuleState {
   /** Рынок (M3+): каталог инструментов, котировки, стакан — модуль MarketSimulator. */
   market: MarketModuleState;
   trading: TradingModuleState;
+
+  /** Обучение (M8+): разблокировка инструментов после тестов. */
+  education: EducationModuleState;
+
+  /** UI-навигация: режим левой панели, выбранный инструмент, фильтры обзора рынка. */
+  uiState: UiStateModuleState;
 }
 
 /**
@@ -100,6 +110,8 @@ export class LogicManager {
   private readonly marketModule: MarketModuleService;
   private readonly portfolioModule: PortfolioModuleService;
   private readonly tradingModule: TradingModuleService;
+  private readonly educationModule: EducationModuleService;
+  private readonly uiStateModule: UiStateModuleService;
   private readonly modules: Array<LogicModule<GameState>>;
   private readonly commandAwareModules: Array<LogicModule<GameState>>;
   private readonly moduleContext: ModuleContext;
@@ -118,11 +130,15 @@ export class LogicManager {
     this.marketModule = new MarketModuleService(calendar);
     this.portfolioModule = new PortfolioModuleService();
     this.tradingModule = new TradingModuleService();
+    this.educationModule = new EducationModuleService();
+    this.uiStateModule = new UiStateModuleService();
     this.modules = [
       this.timeModule,
       this.marketModule,
       this.tradingModule,
       this.portfolioModule,
+      this.educationModule,
+      this.uiStateModule,
     ];
     this.commandAwareModules = this.modules.filter((m) =>
       Boolean(m.handleCommand)
@@ -133,6 +149,7 @@ export class LogicManager {
     };
 
     this.state = this.createInitialState();
+    this.bootstrapMarketUiState();
     this.eventBus.on(TRADING_DAY_CHANGED, (payload) =>
       this.broadcastTradingDayChanged(payload)
     );
@@ -166,7 +183,22 @@ export class LogicManager {
       portfolio: this.portfolioModule.createInitialState(),
       market: this.marketModule.createInitialState(timeState.simulationEpochMs),
       trading: this.tradingModule.createInitialState(),
+      education: this.educationModule.createInitialState(),
+      uiState: this.uiStateModule.createInitialState(),
     };
+  }
+
+  /**
+   * Синхронизировать unlock-набор и выбор инструмента после появления каталога.
+   */
+  private bootstrapMarketUiState(): void {
+    const changedEducation = this.educationModule.syncUnlockedFromCatalog(
+      this.state
+    );
+    const changedUi = this.uiStateModule.ensureDefaultSelectedSymbol(this.state);
+    if (changedEducation || changedUi) {
+      // notifySubscribers вызовется снаружи при необходимости
+    }
   }
 
   /**
@@ -390,7 +422,8 @@ export class LogicManager {
     
     // Сбрасываем состояние на начальное
     this.state = this.createInitialState();
-    
+    this.bootstrapMarketUiState();
+
     // Очищаем очередь событий
     this.eventBus.clear();
     this.eventBus.on(TRADING_DAY_CHANGED, (payload) =>

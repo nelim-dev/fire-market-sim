@@ -10,6 +10,13 @@ import {
   selectMarketReady,
 } from '@/logic/modules/market/selectors';
 import { selectPortfolioTradeLedger } from '@/logic/modules/portfolio/selectors';
+import { selectEducationIsSymbolUnlocked } from '@/logic/modules/education/selectors';
+import {
+  selectMarketOverviewRows,
+  selectUiLeftPanelMode,
+  selectUiMarketOverviewFilters,
+  selectUiSelectedSymbol,
+} from '@/logic/modules/uiState/selectors';
 import {
   selectSimulationStepPreset,
   selectTimeIsPaused,
@@ -51,5 +58,13 @@ export {
   selectMarketCatalogSectionsOrdered,
   selectMarketHasInstrumentsOfKind,
   selectMarketInstrumentsByAssetKind,
+};
+
+export {
+  selectEducationIsSymbolUnlocked,
+  selectUiLeftPanelMode,
+  selectUiSelectedSymbol,
+  selectUiMarketOverviewFilters,
+  selectMarketOverviewRows,
 };
 

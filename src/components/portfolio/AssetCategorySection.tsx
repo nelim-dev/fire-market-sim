@@ -22,9 +22,11 @@ const META: Record<PortfolioAssetKind, { title: string; emoji: string }> = {
 export function AssetCategorySection({
   kind,
   portfolio,
+  selectedSymbol,
 }: {
   kind: PortfolioAssetKind;
   portfolio: PortfolioState;
+  selectedSymbol?: string | null;
 }) {
   const [open, setOpen] = useState(true);
   const list = positionsByKind(portfolio, kind);
@@ -55,7 +57,12 @@ export function AssetCategorySection({
             <p className="py-4 text-sm text-zinc-500">Нет позиций</p>
           ) : (
             list.map((p) => (
-              <PositionRow key={p.id} position={p} portfolio={portfolio} />
+              <PositionRow
+                key={p.id}
+                position={p}
+                portfolio={portfolio}
+                selectedSymbol={selectedSymbol}
+              />
             ))
           )}
         </div>

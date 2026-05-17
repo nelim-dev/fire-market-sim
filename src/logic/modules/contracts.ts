@@ -2,6 +2,8 @@ import type { LogicEventMap } from '@/logic/logicEvents';
 import type { RuntimeCommand } from '@/logic/runtimeCommands';
 import type { TradeExecutionPayload } from '@/logic/logicEvents';
 import type { LedgerEntry } from '@/logic/domain/portfolio';
+import type { EducationCommand } from '@/logic/modules/education/commands';
+import type { UiStateCommand } from '@/logic/modules/uiState/commands';
 
 export type MarketSyncPricesCommand = {
   type: 'market/sync-prices';
@@ -93,7 +95,9 @@ export type LogicCommand =
   | PortfolioAppendLedgerCommand
   | PortfolioClosePositionCommand
   | PortfolioClearLotNkdAtBuyCommand
-  | PortfolioRecordNavSnapshotCommand;
+  | PortfolioRecordNavSnapshotCommand
+  | EducationCommand
+  | UiStateCommand;
 
 /**
  * Контекст, доступный модулю в `update` / `handleCommand`.

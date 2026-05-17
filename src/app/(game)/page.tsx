@@ -1,6 +1,6 @@
 import { GameWorkspace } from '@/components/game/GameWorkspace';
-import { MarketAssetRightPanel } from '@/components/market/MarketAssetRightPanel';
-import { PortfolioScreen } from '@/components/portfolio/PortfolioScreen';
+import { LeftTradingPanel } from '@/components/game/LeftTradingPanel';
+import { TradingRightPanel } from '@/components/market/TradingRightPanel';
 
 /**
  * Главная: портфель слева, рабочая область справа (ТЗ §6).
@@ -8,8 +8,8 @@ import { PortfolioScreen } from '@/components/portfolio/PortfolioScreen';
 export default function GameHomePage() {
   return (
     <GameWorkspace
-      left={<PortfolioScreen />}
-      right={<MarketAssetRightPanel />}
+      left={<LeftTradingPanel />}
+      right={<TradingRightPanel />}
     />
   );
 }
