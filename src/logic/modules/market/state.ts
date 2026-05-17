@@ -6,7 +6,7 @@ import type {
 import type { ChartTimeframeId } from './chartTimeframes';
 import { sortInstrumentCatalog } from './catalogSort';
 import type { MarketMacroSnapshot } from './macro';
-import { STATIC_MARKET_MACRO_SNAPSHOT } from './macro';
+import { EMPTY_MARKET_MACRO_SNAPSHOT } from './macro';
 import type { MarketChartSeriesBundle } from './chartWindows';
 import { emptyChartLinesByTimeframe, emptyPeriodChangeByTimeframe } from './priceSeries';
 import type { MarketPriceBar } from './priceSeries';
@@ -92,7 +92,7 @@ export interface MarketModuleState {
    * Срезы рядов (агрегаты по минутным данным из SQLite / `npm run build:market-db`).
    */
   chartSeries: MarketChartSeriesBundle;
-  /** Статичный макросрез до исторических рядов по макро. */
+  /** Макропоказатели шапки на текущую эпоху симуляции (см. macroResolve). */
   macroSnapshot: MarketMacroSnapshot;
   /**
    * Декларативные не-ценовые данные инструментов (lotSize, дивиденды, купоны, амортизации).
@@ -133,7 +133,7 @@ export function createMarketModuleState(
     instrumentCatalog: catalogSorted,
     assetsBySymbol: buildAssetsBySymbol(catalogSorted, details),
     chartSeries,
-    macroSnapshot: { ...STATIC_MARKET_MACRO_SNAPSHOT },
+    macroSnapshot: { ...EMPTY_MARKET_MACRO_SNAPSHOT },
     details,
   };
 }

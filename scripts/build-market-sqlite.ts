@@ -3,13 +3,14 @@
  * Запуск: npm run build:market-db
  */
 import { createReadStream } from 'node:fs';
-import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import Database from 'better-sqlite3';
 import { dirname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { toDate } from 'date-fns-tz';
 import type { MarketInstrumentCatalogItem } from '../src/logic/modules/market/contracts';
+import { parseKeyRateScheduleText } from '../src/logic/modules/market/keyRateSchedule';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(scriptDir, '..');
@@ -88,6 +89,10 @@ async function main(): Promise<void> {
       PRIMARY KEY (symbol, ts_ms)
     );
     CREATE INDEX IF NOT EXISTS idx_minute_symbol_ts ON minute_bars(symbol, ts_ms);
+    CREATE TABLE IF NOT EXISTS key_rate_events (
+      effective_ts_ms INTEGER NOT NULL PRIMARY KEY,
+      rate_pct REAL NOT NULL
+    );
   `);
   for (const alter of [
     'ALTER TABLE minute_bars ADD COLUMN open REAL',
@@ -158,6 +163,35 @@ async function main(): Promise<void> {
       flush();
     }
   };
+
+  const ksPath = join(projectRoot, 'indexes', 'KS.txt');
+  if (existsSync(ksPath)) {
+    const ksText = readFileSync(ksPath, 'utf-8');
+    const schedule = parseKeyRateScheduleText(ksText);
+    const insertKeyRate = db.prepare(
+      `INSERT OR REPLACE INTO key_rate_events (effective_ts_ms, rate_pct) VALUES (?, ?)`
+    );
+    const importKeyRates = db.transaction((rows: typeof schedule.events) => {
+      db.prepare('DELETE FROM key_rate_events').run();
+      for (const row of rows) {
+        insertKeyRate.run(row.effectiveEpochMs, row.ratePct);
+      }
+    });
+    importKeyRates(schedule.events);
+    const genDir = join(projectRoot, 'src', 'data', 'generated');
+    mkdirSync(genDir, { recursive: true });
+    const schedulePath = join(genDir, 'keyRateSchedule.json');
+    writeFileSync(
+      schedulePath,
+      `${JSON.stringify({ events: schedule.events }, null, 2)}\n`,
+      'utf-8'
+    );
+    console.log(
+      `[build:market-db] KS: key_rate_events=${schedule.events.length} → ${schedulePath}`
+    );
+  } else {
+    console.warn(`[build:market-db] пропуск KS: нет файла ${ksPath}`);
+  }
 
   for (const item of items) {
     const abs = normalize(join(projectRoot, ...item.sourceFilePath.split('/')));

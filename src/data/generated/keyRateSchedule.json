@@ -1,0 +1,328 @@
+{
+  "events": [
+    {
+      "effectiveEpochMs": 1379275200000,
+      "ratePct": 5.5
+    },
+    {
+      "effectiveEpochMs": 1391371200000,
+      "ratePct": 5.5
+    },
+    {
+      "effectiveEpochMs": 1392580800000,
+      "ratePct": 5.5
+    },
+    {
+      "effectiveEpochMs": 1393790400000,
+      "ratePct": 7
+    },
+    {
+      "effectiveEpochMs": 1396555200000,
+      "ratePct": 7
+    },
+    {
+      "effectiveEpochMs": 1398628800000,
+      "ratePct": 7.5
+    },
+    {
+      "effectiveEpochMs": 1404072000000,
+      "ratePct": 7.5
+    },
+    {
+      "effectiveEpochMs": 1406491200000,
+      "ratePct": 8
+    },
+    {
+      "effectiveEpochMs": 1413403200000,
+      "ratePct": 8
+    },
+    {
+      "effectiveEpochMs": 1415134800000,
+      "ratePct": 9.5
+    },
+    {
+      "effectiveEpochMs": 1417381200000,
+      "ratePct": 9.5
+    },
+    {
+      "effectiveEpochMs": 1418245200000,
+      "ratePct": 9.5
+    },
+    {
+      "effectiveEpochMs": 1418331600000,
+      "ratePct": 10.5
+    },
+    {
+      "effectiveEpochMs": 1418677200000,
+      "ratePct": 17
+    },
+    {
+      "effectiveEpochMs": 1418936400000,
+      "ratePct": 17
+    },
+    {
+      "effectiveEpochMs": 1422824400000,
+      "ratePct": 15
+    },
+    {
+      "effectiveEpochMs": 1426453200000,
+      "ratePct": 14
+    },
+    {
+      "effectiveEpochMs": 1430773200000,
+      "ratePct": 12.5
+    },
+    {
+      "effectiveEpochMs": 1434402000000,
+      "ratePct": 11.5
+    },
+    {
+      "effectiveEpochMs": 1438549200000,
+      "ratePct": 11
+    },
+    {
+      "effectiveEpochMs": 1451595600000,
+      "ratePct": 11
+    },
+    {
+      "effectiveEpochMs": 1465851600000,
+      "ratePct": 10.5
+    },
+    {
+      "effectiveEpochMs": 1474232400000,
+      "ratePct": 10
+    },
+    {
+      "effectiveEpochMs": 1482440400000,
+      "ratePct": 10
+    },
+    {
+      "effectiveEpochMs": 1490562000000,
+      "ratePct": 9.75
+    },
+    {
+      "effectiveEpochMs": 1493672400000,
+      "ratePct": 9.25
+    },
+    {
+      "effectiveEpochMs": 1497819600000,
+      "ratePct": 9
+    },
+    {
+      "effectiveEpochMs": 1500152400000,
+      "ratePct": 9
+    },
+    {
+      "effectiveEpochMs": 1505682000000,
+      "ratePct": 8.5
+    },
+    {
+      "effectiveEpochMs": 1509310800000,
+      "ratePct": 8.25
+    },
+    {
+      "effectiveEpochMs": 1513544400000,
+      "ratePct": 7.75
+    },
+    {
+      "effectiveEpochMs": 1518382800000,
+      "ratePct": 7.5
+    },
+    {
+      "effectiveEpochMs": 1522011600000,
+      "ratePct": 7.25
+    },
+    {
+      "effectiveEpochMs": 1537131600000,
+      "ratePct": 7.5
+    },
+    {
+      "effectiveEpochMs": 1544994000000,
+      "ratePct": 7.75
+    },
+    {
+      "effectiveEpochMs": 1551560400000,
+      "ratePct": 7.75
+    },
+    {
+      "effectiveEpochMs": 1560718800000,
+      "ratePct": 7.5
+    },
+    {
+      "effectiveEpochMs": 1564347600000,
+      "ratePct": 7.25
+    },
+    {
+      "effectiveEpochMs": 1567976400000,
+      "ratePct": 7
+    },
+    {
+      "effectiveEpochMs": 1572210000000,
+      "ratePct": 6.5
+    },
+    {
+      "effectiveEpochMs": 1576443600000,
+      "ratePct": 6.25
+    },
+    {
+      "effectiveEpochMs": 1581282000000,
+      "ratePct": 6
+    },
+    {
+      "effectiveEpochMs": 1587934800000,
+      "ratePct": 5.5
+    },
+    {
+      "effectiveEpochMs": 1589403600000,
+      "ratePct": 5.5
+    },
+    {
+      "effectiveEpochMs": 1592773200000,
+      "ratePct": 4.5
+    },
+    {
+      "effectiveEpochMs": 1595797200000,
+      "ratePct": 4.25
+    },
+    {
+      "effectiveEpochMs": 1616360400000,
+      "ratePct": 4.5
+    },
+    {
+      "effectiveEpochMs": 1619384400000,
+      "ratePct": 5
+    },
+    {
+      "effectiveEpochMs": 1623704400000,
+      "ratePct": 5.5
+    },
+    {
+      "effectiveEpochMs": 1627246800000,
+      "ratePct": 6.5
+    },
+    {
+      "effectiveEpochMs": 1631480400000,
+      "ratePct": 6.75
+    },
+    {
+      "effectiveEpochMs": 1635109200000,
+      "ratePct": 7.5
+    },
+    {
+      "effectiveEpochMs": 1639947600000,
+      "ratePct": 8.5
+    },
+    {
+      "effectiveEpochMs": 1640984400000,
+      "ratePct": 8.5
+    },
+    {
+      "effectiveEpochMs": 1644786000000,
+      "ratePct": 9.5
+    },
+    {
+      "effectiveEpochMs": 1645995600000,
+      "ratePct": 20
+    },
+    {
+      "effectiveEpochMs": 1646082000000,
+      "ratePct": 20
+    },
+    {
+      "effectiveEpochMs": 1648155600000,
+      "ratePct": 20
+    },
+    {
+      "effectiveEpochMs": 1649624400000,
+      "ratePct": 17
+    },
+    {
+      "effectiveEpochMs": 1651611600000,
+      "ratePct": 14
+    },
+    {
+      "effectiveEpochMs": 1653598800000,
+      "ratePct": 11
+    },
+    {
+      "effectiveEpochMs": 1655154000000,
+      "ratePct": 9.5
+    },
+    {
+      "effectiveEpochMs": 1658696400000,
+      "ratePct": 8
+    },
+    {
+      "effectiveEpochMs": 1663534800000,
+      "ratePct": 7.5
+    },
+    {
+      "effectiveEpochMs": 1690146000000,
+      "ratePct": 8.5
+    },
+    {
+      "effectiveEpochMs": 1692046800000,
+      "ratePct": 12
+    },
+    {
+      "effectiveEpochMs": 1694984400000,
+      "ratePct": 13
+    },
+    {
+      "effectiveEpochMs": 1697403600000,
+      "ratePct": 13
+    },
+    {
+      "effectiveEpochMs": 1698613200000,
+      "ratePct": 15
+    },
+    {
+      "effectiveEpochMs": 1702846800000,
+      "ratePct": 16
+    },
+    {
+      "effectiveEpochMs": 1722200400000,
+      "ratePct": 18
+    },
+    {
+      "effectiveEpochMs": 1726434000000,
+      "ratePct": 19
+    },
+    {
+      "effectiveEpochMs": 1730062800000,
+      "ratePct": 21
+    },
+    {
+      "effectiveEpochMs": 1749416400000,
+      "ratePct": 20
+    },
+    {
+      "effectiveEpochMs": 1753650000000,
+      "ratePct": 18
+    },
+    {
+      "effectiveEpochMs": 1757883600000,
+      "ratePct": 17
+    },
+    {
+      "effectiveEpochMs": 1761512400000,
+      "ratePct": 16.5
+    },
+    {
+      "effectiveEpochMs": 1766350800000,
+      "ratePct": 16
+    },
+    {
+      "effectiveEpochMs": 1771189200000,
+      "ratePct": 15.5
+    },
+    {
+      "effectiveEpochMs": 1774213200000,
+      "ratePct": 15
+    },
+    {
+      "effectiveEpochMs": 1777237200000,
+      "ratePct": 14.5
+    }
+  ]
+}

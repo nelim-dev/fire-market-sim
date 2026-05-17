@@ -6,8 +6,9 @@ import { LogicManager } from '../../src/logic/managers/LogicManager';
 import marketInstrumentCatalogJson from '../../src/data/generated/marketInstrumentCatalog.json';
 import type { MarketInstrumentCatalogItem } from '../../src/logic/modules/market/contracts';
 import { selectMarketInstrumentCatalog } from '../../src/logic/modules/market/selectors';
-import { STATIC_MARKET_MACRO_SNAPSHOT } from '../../src/logic/modules/market/macro';
+import { EMPTY_MARKET_MACRO_SNAPSHOT } from '../../src/logic/modules/market/macro';
 import { applyMarketQuotesForSimulationEpoch } from '../../src/logic/modules/market/quoteApply';
+import { MACRO_BRENT_SYMBOL } from '../../src/logic/modules/market/macroSymbols';
 import { exitCode, printResult } from './runner';
 
 const M = 'M3';
@@ -51,21 +52,32 @@ run('catalog-source: MarketModule использует generated marketInstrumen
   }
 });
 
-run('macro-static: macroSnapshot не меняется от рыночного апдейта', () => {
+run('macro-empty: без баров macroSnapshot остаётся null', () => {
   const lm = new LogicManager();
   const state = lm.getState();
-  const before = { ...state.market.macroSnapshot };
   applyMarketQuotesForSimulationEpoch(state.market, state.simulationEpochMs + 60_000);
-  const after = state.market.macroSnapshot;
-  if (before.keyRatePct !== STATIC_MARKET_MACRO_SNAPSHOT.keyRatePct) {
-    throw new Error('до апдейта keyRatePct не совпадает со статичным snapshot');
-  }
+  const macro = state.market.macroSnapshot;
   if (
-    after.keyRatePct !== before.keyRatePct ||
-    after.usdRub !== before.usdRub ||
-    after.brentUsd !== before.brentUsd
+    macro.brentUsd !== EMPTY_MARKET_MACRO_SNAPSHOT.brentUsd ||
+    macro.usdRub !== EMPTY_MARKET_MACRO_SNAPSHOT.usdRub
   ) {
-    throw new Error('macroSnapshot изменился после applyMarketQuotesForSimulationEpoch');
+    throw new Error('без данных brent/usd должны оставаться null');
+  }
+});
+
+run('macro-dynamic: при барах BR macroSnapshot.brentUsd обновляется', () => {
+  const lm = new LogicManager();
+  const state = lm.getState();
+  const epoch = state.simulationEpochMs;
+  state.market.chartSeries.minute[MACRO_BRENT_SYMBOL] = [
+    { t: epoch - 60_000, o: 50, h: 51, l: 49, c: 50, v: 1 },
+    { t: epoch, o: 51, h: 52, l: 50, c: 51.5, v: 1 },
+  ];
+  applyMarketQuotesForSimulationEpoch(state.market, epoch);
+  if (state.market.macroSnapshot.brentUsd !== 51.5) {
+    throw new Error(
+      `ожидали brentUsd=51.5, получили ${state.market.macroSnapshot.brentUsd}`
+    );
   }
 });
 

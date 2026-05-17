@@ -16,6 +16,7 @@ import {
 } from './marketElectronBridge';
 import type { MarketPriceBar } from './priceSeries';
 import { applyMarketQuotesForSimulationEpoch } from './quoteApply';
+import { trimChartSeriesBundleForStorage } from './chartSeriesRetention';
 import {
   createMarketModuleState,
   type MarketModuleState,
@@ -223,7 +224,8 @@ export class MarketModuleService implements LogicModule<GameState> {
     if (!changed) {
       return false;
     }
-    state.market = createMarketModuleState(catalog, merged);
+    const trimmed = trimChartSeriesBundleForStorage(merged);
+    state.market = createMarketModuleState(catalog, trimmed);
     this.afterExternalHydrate(state.market, currentEpoch);
     this.hydrateProbe.applied += 1;
     return true;

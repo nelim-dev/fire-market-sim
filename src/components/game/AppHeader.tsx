@@ -16,6 +16,7 @@ import {
 import { formatRub } from '@/components/portfolio/formatRub';
 import {
   selectIsPaused,
+  selectMacroSnapshot,
   selectPortfolio,
   selectSimulationEpochMs,
   selectTimeScale,
@@ -43,11 +44,19 @@ function NavLink({
   );
 }
 
+function formatMacroPrice(value: number | null, digits: number): string {
+  if (value === null || !Number.isFinite(value)) {
+    return '—';
+  }
+  return value.toFixed(digits);
+}
+
 export function AppHeader() {
   const simulationEpochMs = useGameState(selectSimulationEpochMs);
   const isPaused = useGameState(selectIsPaused);
   const timeScale = useGameState(selectTimeScale);
   const cashRub = useGameState((s) => selectPortfolio(s).cashRub);
+  const macro = useGameState(selectMacroSnapshot);
   const lm = gameLoop.getLogicManager();
 
   const dateStr = formatSimulationDateOnly(simulationEpochMs);
@@ -69,12 +78,20 @@ export function AppHeader() {
             </span>
           </Link>
           <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-zinc-500 sm:gap-x-3 sm:text-xs lg:text-sm">
-            <span title="Макро: позже из данных">📈 6.0%</span>
-            <span title="Brent: заглушка">🛢 65.20</span>
-            <span title="Курс: заглушка">💵 75.40 ₽/$</span>
             <span className="text-zinc-300" title="Денежный баланс">
               💰 {formatRub(cashRub)}
             </span>
+            <span title="Нефть Brent, $/ббл">
+              🛢 {formatMacroPrice(macro.brentUsd, 2)}
+            </span>
+            <span title="Курс USD/RUB">
+              💵 {formatMacroPrice(macro.usdRub, 2)} ₽/$
+            </span>
+            {macro.keyRatePct !== null ? (
+              <span title="Ключевая ставка ЦБ РФ">
+                📈 {macro.keyRatePct.toFixed(1)}%
+              </span>
+            ) : null}
           </div>
         </div>
 

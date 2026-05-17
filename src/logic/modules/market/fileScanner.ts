@@ -8,6 +8,7 @@ import type {
   MarketInstrumentCatalogItem,
 } from './contracts';
 import { toCatalogItem } from './contracts';
+import { isExcludedFromMarketCatalog } from './catalogExclusions';
 
 function isDataFile(fileName: string): boolean {
   return extname(fileName).toLowerCase() === '.txt';
@@ -41,6 +42,7 @@ function scanDirectory(
 
   return entries
     .filter(isDataFile)
+    .filter((fileName) => !isExcludedFromMarketCatalog(getFileStem(fileName)))
     .map((fileName) => ({
       assetKind: source.kind,
       directoryName: source.directoryName,

@@ -92,14 +92,19 @@
 | `fileScanner.ts` | Сканер `.txt`-файлов котировок → каталог инструментов. |
 | `instrumentDetails.ts` | Загрузка `marketInstrumentDetailsCatalog.json` (lot, мета, дивиденды, купоны, погашения). |
 | `catalogSort.ts`, `selectors.ts` | Сортировка по виду + тикеру, селекторы (по символу, по виду, секциями). |
-| `priceSeries.ts` | Типы `MarketPriceBar` (OHLCV), пустые контейнеры. |
+| `priceSeries.ts` | Типы `MarketPriceBar` (OHLCV), `lastBarIndexAtOrBefore`, `sliceTailAtOrBeforeEpoch` (хвост ряда до epoch без копии всего префикса). |
 | `minuteBarAggregation.ts` | Агрегация минутных баров в 5m/30m/1h/1d/1w. |
 | `chartTimeframes.ts` | ID таймфреймов и константы числа слотов (1d=530, 1w=530, 1m=380, 6m=1125, 1y=250). |
 | `chartWindows.ts` | Сборка окна графика по таймфрейму + forward-fill для редких серий. |
-| `chartBundleLimits.ts` | Ограничители размеров истории в окне. |
+| `chartBundleLimits.ts` | Lookback при **импорте** в SQLite (`CHART_BUNDLE_PRE_SESSION_MS` ≈ 370 дней до первой сессии). |
+| `chartSeriesRetention.ts` | **Runtime:** после hydrate обрезает `chartSeries` intraday-ряды до объёма, достаточного для окон графика (`CHART_SERIES_STORE_MAX_BARS`); daily/weekly без count-cap (вкладка `all`). |
 | `quoteApply.ts` | Применение котировок на текущий `simulationEpochMs` (цена, daily-change, окно графика, НКД для бондов). |
 | `marketElectronBridge.ts` | Клиент IPC к Electron main (`market:get-slices`, `prefetch-day`, `prefetch-next-day`). |
-| `macro.ts` | Статичный макро-snapshot (Brent, USD/RUB, ключевая ставка) — заглушка. |
+| `macro.ts` | Контракт `MarketMacroSnapshot` (Brent, USD/RUB, ключевая ставка). |
+| `macroSymbols.ts` | Символы макро-рядов: `BR`, `USD000UTSTOM`; stem `KS` исключён из каталога. |
+| `macroResolve.ts` | Резолв макро по `simulationEpochMs` (close минутных баров + step-function KS). |
+| `keyRateSchedule.ts` | Парсинг/загрузка расписания ставки ЦБ из `keyRateSchedule.json`. |
+| `catalogExclusions.ts` | Исключение `KS.txt` из сканера каталога. |
 | `corporateActions/state.ts` | `CorporateActionsState` с set уже эмитированных платежей (dedup). |
 | `corporateActions/scheduleScanner.ts` | Сканер расписания в окне `(prev, current]` → `ScannedDeclaration[]` (dividend/coupon/maturity). |
 | `corporateActions/dividendEligibility.ts` | Правило biz-cut-off для дивидендов: T+0/T+2/T+1 по эре Мосбиржи (`< 02.09.2013` / `< 31.07.2023` / иначе). |
@@ -232,7 +237,9 @@ electron/main.js + market-db-slice.cjs:
        ↓  IPC
 
 src/logic/modules/market/marketElectronBridge.ts
-  → MarketModuleService гидратирует минутные ряды по мере движения времени
+  → MarketModuleService гидратирует ряды по мере движения времени
+  → merge + trimChartSeriesBundleForStorage (intraday не копятся бесконечно в памяти)
+  → quoteApply / chartWindows строят UI-окно из урезанного хранилища
 ```
 
 ### 5.1. Скрипты

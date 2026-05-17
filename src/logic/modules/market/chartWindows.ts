@@ -14,6 +14,7 @@ import {
 import {
   emptyChartLinesByTimeframe,
   lastBarIndexAtOrBefore,
+  sliceTailAtOrBeforeEpoch,
   type MarketPriceBar,
 } from './priceSeries';
 
@@ -55,15 +56,6 @@ export function emptyChartSeriesBundle(): MarketChartSeriesBundle {
   };
 }
 
-function clipToEpochSorted(
-  bars: readonly MarketPriceBar[],
-  epochMs: number
-): readonly MarketPriceBar[] {
-  const hi = lastBarIndexAtOrBefore(bars, epochMs);
-  if (hi < 0) return [];
-  return bars.slice(0, hi + 1);
-}
-
 /**
  * Заполнить набор слотов реальными барами + forward-fill последним известным close.
  *
@@ -83,12 +75,10 @@ export function buildForwardFilledLine(
 ): readonly MarketPriceBar[] {
   if (slots.length === 0) return [];
   const firstSlot = slots[0];
-  let lastClose: number | null = null;
-  let cursor = 0;
-  while (cursor < bars.length && bars[cursor].t < firstSlot) {
-    lastClose = bars[cursor].c;
-    cursor++;
-  }
+  const carryIdx = lastBarIndexAtOrBefore(bars, firstSlot - 1);
+  let lastClose: number | null =
+    carryIdx >= 0 ? bars[carryIdx].c : null;
+  let cursor = carryIdx < 0 ? 0 : carryIdx;
   const out: MarketPriceBar[] = [];
   let prevSlot = firstSlot - 1;
   for (const t of slots) {
@@ -151,15 +141,18 @@ export function buildChartLineByTimeframeFromBundle(
   const h1 = bundle.oneHour[sym] ?? [];
 
   const out = emptyChartLinesByTimeframe();
-  const clippedDaily = clipToEpochSorted(daily, epochMs);
 
   if (!calendar || calendar.dayCount === 0) {
-    out['1d'] = clipToEpochSorted(minute, epochMs).slice(-TF_BAR_COUNT['1d']);
-    out['1w'] = clipToEpochSorted(m5, epochMs).slice(-TF_BAR_COUNT['1w']);
-    out['1m'] = clipToEpochSorted(m30, epochMs).slice(-TF_BAR_COUNT['1m']);
-    out['6m'] = clipToEpochSorted(h1, epochMs).slice(-TF_BAR_COUNT['6m']);
-    out['1y'] = clippedDaily.slice(-TF_BAR_COUNT['1y']);
-    out['all'] = clippedDaily;
+    out['1d'] = sliceTailAtOrBeforeEpoch(minute, epochMs, TF_BAR_COUNT['1d']);
+    out['1w'] = sliceTailAtOrBeforeEpoch(m5, epochMs, TF_BAR_COUNT['1w']);
+    out['1m'] = sliceTailAtOrBeforeEpoch(m30, epochMs, TF_BAR_COUNT['1m']);
+    out['6m'] = sliceTailAtOrBeforeEpoch(h1, epochMs, TF_BAR_COUNT['6m']);
+    out['1y'] = sliceTailAtOrBeforeEpoch(
+      daily,
+      epochMs,
+      TF_BAR_COUNT['1y']
+    );
+    out['all'] = sliceTailAtOrBeforeEpoch(daily, epochMs);
     return out;
   }
 
@@ -202,7 +195,7 @@ export function buildChartLineByTimeframeFromBundle(
   );
   out['1y'] = buildForwardFilledLine(daily, slotsDaily);
 
-  out['all'] = clippedDaily;
+  out['all'] = sliceTailAtOrBeforeEpoch(daily, epochMs);
 
   return out;
 }

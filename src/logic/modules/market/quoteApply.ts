@@ -1,4 +1,5 @@
 import type { TradingCalendar } from '@/logic/time/TradingCalendar';
+import { applyMacroSnapshotForEpoch } from './macroResolve';
 import type { MarketAssetState, MarketModuleState } from './state';
 import { CHART_TIMEFRAME_IDS } from './chartTimeframes';
 import { buildChartLineByTimeframeFromBundle } from './chartWindows';
@@ -183,4 +184,5 @@ export function applyMarketQuotesForSimulationEpoch(
       faceValueRub: nextFaceValueRub,
     };
   }
+  applyMacroSnapshotForEpoch(market.macroSnapshot, simulationEpochMs, market.chartSeries);
 }

@@ -98,6 +98,11 @@ npm run download:moex-funds:smoke
 npm run download:moex-bonds:incremental
 npm run download:moex-stocks:incremental
 npm run download:moex-funds:incremental
+
+# Валюта USD/RUB TOM (MOEX CETS)
+npm run download:moex-currency
+npm run download:moex-currency:smoke
+npm run download:moex-currency:incremental
 ```
 
 Результат окажется в `downloadStockData/output/`:
@@ -161,6 +166,20 @@ npm run build:market-db
 Открыть `src/data/portfolio/buildDemoPortfolio.ts` и добавить позицию через
 функцию `position(...)`. См. формат существующих SBER / SU26227RMFS7 / SBMM.
 
+### 3.6. Макропоказатели шапки (BR, USD/RUB, ставка ЦБ)
+
+| Показатель | Файл | Каталог / график |
+|---|---|---|
+| Нефть Brent | `indexes/BR.txt` (Finam) | Да, `assetKind: index` — график, без торговли |
+| USD/RUB | `tickers/USD000UTSTOM.txt` | Да — график и котировки (`npm run download:moex-currency` → скопировать свечи в `tickers/`) |
+| Ставка ЦБ | `indexes/KS.txt` (таб: `DD.MM.YYYY`, ставка %) | **Нет** — только шапка; в каталог не попадает |
+
+После добавления файлов — как в §3.3–3.4 (`gen:market-catalog`, `gen:calendar`, `build:market-db`).
+`build:market-db` также импортирует `KS.txt` в таблицу `key_rate_events` и пишет
+`src/data/generated/keyRateSchedule.json` для логики без Electron.
+
+Порядок чипов в шапке: **💰** → **🛢** → **💵** → **📈** (ставка ЦБ скрыта до 16.09.2013).
+
 ---
 
 ## 4. Тесты
@@ -169,7 +188,7 @@ npm run build:market-db
 # Отдельные вехи
 npm run test:m1     # TimeModule + основной цикл
 npm run test:m2     # Портфель, селекторы (NAV, прибыль за период, upcoming)
-npm run test:m3     # Рынок: каталог, котировки, графики, агрегации, дивиденды
+npm run test:m3     # Рынок: каталог, котировки, графики, retention chartSeries, агрегации, дивиденды
 npm run test:m4     # Трейдинг: ордера, НКД, FIFO, налоги, журнал
 
 # Все вехи M1–M10 подряд (M5–M10 пока stub)

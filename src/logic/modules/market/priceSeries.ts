@@ -56,6 +56,24 @@ export function lastBarIndexAtOrBefore(
   return ans;
 }
 
+/**
+ * Бары с t <= epochMs; при `maxTail` — только последние `maxTail` из этого префикса
+ * (без копирования всего префикса от начала истории).
+ */
+export function sliceTailAtOrBeforeEpoch(
+  bars: readonly MarketPriceBar[],
+  epochMs: number,
+  maxTail?: number
+): readonly MarketPriceBar[] {
+  const hi = lastBarIndexAtOrBefore(bars, epochMs);
+  if (hi < 0) {
+    return [];
+  }
+  const lo =
+    maxTail !== undefined && maxTail > 0 ? Math.max(0, hi - maxTail + 1) : 0;
+  return bars.slice(lo, hi + 1);
+}
+
 /** Доходность за видимый отрезок: (последнее − первое) / первое закрытие, в %. */
 export function computePeriodReturnPct(
   bars: readonly MarketPriceBar[]

@@ -18,6 +18,22 @@
     },
     {
       "assetKind": "index",
+      "ticker": "BR",
+      "symbol": "BR",
+      "displayName": "BR",
+      "isin": "TBD-BR",
+      "sourceFilePath": "indexes/BR.txt"
+    },
+    {
+      "assetKind": "index",
+      "ticker": "EU",
+      "symbol": "EU",
+      "displayName": "Eu",
+      "isin": "TBD-EU",
+      "sourceFilePath": "indexes/Eu.txt"
+    },
+    {
+      "assetKind": "index",
       "ticker": "RGBI",
       "symbol": "RGBI",
       "displayName": "RGBI",
@@ -31,6 +47,14 @@
       "displayName": "RTSI",
       "isin": "TBD-RTSI",
       "sourceFilePath": "indexes/RTSI.txt"
+    },
+    {
+      "assetKind": "index",
+      "ticker": "USD000UTSTOM",
+      "symbol": "USD000UTSTOM",
+      "displayName": "USD000UTSTOM",
+      "isin": "TBD-USD000UTSTOM",
+      "sourceFilePath": "indexes/USD000UTSTOM.txt"
     },
     {
       "assetKind": "stock",

@@ -9,7 +9,9 @@ import { TradingCalendar } from '../../src/logic/time/TradingCalendar';
 import { SessionTimelineController } from '../../src/logic/time/SessionTimelineController';
 import { EventBus } from '../../src/logic/systems/EventBus';
 import { LogicManager } from '../../src/logic/managers/LogicManager';
-import { STATIC_MARKET_MACRO_SNAPSHOT } from '../../src/logic/modules/market/macro';
+import { EMPTY_MARKET_MACRO_SNAPSHOT } from '../../src/logic/modules/market/macro';
+import { MACRO_BRENT_SYMBOL } from '../../src/logic/modules/market/macroSymbols';
+import { applyMarketQuotesForSimulationEpoch } from '../../src/logic/modules/market/quoteApply';
 import { exitCode, printResult } from './runner';
 
 const M = 'ARCH';
@@ -104,26 +106,24 @@ run('EventBus<LogicEventMap>: принимает типизированный pa
   }
 });
 
-run('MarketModule: макросрез статичен и совпадает с STATIC после тиков LogicManager', () => {
+run('MarketModule: макросрез null без баров; обновляется при данных BR', () => {
   const lm = new LogicManager();
   const macro0 = lm.getState().market.macroSnapshot;
   if (
-    macro0.brentUsd !== STATIC_MARKET_MACRO_SNAPSHOT.brentUsd ||
-    macro0.usdRub !== STATIC_MARKET_MACRO_SNAPSHOT.usdRub ||
-    macro0.keyRatePct !== STATIC_MARKET_MACRO_SNAPSHOT.keyRatePct
+    macro0.brentUsd !== EMPTY_MARKET_MACRO_SNAPSHOT.brentUsd ||
+    macro0.usdRub !== EMPTY_MARKET_MACRO_SNAPSHOT.usdRub
   ) {
-    throw new Error('начальный macroSnapshot не совпадает с STATIC_MARKET_MACRO_SNAPSHOT');
+    throw new Error('начальный macroSnapshot должен быть пустым (null) без рядов');
   }
-  for (let i = 0; i < 10; i++) {
-    lm.update(0.05);
-  }
+  const state = lm.getState();
+  const epoch = state.simulationEpochMs;
+  state.market.chartSeries.minute[MACRO_BRENT_SYMBOL] = [
+    { t: epoch, o: 60, h: 61, l: 59, c: 60, v: 1 },
+  ];
+  applyMarketQuotesForSimulationEpoch(state.market, epoch, null);
   const macro1 = lm.getState().market.macroSnapshot;
-  if (
-    macro1.brentUsd !== macro0.brentUsd ||
-    macro1.usdRub !== macro0.usdRub ||
-    macro1.keyRatePct !== macro0.keyRatePct
-  ) {
-    throw new Error('macroSnapshot не должен меняться при update() рынка на этом этапе');
+  if (macro1.brentUsd !== 60) {
+    throw new Error(`после update с баром BR ожидали brentUsd=60, получили ${macro1.brentUsd}`);
   }
 });
 

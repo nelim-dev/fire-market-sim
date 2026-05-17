@@ -6,7 +6,7 @@
   "scripts": {
     "test:m1": "tsx tests/console/m1.test.ts",
     "test:m2": "tsx tests/console/m2.test.ts",
-    "test:m3": "tsx tests/console/m3-catalog-selectors.test.ts && tsx tests/console/m3-market-quote-clip.test.ts && tsx tests/console/m3-minute-bar-aggregation.test.ts && tsx tests/console/m3-market-runtime-contract.test.ts && tsx tests/console/m3-chart-windows.test.ts && tsx tests/console/m3-dividend-eligibility.test.ts",
+    "test:m3": "tsx tests/console/m3-catalog-selectors.test.ts && tsx tests/console/m3-market-quote-clip.test.ts && tsx tests/console/m3-minute-bar-aggregation.test.ts && tsx tests/console/m3-market-runtime-contract.test.ts && tsx tests/console/m3-macro-indicators.test.ts && tsx tests/console/m3-chart-windows.test.ts && tsx tests/console/m3-dividend-eligibility.test.ts && tsx tests/console/m3-chart-series-retention.test.ts && npx tsx --test src/logic/modules/market/__tests__/macroResolve.test.ts",
     "test:m4": "tsx tests/console/m4-trading-and-ui-contract.test.ts && tsx tests/console/m4-extended.test.ts",
     "test:m5": "tsx tests/console/stub-milestone.ts M5",
     "test:m6": "tsx tests/console/stub-milestone.ts M6",
@@ -28,6 +28,9 @@
     "download:moex-bonds:incremental": "npm --prefix downloadStockData run download:bonds:incremental",
     "download:moex-stocks:incremental": "npm --prefix downloadStockData run download:stocks:incremental",
     "download:moex-funds:incremental": "npm --prefix downloadStockData run download:funds:incremental",
+    "download:moex-currency": "npm --prefix downloadStockData run download:currency",
+    "download:moex-currency:smoke": "npm --prefix downloadStockData run download:currency:smoke",
+    "download:moex-currency:incremental": "npm --prefix downloadStockData run download:currency:incremental",
     "test:download-stock-data": "npm --prefix downloadStockData test",
     "dev": "next dev --turbopack",
     "build": "next build",
