@@ -107,6 +107,10 @@ export interface NavSnapshot {
 
 export interface PortfolioState {
   cashRub: number;
+  /** Зарезервировано под открытые buy-заявки. */
+  cashReservedRub: number;
+  /** Зарезервировано под открытые sell-заявки (по тикеру). */
+  reservedQtyBySymbol: Record<string, number>;
   positions: PortfolioPosition[];
   /**
    * @deprecated Не заполняется и не используется в UI. «Ближайшие выплаты»

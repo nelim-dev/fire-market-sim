@@ -2,7 +2,7 @@ import type { MarketInstrumentCatalogItem } from '@/logic/modules/market/contrac
 import type { LogicCommand, LogicModule, ModuleContext } from '@/logic/modules/contracts';
 import type { GameState } from '@/logic/managers/LogicManager';
 import type { EducationModuleState } from './state';
-import { normalizeEducationSymbol } from './state';
+import { isEducationDefaultLocked, normalizeEducationSymbol } from './state';
 
 export class EducationModuleService implements LogicModule<GameState> {
   readonly id = 'education';
@@ -43,7 +43,9 @@ export class EducationModuleService implements LogicModule<GameState> {
     if (catalog.length === 0) {
       return false;
     }
-    const next = catalog.map((row) => normalizeEducationSymbol(row.symbol));
+    const next = catalog
+      .map((row) => normalizeEducationSymbol(row.symbol))
+      .filter((symbol) => !isEducationDefaultLocked(symbol));
     const prev = state.education.unlockedSymbols;
     if (
       state.education.ready &&
@@ -64,7 +66,9 @@ export class EducationModuleService implements LogicModule<GameState> {
     if (items.length === 0) {
       return false;
     }
-    const next = items.map((row) => normalizeEducationSymbol(row.symbol));
+    const next = items
+      .map((row) => normalizeEducationSymbol(row.symbol))
+      .filter((symbol) => !isEducationDefaultLocked(symbol));
     state.education.unlockedSymbols = next;
     state.education.ready = true;
     return true;

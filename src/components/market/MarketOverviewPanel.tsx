@@ -216,7 +216,7 @@ function AvailableRow({
       </span>
       <span className="shrink-0 text-right tabular-nums">
         <span className="block text-zinc-200">
-          {row.currentPriceRub == null ? '—' : `${formatRub(row.currentPriceRub)} ₽`}
+          {row.currentPriceRub == null ? '—' : formatRub(row.currentPriceRub)}
         </span>
         <span
           className={`text-xs ${

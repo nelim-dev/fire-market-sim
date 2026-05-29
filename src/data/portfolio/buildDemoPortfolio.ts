@@ -94,6 +94,8 @@ export function buildDemoPortfolio(): PortfolioState {
 
   return {
     cashRub: DEMO_INITIAL_CASH_RUB,
+    cashReservedRub: 0,
+    reservedQtyBySymbol: {},
     positions,
     upcomingPayments,
     ledger: [],

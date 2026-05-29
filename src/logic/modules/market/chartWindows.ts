@@ -4,6 +4,7 @@ import {
   buildBackwardIntradaySlots,
 } from '@/logic/time/tradingTimeSlots';
 import type { ChartTimeframeId } from './chartTimeframes';
+import { FIREIDX_SYMBOL } from './compositeIndex';
 import {
   CHART_6M_1H_BAR_COUNT,
   CHART_DAY_1M_BAR_COUNT,
@@ -44,6 +45,44 @@ export type MarketChartSeriesBundle = {
   oneHour: Record<string, readonly MarketPriceBar[]>;
   weekly: Record<string, readonly MarketPriceBar[]>;
 };
+
+/** Какой stored-ряд питает окно графика по таймфрейму. */
+const CHART_TF_SOURCE: Record<
+  ChartTimeframeId,
+  keyof Pick<
+    MarketChartSeriesBundle,
+    'minute' | 'fiveMinute' | 'thirtyMinute' | 'oneHour' | 'dailyClose'
+  >
+> = {
+  '1d': 'minute',
+  '1w': 'fiveMinute',
+  '1m': 'thirtyMinute',
+  '6m': 'oneHour',
+  '1y': 'dailyClose',
+  all: 'dailyClose',
+};
+
+/**
+ * FIREIDX: не строить forward-fill дальше последнего реального бара в ряду.
+ * Иначе на слоте «текущей» минуты появляется carry-forward, а после hydrate
+ * точка пересчитывается — визуальная «тряска».
+ */
+export function chartAnchorEpochMs(
+  symbol: string,
+  bundle: MarketChartSeriesBundle,
+  simulationEpochMs: number,
+  timeframe: ChartTimeframeId
+): number {
+  if (symbol.toUpperCase() !== FIREIDX_SYMBOL) {
+    return simulationEpochMs;
+  }
+  const bars = bundle[CHART_TF_SOURCE[timeframe]][FIREIDX_SYMBOL] ?? [];
+  if (bars.length === 0) {
+    return simulationEpochMs;
+  }
+  const lastT = bars[bars.length - 1]!.t;
+  return Math.min(simulationEpochMs, lastT);
+}
 
 export function emptyChartSeriesBundle(): MarketChartSeriesBundle {
   return {
@@ -110,6 +149,58 @@ export function buildForwardFilledLine(
 }
 
 /**
+ * Предвычисленные слоты торгового времени для одного тика.
+ * Вычисляются один раз на всю итерацию applyMarketQuotesForSimulationEpoch
+ * и переиспользуются для каждого инструмента (Option A performance optimization).
+ */
+export type PrecomputedChartSlots = {
+  slots1d: readonly number[];
+  slots1w: readonly number[];
+  slots1m: readonly number[];
+  slots6m: readonly number[];
+  slots1y: readonly number[];
+  epochMs: number;
+};
+
+/**
+ * Построить все пять массивов слотов один раз для данного epochMs.
+ * Вызывается один раз в applyMarketQuotesForSimulationEpoch перед циклом.
+ */
+export function precomputeChartSlotsForEpoch(
+  calendar: TradingCalendar,
+  epochMs: number
+): PrecomputedChartSlots {
+  return {
+    slots1d: buildBackwardIntradaySlots(
+      calendar,
+      epochMs,
+      TF_INTRADAY_STEP_MS['1d'],
+      TF_BAR_COUNT['1d']
+    ),
+    slots1w: buildBackwardIntradaySlots(
+      calendar,
+      epochMs,
+      TF_INTRADAY_STEP_MS['1w'],
+      TF_BAR_COUNT['1w']
+    ),
+    slots1m: buildBackwardIntradaySlots(
+      calendar,
+      epochMs,
+      TF_INTRADAY_STEP_MS['1m'],
+      TF_BAR_COUNT['1m']
+    ),
+    slots6m: buildBackwardIntradaySlots(
+      calendar,
+      epochMs,
+      TF_INTRADAY_STEP_MS['6m'],
+      TF_BAR_COUNT['6m']
+    ),
+    slots1y: buildBackwardDailySlots(calendar, epochMs, TF_BAR_COUNT['1y']),
+    epochMs,
+  };
+}
+
+/**
  * Срезы линии графика по таймфрейму.
  *
  * Окно строится в **торговом времени** через `TradingCalendar` (ночи/выходные
@@ -126,12 +217,16 @@ export function buildForwardFilledLine(
  *
  * Если `calendar` не передан (например, до готовности календаря) — даём безопасный
  * fallback на «последние N баров clipped к epoch», чтобы UI не падал.
+ *
+ * `preSlots` — предвычисленные слоты (Option A). Если epochMs совпадает и инструмент
+ * не FIREIDX (у него anchor может отличаться) — слоты переиспользуются без перестройки.
  */
 export function buildChartLineByTimeframeFromBundle(
   symbol: string,
   bundle: MarketChartSeriesBundle,
   epochMs: number,
-  calendar: TradingCalendar | null = null
+  calendar: TradingCalendar | null = null,
+  preSlots?: PrecomputedChartSlots | null
 ): Record<ChartTimeframeId, readonly MarketPriceBar[]> {
   const sym = symbol.toUpperCase();
   const minute = bundle.minute[sym] ?? [];
@@ -140,62 +235,87 @@ export function buildChartLineByTimeframeFromBundle(
   const m30 = bundle.thirtyMinute[sym] ?? [];
   const h1 = bundle.oneHour[sym] ?? [];
 
+  const anchor = (tf: ChartTimeframeId) =>
+    chartAnchorEpochMs(sym, bundle, epochMs, tf);
+
+  // Для FIREIDX anchor может отличаться от epochMs (защита от forward-fill).
+  // Для всех прочих инструментов anchor всегда равен epochMs, поэтому
+  // предвычисленные слоты безопасно переиспользуются.
+  const canReuseSlots =
+    preSlots != null &&
+    preSlots.epochMs === epochMs &&
+    sym !== FIREIDX_SYMBOL;
+
   const out = emptyChartLinesByTimeframe();
 
   if (!calendar || calendar.dayCount === 0) {
-    out['1d'] = sliceTailAtOrBeforeEpoch(minute, epochMs, TF_BAR_COUNT['1d']);
-    out['1w'] = sliceTailAtOrBeforeEpoch(m5, epochMs, TF_BAR_COUNT['1w']);
-    out['1m'] = sliceTailAtOrBeforeEpoch(m30, epochMs, TF_BAR_COUNT['1m']);
-    out['6m'] = sliceTailAtOrBeforeEpoch(h1, epochMs, TF_BAR_COUNT['6m']);
+    out['1d'] = sliceTailAtOrBeforeEpoch(
+      minute,
+      anchor('1d'),
+      TF_BAR_COUNT['1d']
+    );
+    out['1w'] = sliceTailAtOrBeforeEpoch(m5, anchor('1w'), TF_BAR_COUNT['1w']);
+    out['1m'] = sliceTailAtOrBeforeEpoch(
+      m30,
+      anchor('1m'),
+      TF_BAR_COUNT['1m']
+    );
+    out['6m'] = sliceTailAtOrBeforeEpoch(h1, anchor('6m'), TF_BAR_COUNT['6m']);
     out['1y'] = sliceTailAtOrBeforeEpoch(
       daily,
-      epochMs,
+      anchor('1y'),
       TF_BAR_COUNT['1y']
     );
-    out['all'] = sliceTailAtOrBeforeEpoch(daily, epochMs);
+    out['all'] = sliceTailAtOrBeforeEpoch(daily, anchor('all'));
     return out;
   }
 
-  const slots1m = buildBackwardIntradaySlots(
-    calendar,
-    epochMs,
-    TF_INTRADAY_STEP_MS['1d'],
-    TF_BAR_COUNT['1d']
-  );
-  out['1d'] = buildForwardFilledLine(minute, slots1m);
+  const slots1d = canReuseSlots
+    ? preSlots!.slots1d
+    : buildBackwardIntradaySlots(
+        calendar,
+        anchor('1d'),
+        TF_INTRADAY_STEP_MS['1d'],
+        TF_BAR_COUNT['1d']
+      );
+  out['1d'] = buildForwardFilledLine(minute, slots1d);
 
-  const slots5m = buildBackwardIntradaySlots(
-    calendar,
-    epochMs,
-    TF_INTRADAY_STEP_MS['1w'],
-    TF_BAR_COUNT['1w']
-  );
-  out['1w'] = buildForwardFilledLine(m5, slots5m);
+  const slots1w = canReuseSlots
+    ? preSlots!.slots1w
+    : buildBackwardIntradaySlots(
+        calendar,
+        anchor('1w'),
+        TF_INTRADAY_STEP_MS['1w'],
+        TF_BAR_COUNT['1w']
+      );
+  out['1w'] = buildForwardFilledLine(m5, slots1w);
 
-  const slots30m = buildBackwardIntradaySlots(
-    calendar,
-    epochMs,
-    TF_INTRADAY_STEP_MS['1m'],
-    TF_BAR_COUNT['1m']
-  );
-  out['1m'] = buildForwardFilledLine(m30, slots30m);
+  const slots1m = canReuseSlots
+    ? preSlots!.slots1m
+    : buildBackwardIntradaySlots(
+        calendar,
+        anchor('1m'),
+        TF_INTRADAY_STEP_MS['1m'],
+        TF_BAR_COUNT['1m']
+      );
+  out['1m'] = buildForwardFilledLine(m30, slots1m);
 
-  const slots1h = buildBackwardIntradaySlots(
-    calendar,
-    epochMs,
-    TF_INTRADAY_STEP_MS['6m'],
-    TF_BAR_COUNT['6m']
-  );
-  out['6m'] = buildForwardFilledLine(h1, slots1h);
+  const slots6m = canReuseSlots
+    ? preSlots!.slots6m
+    : buildBackwardIntradaySlots(
+        calendar,
+        anchor('6m'),
+        TF_INTRADAY_STEP_MS['6m'],
+        TF_BAR_COUNT['6m']
+      );
+  out['6m'] = buildForwardFilledLine(h1, slots6m);
 
-  const slotsDaily = buildBackwardDailySlots(
-    calendar,
-    epochMs,
-    TF_BAR_COUNT['1y']
-  );
-  out['1y'] = buildForwardFilledLine(daily, slotsDaily);
+  const slots1y = canReuseSlots
+    ? preSlots!.slots1y
+    : buildBackwardDailySlots(calendar, anchor('1y'), TF_BAR_COUNT['1y']);
+  out['1y'] = buildForwardFilledLine(daily, slots1y);
 
-  out['all'] = sliceTailAtOrBeforeEpoch(daily, epochMs);
+  out['all'] = sliceTailAtOrBeforeEpoch(daily, anchor('all'));
 
   return out;
 }

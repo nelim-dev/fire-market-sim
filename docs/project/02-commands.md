@@ -19,8 +19,10 @@ npm install
 npm --prefix downloadStockData install
 ```
 
-Зависимости разнесены, потому что `better-sqlite3` нужен только для сборки БД, а
-`downloadStockData/` — самостоятельный пакет с другим набором зависимостей.
+`better-sqlite3` — нативный модуль: после `npm install` для Electron выполните
+`npm run rebuild:electron` (иначе `market:get-slices` может упасть при загрузке).
+Для `npm run build:market-db` из системного Node — `npm run rebuild:node`, если
+перед этим собирали под Electron. `downloadStockData/` — отдельный пакет.
 
 ---
 
@@ -158,7 +160,9 @@ npm run build:market-db
 `data/market.sqlite`. Также копирует `src/data/generated/tradingCalendar.json` →
 `data/tradingCalendar.json` (это файл, который видит Electron main).
 
-После пересборки БД достаточно перезапустить `electron:dev` — все новые тикеры
+БД может быть больше 2 GiB — чтение идёт через `better-sqlite3` в main-процессе
+(не через загрузку всего файла в RAM). После пересборки БД перезапустите
+`electron:dev` — все новые тикеры
 появятся в каталоге UI.
 
 ### 3.5. Если демо-портфель должен сразу видеть новый актив

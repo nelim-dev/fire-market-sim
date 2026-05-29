@@ -41,7 +41,7 @@ npm run test:all
 
 - **Frontend:** TypeScript, React 19, Next.js 16, Tailwind CSS 4
 - **Desktop:** Electron 40 (NSIS-инсталлятор под Windows)
-- **БД:** SQLite — `better-sqlite3` для сборки, `sql.js` (WASM) в окне
+- **БД:** SQLite — `better-sqlite3` (сборка `data/market.sqlite` и чтение слайсов в Electron main; файл БД может быть >2 GiB)
 - **Время / даты:** `date-fns`, `date-fns-tz` (всё в Europe/Moscow)
 - **Тесты:** свой консольный runner (`tests/console/`) на `tsx`
 - **Загрузчик:** отдельный пакет `downloadStockData/` к MOEX ISS API

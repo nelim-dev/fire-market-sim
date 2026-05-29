@@ -6,12 +6,14 @@ import { selectUpcomingPayments } from '@/logic/modules/portfolio/selectors';
 import { PortfolioCompositionTab } from './PortfolioCompositionTab';
 import { PortfolioPlaceholderTab } from './PortfolioPlaceholderTab';
 import { TradeHistoryTab } from './TradeHistoryTab';
+import { OpenOrdersTab } from './OpenOrdersTab';
 
-type MainTab = 'composition' | 'history' | 'stats';
+type MainTab = 'composition' | 'history' | 'orders' | 'stats';
 
 const tabs: { id: MainTab; label: string }[] = [
   { id: 'composition', label: 'Состав' },
   { id: 'history', label: 'История' },
+  { id: 'orders', label: 'Заявки' },
   { id: 'stats', label: 'Статистика' },
 ];
 
@@ -78,6 +80,7 @@ export function PortfolioScreen({
         {tab === 'history' && (
           <TradeHistoryTab entries={portfolio.ledger} />
         )}
+        {tab === 'orders' && <OpenOrdersTab />}
         {tab === 'stats' && <PortfolioPlaceholderTab tab="stats" />}
       </div>
     </div>

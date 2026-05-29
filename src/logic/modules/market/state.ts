@@ -14,6 +14,11 @@ import {
   loadInstrumentDetailsCatalog,
   type InstrumentDetailsCatalog,
 } from './instrumentDetails';
+import {
+  createEmptyCompositeIndex,
+  FIREIDX_SYMBOL,
+  type CompositeIndexState,
+} from './compositeIndex';
 
 export type { OrderBookSnapshot } from './contracts';
 export type { MarketMacroSnapshot } from './macro';
@@ -36,6 +41,8 @@ export interface MarketAssetState {
   /** Линия графика по таймфрейму, уже обрезана по `simulationEpochMs` (см. `quoteApply`). */
   chartLineByTimeframe: Record<ChartTimeframeId, readonly MarketPriceBar[]>;
   orderBook: OrderBookSnapshot;
+  /** Эпоха последней сборки стакана (для сглаживания между тиками). */
+  orderBookBuiltAtEpochMs: number;
   /** Минимальный лот: для торговли — quantity должно быть кратно. По умолчанию 1. */
   lotSize: number;
   /** Признак облигации: триггер для НКД/купонов/погашения. */
@@ -46,6 +53,8 @@ export interface MarketAssetState {
   maturityEpochMs: number | null;
   /** Текущий НКД за облигацию, ₽. 0 для не-бондов и до подключения сабсервиса corporateActions. */
   nkdPerBondRub: number;
+  /** Только для console-тестов: фиксированный глубокий стакан (quoteApply не строит pseudo). */
+  testOrderBookPin?: { priceRub: number; qty: number };
 }
 
 export function createEmptyOrderBook(): OrderBookSnapshot {
@@ -73,6 +82,7 @@ export function buildAssetsBySymbol(
       periodChangePctByTimeframe: emptyPeriodChangeByTimeframe(),
       chartLineByTimeframe: emptyChartLinesByTimeframe(),
       orderBook: createEmptyOrderBook(),
+      orderBookBuiltAtEpochMs: 0,
       lotSize: Math.max(1, Math.floor(lotSize)),
       isBond,
       faceValueRub: meta?.initialFaceValueRub ?? null,
@@ -100,6 +110,21 @@ export interface MarketModuleState {
    * Все сущности — read-only snapshot за время жизни процесса.
    */
   details: InstrumentDetailsCatalog;
+  compositeIndex: CompositeIndexState;
+  /** Кэш hot-path FIREIDX: когда делали full rebuild daily/minute. */
+  fireidxRuntime: FireidxRuntimeCache;
+}
+
+export type FireidxRuntimeCache = {
+  lastFullRebuildEpochMs: number;
+  lastDailyRebuildMskDate: string | null;
+};
+
+export function createEmptyFireidxRuntimeCache(): FireidxRuntimeCache {
+  return {
+    lastFullRebuildEpochMs: 0,
+    lastDailyRebuildMskDate: null,
+  };
 }
 
 function normalizeBarsRecord(
@@ -114,11 +139,30 @@ function normalizeBarsRecord(
   return out;
 }
 
+/** Обновляет только ряды графиков, сохраняя compositeIndex и assets. */
+export function applyChartSeriesBundleToMarket(
+  market: MarketModuleState,
+  bundle: MarketChartSeriesBundle
+): void {
+  market.chartSeries = bundle;
+}
+
 export function createMarketModuleState(
   items: readonly MarketInstrumentCatalogItem[],
   chartSeriesInput: Partial<MarketChartSeriesBundle> = {}
 ): MarketModuleState {
-  const catalogSorted = sortInstrumentCatalog(items);
+  const withIndex = [...items];
+  if (!withIndex.some((i) => i.symbol.toUpperCase() === FIREIDX_SYMBOL)) {
+    withIndex.push({
+      assetKind: 'fund',
+      ticker: FIREIDX_SYMBOL,
+      symbol: FIREIDX_SYMBOL,
+      displayName: 'FIRE Market Index',
+      isin: 'FIREIDX-SYNTH',
+      sourceFilePath: '',
+    });
+  }
+  const catalogSorted = sortInstrumentCatalog(withIndex);
   const details = loadInstrumentDetailsCatalog();
   const chartSeries: MarketChartSeriesBundle = {
     minute: normalizeBarsRecord(catalogSorted, chartSeriesInput.minute),
@@ -128,12 +172,16 @@ export function createMarketModuleState(
     oneHour: normalizeBarsRecord(catalogSorted, chartSeriesInput.oneHour),
     weekly: normalizeBarsRecord(catalogSorted, chartSeriesInput.weekly),
   };
+  const assetsBySymbol = buildAssetsBySymbol(catalogSorted, details);
+  const compositeIndex = createEmptyCompositeIndex();
   return {
     ready: catalogSorted.length > 0,
     instrumentCatalog: catalogSorted,
-    assetsBySymbol: buildAssetsBySymbol(catalogSorted, details),
+    assetsBySymbol,
     chartSeries,
     macroSnapshot: { ...EMPTY_MARKET_MACRO_SNAPSHOT },
     details,
+    compositeIndex,
+    fireidxRuntime: createEmptyFireidxRuntimeCache(),
   };
 }

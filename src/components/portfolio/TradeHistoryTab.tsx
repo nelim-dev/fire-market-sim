@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import type { LedgerEntry, LedgerEntryKind } from '@/logic/domain/portfolio';
-import { formatRub } from './formatRub';
+import { formatRub, formatRubSigned } from './formatRub';
 
 type SortColumn = 'date' | 'ticker' | 'kind' | 'amount';
 type SortDirection = 'asc' | 'desc';
@@ -57,11 +57,6 @@ const KIND_LABELS: Record<LedgerEntryKind, string> = {
 
 function formatDate(epochMs: number): string {
   return formatInTimeZone(epochMs, 'Europe/Moscow', 'dd.MM.yyyy HH:mm');
-}
-
-function formatSignedRub(amountRub: number): string {
-  const sign = amountRub >= 0 ? '+' : '';
-  return `${sign}${formatRub(amountRub)} ₽`;
 }
 
 function toCsv(entries: readonly LedgerEntry[]): string {
@@ -247,7 +242,7 @@ export function TradeHistoryTab({
                     positive ? 'text-emerald-400' : 'text-rose-400'
                   }`}
                 >
-                  {formatSignedRub(entry.amountRub)}
+                  {formatRubSigned(entry.amountRub)}
                 </div>
               </div>
               <div className="mt-0.5 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5 text-[11px] leading-snug text-zinc-500 sm:text-xs">
@@ -257,7 +252,7 @@ export function TradeHistoryTab({
                 <div className="shrink-0 whitespace-nowrap text-right font-mono tabular-nums">
                   {entry.quantity !== undefined ? `${entry.quantity} ед.` : ''}
                   {entry.priceRub !== undefined
-                    ? ` · ${formatRub(entry.priceRub)} ₽`
+                    ? ` · ${formatRub(entry.priceRub)}`
                     : ''}
                 </div>
               </div>

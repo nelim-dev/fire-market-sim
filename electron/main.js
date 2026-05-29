@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const {
   buildSlicesPayload,
+  buildDaySlicesPayload,
   prefetchNextDayPayload,
   prefetchDayPayload,
 } = require('./market-db-slice.cjs');
@@ -60,6 +61,11 @@ function registerMarketIpc() {
   ipcMain.removeHandler('market:prefetch-day');
   ipcMain.handle('market:prefetch-day', async (_event, payload) => {
     return await prefetchDayPayload(payload ?? {});
+  });
+
+  ipcMain.removeHandler('market:get-day-slices');
+  ipcMain.handle('market:get-day-slices', async (_event, payload) => {
+    return await buildDaySlicesPayload(payload ?? {});
   });
 }
 

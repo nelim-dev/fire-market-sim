@@ -1,5 +1,6 @@
 import type { GameState } from '@/logic/managers/LogicManager';
 import type { MarketInstrumentCatalogItem } from '@/logic/modules/market/contracts';
+import { selectIsInstrumentActiveOnMarket } from '@/logic/modules/market/selectors';
 import { selectEducationIsSymbolUnlocked } from '@/logic/modules/education/selectors';
 import type { LeftPanelMode, MarketOverviewAssetKindFilter } from './state';
 
@@ -76,6 +77,9 @@ export const selectMarketOverviewRows = (
   const locked: MarketOverviewInstrumentRow[] = [];
 
   for (const item of state.market.instrumentCatalog) {
+    if (!selectIsInstrumentActiveOnMarket(item.symbol)(state)) {
+      continue;
+    }
     if (!matchesSearch(item, filters.searchQuery)) {
       continue;
     }

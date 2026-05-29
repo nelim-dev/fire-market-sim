@@ -8,6 +8,7 @@ import {
   selectMarketMacroSnapshot,
   selectMarketModule,
   selectMarketReady,
+  selectIsInstrumentActiveOnMarket,
 } from '@/logic/modules/market/selectors';
 import { selectPortfolioTradeLedger } from '@/logic/modules/portfolio/selectors';
 import { selectEducationIsSymbolUnlocked } from '@/logic/modules/education/selectors';
@@ -58,6 +59,7 @@ export {
   selectMarketCatalogSectionsOrdered,
   selectMarketHasInstrumentsOfKind,
   selectMarketInstrumentsByAssetKind,
+  selectIsInstrumentActiveOnMarket,
 };
 
 export {

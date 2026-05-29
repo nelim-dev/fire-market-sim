@@ -17,6 +17,11 @@ export type MarketPrefetchDayIpcPayload = {
   symbols: readonly string[];
 };
 
+export type MarketDaySlicesIpcPayload = {
+  mskDateYyyymmdd: string;
+  symbols: readonly string[];
+};
+
 export type MarketSlicesIpcOk = {
   ok: true;
   minuteBySymbol: Record<string, MarketPriceBar[]>;
@@ -145,4 +150,33 @@ export async function prefetchDayFromElectron(
     mskDateYyyymmdd,
     symbols: symbols.map((s) => s.toUpperCase()),
   });
+}
+
+export async function fetchDaySlicesFromElectron(
+  mskDateYyyymmdd: string,
+  symbols: readonly string[]
+): Promise<MarketChartSeriesBundle | null> {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  const w = window as unknown as {
+    marketData?: {
+      getDaySlices: (p: {
+        mskDateYyyymmdd: string;
+        symbols: string[];
+      }) => Promise<MarketSlicesIpcResult>;
+    };
+  };
+  if (!w.marketData?.getDaySlices) {
+    return null;
+  }
+  const res = await w.marketData.getDaySlices({
+    mskDateYyyymmdd,
+    symbols: symbols.map((s) => s.toUpperCase()),
+  });
+  if (!res.ok) {
+    console.warn('[marketData]', res);
+    return null;
+  }
+  return bundleFromOkPayload(res);
 }

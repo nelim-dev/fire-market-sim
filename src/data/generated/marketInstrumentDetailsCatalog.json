@@ -1,14 +1,269 @@
 {
-  "generatedAt": "2026-05-12T19:19:19.147Z",
+  "generatedAt": "2026-05-29T10:23:03.378Z",
   "lotSizeBySymbol": {
+    "AFLT": 1,
+    "CHMF": 1,
+    "GAZP": 1,
+    "GLDRUB_TOM": 1,
+    "GMKN": 1,
+    "HYDR": 1,
+    "IRAO": 1,
+    "LKOH": 1,
+    "MGNT": 1,
+    "MOEX": 1,
+    "MTSS": 1,
+    "NLMK": 1,
+    "NVTK": 1,
+    "PLZL": 1,
+    "ROSN": 1,
     "RU0009029540": 1,
+    "RU000A0E49M0": 1,
+    "RU000A0JP4V9": 1,
+    "RU000A0JQ185": 1,
+    "RU000A0JQ6A7": 1,
+    "RU000A0JQCC3": 1,
+    "RU000A0JQXR7": 1,
+    "RU000A0JQY27": 1,
+    "RU000A0JQY35": 1,
+    "RU000A0JQY68": 1,
+    "RU000A0JUD59": 1,
+    "RU000A0ZZFZ4": 1,
+    "RU000A100Y76": 1,
+    "RU000A102598": 1,
+    "RU000A1040H1": 1,
+    "RU000A1050X7": 1,
+    "RU000A105M59": 1,
+    "RU000A105W08": 1,
+    "RU000A107UW1": 1,
+    "RU000A1089K2": 1,
+    "RU000A109W87": 1,
+    "RU000A10AEB8": 1,
+    "RU000A10AYR2": 1,
+    "RU000A10C6F7": 1,
+    "RU000A10C8S6": 1,
+    "RU000A10CMR3": 1,
+    "RU000A10CRC4": 1,
+    "RU000A10DHX9": 1,
+    "RU000A10F7T3": 1,
+    "RUAL": 1,
     "SBER": 1,
     "SBMM": 1,
+    "SLVRUB_TOM": 100,
+    "SU25069RMFS4": 1,
+    "SU25072RMFS8": 1,
     "SU25081RMFS9": 1,
+    "SU26207RMFS9": 1,
+    "SU26212RMFS9": 1,
+    "SU26218RMFS6": 1,
+    "SU26221RMFS0": 1,
     "SU26227RMFS7": 1,
-    "SU26247RMFS5": 1
+    "SU26230RMFS1": 1,
+    "SU26247RMFS5": 1,
+    "SU29010RMFS4": 1,
+    "SU46023RMFS6": 1,
+    "TATN": 1,
+    "USD000UTSTOM": 1000,
+    "VTBR": 1,
+    "YDEX": 1
+  },
+  "sharesOutstandingBySymbol": {
+    "AFLT": 3975771215,
+    "CHMF": 837718660,
+    "GAZP": 23673512900,
+    "GMKN": 15286339700,
+    "HYDR": 444793377038,
+    "IRAO": 104400000000,
+    "LKOH": 692865762,
+    "MGNT": 101911355,
+    "MOEX": 2276401458,
+    "MTSS": 1998381575,
+    "NLMK": 5993227240,
+    "NVTK": 3036306000,
+    "PLZL": 1360694001,
+    "ROSN": 10598177817,
+    "RU0009029540": 14002000,
+    "RU000A0E49M0": 1120000,
+    "RU000A0JP4V9": 2000000,
+    "RU000A0JQ185": 15000000,
+    "RU000A0JQ6A7": 5000000,
+    "RU000A0JQCC3": 15000000,
+    "RU000A0JQXR7": 10000000,
+    "RU000A0JQY27": 6096000,
+    "RU000A0JQY35": 6096000,
+    "RU000A0JQY68": 990000,
+    "RU000A0JUD59": 5000000,
+    "RU000A0ZZFZ4": 20000000,
+    "RU000A100Y76": 491972,
+    "RU000A102598": 2500000,
+    "RU000A1040H1": 123082,
+    "RU000A1050X7": 300000,
+    "RU000A105M59": 250000,
+    "RU000A105W08": 7000000,
+    "RU000A107UW1": 50000000,
+    "RU000A1089K2": 900000,
+    "RU000A109W87": 27600,
+    "RU000A10AEB8": 20500000,
+    "RU000A10AYR2": 490105,
+    "RU000A10C6F7": 20000000,
+    "RU000A10C8S6": 25000000,
+    "RU000A10CMR3": 4000000,
+    "RU000A10CRC4": 8500000,
+    "RU000A10DHX9": 700000,
+    "RU000A10F7T3": 15000000,
+    "RUAL": 15193014862,
+    "SBER": 21586948000,
+    "SU25069RMFS4": 45000000,
+    "SU25072RMFS8": 150000000,
+    "SU25081RMFS9": 150000000,
+    "SU26207RMFS9": 370200604,
+    "SU26212RMFS9": 356981514,
+    "SU26218RMFS6": 597608211,
+    "SU26221RMFS0": 396268629,
+    "SU26227RMFS7": 400000000,
+    "SU26230RMFS1": 699489066,
+    "SU26247RMFS5": 1000000000,
+    "SU29010RMFS4": 190287001,
+    "SU46023RMFS6": 295000000,
+    "TATN": 2178690700,
+    "VTBR": 12927766416,
+    "YDEX": 394967916
   },
   "instrumentMetaBySymbol": {
+    "AFLT": {
+      "isBond": false,
+      "initialFaceValueRub": 1,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU0009062285",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1383199320000
+    },
+    "CHMF": {
+      "isBond": false,
+      "initialFaceValueRub": 0.01,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU0009046510",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1402293600000
+    },
+    "GAZP": {
+      "isBond": false,
+      "initialFaceValueRub": 5,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU0007661625",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1402293600000
+    },
+    "GLDRUB_TOM": {
+      "isBond": false,
+      "initialFaceValueRub": 1,
+      "faceUnit": "GLD",
+      "maturityEpochMs": null,
+      "isin": null,
+      "groupRaw": "currency_metal",
+      "firstTradeEpochMs": 1529669340000
+    },
+    "GMKN": {
+      "isBond": false,
+      "initialFaceValueRub": 0.01,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU0007288411",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1402293600000
+    },
+    "HYDR": {
+      "isBond": false,
+      "initialFaceValueRub": 1,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A0JPKH7",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1364191200000
+    },
+    "IRAO": {
+      "isBond": false,
+      "initialFaceValueRub": 2.80977,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A0JPNM1",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1373263200000
+    },
+    "LKOH": {
+      "isBond": false,
+      "initialFaceValueRub": 0.025,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU0009024277",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1364191200000
+    },
+    "MGNT": {
+      "isBond": false,
+      "initialFaceValueRub": 0.01,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A0JKQU8",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1373263200000
+    },
+    "MOEX": {
+      "isBond": false,
+      "initialFaceValueRub": 1,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A0JR4A1",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1365055620000
+    },
+    "MTSS": {
+      "isBond": false,
+      "initialFaceValueRub": 0.1,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU0007775219",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1373263200000
+    },
+    "NLMK": {
+      "isBond": false,
+      "initialFaceValueRub": 1,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU0009046452",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1402293600000
+    },
+    "NVTK": {
+      "isBond": false,
+      "initialFaceValueRub": 0.1,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A0DKVS5",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1364191200000
+    },
+    "PLZL": {
+      "isBond": false,
+      "initialFaceValueRub": 0.1,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A0JNAA8",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1402293600000
+    },
+    "ROSN": {
+      "isBond": false,
+      "initialFaceValueRub": 0.01,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A0J2Q06",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1402293600000
+    },
     "RU0009029540": {
       "isBond": false,
       "initialFaceValueRub": 50,
@@ -17,13 +272,260 @@
       "isin": "RU0009029540",
       "groupRaw": "stock_shares"
     },
+    "RU000A0E49M0": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1211227200000,
+      "isin": "RU000A0E49M0",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A0JP4V9": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1238529600000,
+      "isin": "RU000A0JP4V9",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A0JQ185": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1306872000000,
+      "isin": "RU000A0JQ185",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A0JQ6A7": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1402344000000,
+      "isin": "RU000A0JQ6A7",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A0JQCC3": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1347912000000,
+      "isin": "RU000A0JQCC3",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1323932520000
+    },
+    "RU000A0JQXR7": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1593118800000,
+      "isin": "RU000A0JQXR7",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A0JQY27": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 2300043600000,
+      "isin": "RU000A0JQY27",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A0JQY35": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 2300043600000,
+      "isin": "RU000A0JQY35",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A0JQY68": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1374436800000,
+      "isin": "RU000A0JQY68",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A0JUD59": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1608066000000,
+      "isin": "RU000A0JUD59",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A0ZZFZ4": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A0ZZFZ4",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A100Y76": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1574370000000,
+      "isin": "RU000A100Y76",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A102598": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1757970000000,
+      "isin": "RU000A102598",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1600779480000
+    },
+    "RU000A1040H1": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1761080400000,
+      "isin": "RU000A1040H1",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1644228240000
+    },
+    "RU000A1050X7": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1753736400000,
+      "isin": "RU000A1050X7",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1723705320000
+    },
+    "RU000A105M59": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1826571600000,
+      "isin": "RU000A105M59",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1671111180000
+    },
+    "RU000A105W08": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1802811600000,
+      "isin": "RU000A105W08",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A107UW1": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1802379600000,
+      "isin": "RU000A107UW1",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1709120940000
+    },
+    "RU000A1089K2": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "CNY",
+      "maturityEpochMs": 1791493200000,
+      "isin": "RU000A1089K2",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1712915340000
+    },
+    "RU000A109W87": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1797800400000,
+      "isin": "RU000A109W87",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A10AEB8": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1796763600000,
+      "isin": "RU000A10AEB8",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1734608700000
+    },
+    "RU000A10AYR2": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1772571600000,
+      "isin": "RU000A10AYR2",
+      "groupRaw": "stock_bonds"
+    },
+    "RU000A10C6F7": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1877806800000,
+      "isin": "RU000A10C6F7",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1753446600000
+    },
+    "RU000A10C8S6": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1912280400000,
+      "isin": "RU000A10C8S6",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1754573460000
+    },
+    "RU000A10CMR3": {
+      "isBond": true,
+      "initialFaceValueRub": 100,
+      "faceUnit": "USD",
+      "maturityEpochMs": 1912366800000,
+      "isin": "RU000A10CMR3",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1756899900000
+    },
+    "RU000A10CRC4": {
+      "isBond": true,
+      "initialFaceValueRub": 100,
+      "faceUnit": "USD",
+      "maturityEpochMs": 1882386000000,
+      "isin": "RU000A10CRC4",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1758026700000
+    },
+    "RU000A10DHX9": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1856811600000,
+      "isin": "RU000A10DHX9",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1763552700000
+    },
+    "RU000A10F7T3": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1857416400000,
+      "isin": "RU000A10F7T3",
+      "groupRaw": "stock_bonds"
+    },
+    "RUAL": {
+      "isBond": false,
+      "initialFaceValueRub": 0.65652,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A1025V3",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1427698980000
+    },
     "SBER": {
       "isBond": false,
       "initialFaceValueRub": 3,
       "faceUnit": "SUR",
       "maturityEpochMs": null,
       "isin": "RU0009029540",
-      "groupRaw": "stock_shares"
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1231659000000
     },
     "SBMM": {
       "isBond": false,
@@ -31,7 +533,34 @@
       "faceUnit": null,
       "maturityEpochMs": null,
       "isin": "RU000A103RF1",
-      "groupRaw": "stock_ppif"
+      "groupRaw": "stock_ppif",
+      "firstTradeEpochMs": 1633418400000
+    },
+    "SLVRUB_TOM": {
+      "isBond": false,
+      "initialFaceValueRub": 1,
+      "faceUnit": "SLV",
+      "maturityEpochMs": null,
+      "isin": null,
+      "groupRaw": "currency_metal",
+      "firstTradeEpochMs": 1389336960000
+    },
+    "SU25069RMFS4": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1347998400000,
+      "isin": "RU000A0JQCM2",
+      "groupRaw": "stock_bonds"
+    },
+    "SU25072RMFS8": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1358884800000,
+      "isin": "RU000A0JQQE9",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1329223440000
     },
     "SU25081RMFS9": {
       "isBond": true,
@@ -39,7 +568,44 @@
       "faceUnit": "SUR",
       "maturityEpochMs": 1517346000000,
       "isin": "RU000A0JTKZ1",
-      "groupRaw": "stock_bonds"
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1379341620000
+    },
+    "SU26207RMFS9": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1801602000000,
+      "isin": "RU000A0JS3W6",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1364221260000
+    },
+    "SU26212RMFS9": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1831842000000,
+      "isin": "RU000A0JTK38",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1378114260000
+    },
+    "SU26218RMFS6": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1947358800000,
+      "isin": "RU000A0JVW48",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1455710340000
+    },
+    "SU26221RMFS0": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1995138000000,
+      "isin": "RU000A0JXFM1",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1489582140000
     },
     "SU26227RMFS7": {
       "isBond": true,
@@ -47,7 +613,17 @@
       "faceUnit": "SUR",
       "maturityEpochMs": 1721163600000,
       "isin": "RU000A1007F4",
-      "groupRaw": "stock_bonds"
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1553677980000
+    },
+    "SU26230RMFS1": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 2183835600000,
+      "isin": "RU000A100EF5",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1560943800000
     },
     "SU26247RMFS5": {
       "isBond": true,
@@ -56,9 +632,1329 @@
       "maturityEpochMs": 2188674000000,
       "isin": "RU000A108EF8",
       "groupRaw": "stock_bonds"
+    },
+    "SU29010RMFS4": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 2048965200000,
+      "isin": "RU000A0JV4Q1",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1446019140000
+    },
+    "SU46023RMFS6": {
+      "isBond": true,
+      "initialFaceValueRub": 1000,
+      "faceUnit": "SUR",
+      "maturityEpochMs": 1784754000000,
+      "isin": "RU000A0JRTL6",
+      "groupRaw": "stock_bonds",
+      "firstTradeEpochMs": 1372249740000
+    },
+    "TATN": {
+      "isBond": false,
+      "initialFaceValueRub": 1,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU0009033591",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1373263200000
+    },
+    "USD000UTSTOM": {
+      "isBond": false,
+      "initialFaceValueRub": 1,
+      "faceUnit": "USD",
+      "maturityEpochMs": null,
+      "isin": null,
+      "groupRaw": "currency_selt",
+      "firstTradeEpochMs": 1323928800000
+    },
+    "VTBR": {
+      "isBond": false,
+      "initialFaceValueRub": 50,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A0JP5V6",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1364191200000
+    },
+    "YDEX": {
+      "isBond": false,
+      "initialFaceValueRub": 0.4,
+      "faceUnit": "SUR",
+      "maturityEpochMs": null,
+      "isin": "RU000A107T19",
+      "groupRaw": "stock_shares",
+      "firstTradeEpochMs": 1721804340000
+    },
+    "BR": {
+      "isBond": false,
+      "initialFaceValueRub": null,
+      "faceUnit": null,
+      "maturityEpochMs": null,
+      "firstTradeEpochMs": 1247753160000,
+      "isin": null,
+      "groupRaw": null
+    },
+    "EU": {
+      "isBond": false,
+      "initialFaceValueRub": null,
+      "faceUnit": null,
+      "maturityEpochMs": null,
+      "firstTradeEpochMs": 1245173040000,
+      "isin": null,
+      "groupRaw": null
+    },
+    "RGBI": {
+      "isBond": false,
+      "initialFaceValueRub": null,
+      "faceUnit": null,
+      "maturityEpochMs": null,
+      "firstTradeEpochMs": 1648019760000,
+      "isin": null,
+      "groupRaw": null
+    },
+    "RTSI": {
+      "isBond": false,
+      "initialFaceValueRub": null,
+      "faceUnit": null,
+      "maturityEpochMs": null,
+      "firstTradeEpochMs": 1231659000000,
+      "isin": null,
+      "groupRaw": null
     }
   },
   "dividendsBySymbol": {
+    "AFLT": [
+      {
+        "recordCloseDateEpochMs": 1404763200000,
+        "perShareRub": 2.5,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1499979600000,
+        "perShareRub": 17.48,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1530824400000,
+        "perShareRub": 12.8053,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1562274000000,
+        "perShareRub": 2.6877,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1752786000000,
+        "perShareRub": 5.27,
+        "currency": "RUB"
+      }
+    ],
+    "CHMF": [
+      {
+        "recordCloseDateEpochMs": 1376251200000,
+        "perShareRub": 2.03,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1383163200000,
+        "perShareRub": 2.01,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1403467200000,
+        "perShareRub": 2.43,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1411329600000,
+        "perShareRub": 2.14,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1416862800000,
+        "perShareRub": 54.46,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1433451600000,
+        "perShareRub": 12.81,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1443387600000,
+        "perShareRub": 12.63,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1450645200000,
+        "perShareRub": 13.17,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1467666000000,
+        "perShareRub": 8.25,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1472763600000,
+        "perShareRub": 19.66,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1473973200000,
+        "perShareRub": 19.66,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1481576400000,
+        "perShareRub": 24.96,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1497906000000,
+        "perShareRub": 24.44,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1506373200000,
+        "perShareRub": 22.28,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1512421200000,
+        "perShareRub": 35.61,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1529355600000,
+        "perShareRub": 38.32,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1537822800000,
+        "perShareRub": 45.94,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1543870800000,
+        "perShareRub": 44.39,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1557176400000,
+        "perShareRub": 32.08,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1560805200000,
+        "perShareRub": 35.43,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1568667600000,
+        "perShareRub": 26.72,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1575320400000,
+        "perShareRub": 27.47,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1592254800000,
+        "perShareRub": 26.26,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1599512400000,
+        "perShareRub": 15.44,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1607374800000,
+        "perShareRub": 37.34,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1622494800000,
+        "perShareRub": 36.27,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1630530000000,
+        "perShareRub": 84.45,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1639429200000,
+        "perShareRub": 85.93,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1653944400000,
+        "perShareRub": 109.81,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1718658000000,
+        "perShareRub": 191.51,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1725915600000,
+        "perShareRub": 31.06,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1734382800000,
+        "perShareRub": 49.06,
+        "currency": "RUB"
+      }
+    ],
+    "GAZP": [
+      {
+        "recordCloseDateEpochMs": 1405540800000,
+        "perShareRub": 7.2,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1436994000000,
+        "perShareRub": 7.2,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1468962000000,
+        "perShareRub": 7.89,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1500498000000,
+        "perShareRub": 8.04,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1531947600000,
+        "perShareRub": 8.04,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1563397200000,
+        "perShareRub": 16.61,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1594846800000,
+        "perShareRub": 15.24,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1626296400000,
+        "perShareRub": 12.55,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1658264400000,
+        "perShareRub": 52.53,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1665435600000,
+        "perShareRub": 51.03,
+        "currency": "RUB"
+      }
+    ],
+    "GMKN": [
+      {
+        "recordCloseDateEpochMs": 1383249600000,
+        "perShareRub": 220.7,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1402948800000,
+        "perShareRub": 248.48,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1419195600000,
+        "perShareRub": 762.34,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1432501200000,
+        "perShareRub": 670.04,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1443128400000,
+        "perShareRub": 305.07,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1451422800000,
+        "perShareRub": 321.95,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1466456400000,
+        "perShareRub": 230.14,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1482872400000,
+        "perShareRub": 444.25,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1498165200000,
+        "perShareRub": 446.1,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1508360400000,
+        "perShareRub": 224.2,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1531774800000,
+        "perShareRub": 607.98,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1538341200000,
+        "perShareRub": 776.02,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1561064400000,
+        "perShareRub": 792.52,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1570395600000,
+        "perShareRub": 883.93,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1577394000000,
+        "perShareRub": 604.09,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1590354000000,
+        "perShareRub": 557.2,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1608757200000,
+        "perShareRub": 623.35,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1622494800000,
+        "perShareRub": 1021.22,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1642107600000,
+        "perShareRub": 1523.17,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1655154000000,
+        "perShareRub": 1166.22,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1703538000000,
+        "perShareRub": 915.33,
+        "currency": "RUB"
+      }
+    ],
+    "HYDR": [
+      {
+        "recordCloseDateEpochMs": 1404763200000,
+        "perShareRub": 0.01,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1436216400000,
+        "perShareRub": 0.02,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1467925200000,
+        "perShareRub": 0.04,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1499634000000,
+        "perShareRub": 0.05,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1530910800000,
+        "perShareRub": 0.0263335,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1562619600000,
+        "perShareRub": 0.0367388,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1602277200000,
+        "perShareRub": 0.03568039,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1625864400000,
+        "perShareRub": 0.0530482,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1657400400000,
+        "perShareRub": 0.05304937,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1689022800000,
+        "perShareRub": 0.050254795,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1752181200000,
+        "perShareRub": 0.075648608,
+        "currency": "RUB"
+      }
+    ],
+    "IRAO": [
+      {
+        "recordCloseDateEpochMs": 1466456400000,
+        "perShareRub": 0.02,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1497906000000,
+        "perShareRub": 0.15,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1527800400000,
+        "perShareRub": 0.13,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1559250000000,
+        "perShareRub": 0.171635536398468,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1590958800000,
+        "perShareRub": 0.196192528735633,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1623013200000,
+        "perShareRub": 0.180711206896552,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1654808400000,
+        "perShareRub": 0.23658380041773,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1685394000000,
+        "perShareRub": 0.28365531801897,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1717362000000,
+        "perShareRub": 0.325999263608046,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1749416400000,
+        "perShareRub": 0.353756516888506,
+        "currency": "RUB"
+      }
+    ],
+    "LKOH": [
+      {
+        "recordCloseDateEpochMs": 1376510400000,
+        "perShareRub": 50,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1405368000000,
+        "perShareRub": 60,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1419541200000,
+        "perShareRub": 60,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1430168400000,
+        "perShareRub": 94,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1436821200000,
+        "perShareRub": 94,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1437080400000,
+        "perShareRub": 94,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1450904400000,
+        "perShareRub": 65,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1468270800000,
+        "perShareRub": 112,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1482440400000,
+        "perShareRub": 75,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1499634000000,
+        "perShareRub": 120,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1513890000000,
+        "perShareRub": 85,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1531256400000,
+        "perShareRub": 130,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1545339600000,
+        "perShareRub": 95,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1562619600000,
+        "perShareRub": 155,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1576789200000,
+        "perShareRub": 192,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1594328400000,
+        "perShareRub": 350,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1608238800000,
+        "perShareRub": 46,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1625432400000,
+        "perShareRub": 213,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1640034000000,
+        "perShareRub": 340,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1671570000000,
+        "perShareRub": 537,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1685912400000,
+        "perShareRub": 438,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1702760400000,
+        "perShareRub": 447,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1715029200000,
+        "perShareRub": 498,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1734382800000,
+        "perShareRub": 514,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1748898000000,
+        "perShareRub": 541,
+        "currency": "RUB"
+      }
+    ],
+    "MGNT": [
+      {
+        "recordCloseDateEpochMs": 1375992000000,
+        "perShareRub": 46.06,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1402603200000,
+        "perShareRub": 89.15,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1412884800000,
+        "perShareRub": 78.3,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1414530000000,
+        "perShareRub": 152.07,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1419886800000,
+        "perShareRub": 152.07,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1434661200000,
+        "perShareRub": 132.57,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1444338000000,
+        "perShareRub": 88.4,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1452200400000,
+        "perShareRub": 179.77,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1466110800000,
+        "perShareRub": 42.3,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1474578000000,
+        "perShareRub": 84.6,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1482440400000,
+        "perShareRub": 126.12,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1498165200000,
+        "perShareRub": 67.41,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1505422800000,
+        "perShareRub": 115.51,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1530824400000,
+        "perShareRub": 135.5,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1545339600000,
+        "perShareRub": 137.38,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1560459600000,
+        "perShareRub": 166.78,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1578603600000,
+        "perShareRub": 147.19,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1592514000000,
+        "perShareRub": 157,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1610053200000,
+        "perShareRub": 245.31,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1624568400000,
+        "perShareRub": 245.31,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1640898000000,
+        "perShareRub": 294.37,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1704920400000,
+        "perShareRub": 412.13,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1720990800000,
+        "perShareRub": 412.13,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1736370000000,
+        "perShareRub": 560,
+        "currency": "RUB"
+      }
+    ],
+    "MOEX": [
+      {
+        "recordCloseDateEpochMs": 1405022400000,
+        "perShareRub": 2.38,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1431378000000,
+        "perShareRub": 3.87,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1463346000000,
+        "perShareRub": 7.11,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1494882000000,
+        "perShareRub": 7.68,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1506632400000,
+        "perShareRub": 2.49,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1526331600000,
+        "perShareRub": 5.47,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1557781200000,
+        "perShareRub": 7.7,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1589490000000,
+        "perShareRub": 7.93,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1620939600000,
+        "perShareRub": 9.45,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1683838800000,
+        "perShareRub": 4.84,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1686862800000,
+        "perShareRub": 4.84,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1718312400000,
+        "perShareRub": 17.35,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1752094800000,
+        "perShareRub": 26.11,
+        "currency": "RUB"
+      }
+    ],
+    "MTSS": [
+      {
+        "recordCloseDateEpochMs": 1531083600000,
+        "perShareRub": 23.4,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1539032400000,
+        "perShareRub": 2.6,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1562619600000,
+        "perShareRub": 19.98,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1571000400000,
+        "perShareRub": 8.68,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1578603600000,
+        "perShareRub": 13.25,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1594242000000,
+        "perShareRub": 20.57,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1602450000000,
+        "perShareRub": 8.93,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1625691600000,
+        "perShareRub": 26.51,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1633986000000,
+        "perShareRub": 10.55,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1657573200000,
+        "perShareRub": 33.85,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1687986000000,
+        "perShareRub": 34.29,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1721077200000,
+        "perShareRub": 35,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1751835600000,
+        "perShareRub": 35,
+        "currency": "RUB"
+      }
+    ],
+    "NLMK": [
+      {
+        "recordCloseDateEpochMs": 1402948800000,
+        "perShareRub": 0.67,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1412971200000,
+        "perShareRub": 0.88,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1434402000000,
+        "perShareRub": 1.64,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1444597200000,
+        "perShareRub": 0.93,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1452200400000,
+        "perShareRub": 1.95,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1465851600000,
+        "perShareRub": 1.13,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1476219600000,
+        "perShareRub": 1.08,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1483909200000,
+        "perShareRub": 3.63,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1497387600000,
+        "perShareRub": 2.35,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1507755600000,
+        "perShareRub": 3.2,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1515445200000,
+        "perShareRub": 5.13,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1529442000000,
+        "perShareRub": 5.73,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1539291600000,
+        "perShareRub": 5.24,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1546981200000,
+        "perShareRub": 6.04,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1557090000000,
+        "perShareRub": 5.8,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1560891600000,
+        "perShareRub": 7.34,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1570654800000,
+        "perShareRub": 3.68,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1578517200000,
+        "perShareRub": 3.22,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1588712400000,
+        "perShareRub": 5.16,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1591650000000,
+        "perShareRub": 3.12,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1594587600000,
+        "perShareRub": 3.21,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1602450000000,
+        "perShareRub": 4.75,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1609189200000,
+        "perShareRub": 6.43,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1620680400000,
+        "perShareRub": 7.25,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1624395600000,
+        "perShareRub": 7.71,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1630962000000,
+        "perShareRub": 13.62,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1638824400000,
+        "perShareRub": 13.33,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1673384400000,
+        "perShareRub": 2.6,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1716757200000,
+        "perShareRub": 25.43,
+        "currency": "RUB"
+      }
+    ],
+    "NVTK": [
+      {
+        "recordCloseDateEpochMs": 1539118800000,
+        "perShareRub": 9.25,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1557090000000,
+        "perShareRub": 16.81,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1570654800000,
+        "perShareRub": 14.23,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1588885200000,
+        "perShareRub": 18.1,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1602450000000,
+        "perShareRub": 11.82,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1620334800000,
+        "perShareRub": 23.74,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1633899600000,
+        "perShareRub": 27.67,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1651698000000,
+        "perShareRub": 43.77,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1665262800000,
+        "perShareRub": 45,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1683061200000,
+        "perShareRub": 60.58,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1696885200000,
+        "perShareRub": 34.5,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1711400400000,
+        "perShareRub": 44.09,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1728594000000,
+        "perShareRub": 35.5,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1745787600000,
+        "perShareRub": 46.65,
+        "currency": "RUB"
+      }
+    ],
+    "PLZL": [
+      {
+        "recordCloseDateEpochMs": 1500238800000,
+        "perShareRub": 152.41,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1506286800000,
+        "perShareRub": 104.3,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1528578000000,
+        "perShareRub": 147.12,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1539810000000,
+        "perShareRub": 131.11,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1557954000000,
+        "perShareRub": 143.62,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1570654800000,
+        "perShareRub": 162.98,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1598562000000,
+        "perShareRub": 244.75,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1603141200000,
+        "perShareRub": 240.18,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1623013200000,
+        "perShareRub": 387.15,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1633899600000,
+        "perShareRub": 267.48,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1686862800000,
+        "perShareRub": 436.79,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1734037200000,
+        "perShareRub": 1301.75,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1745528400000,
+        "perShareRub": 73,
+        "currency": "RUB"
+      }
+    ],
+    "ROSN": [
+      {
+        "recordCloseDateEpochMs": 1404763200000,
+        "perShareRub": 12.85,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1435525200000,
+        "perShareRub": 8.21,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1466974800000,
+        "perShareRub": 11.75,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1499029200000,
+        "perShareRub": 5.98,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1507582800000,
+        "perShareRub": 3.83,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1530478800000,
+        "perShareRub": 6.65,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1539032400000,
+        "perShareRub": 14.58,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1560718800000,
+        "perShareRub": 11.33,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1570741200000,
+        "perShareRub": 15.34,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1592168400000,
+        "perShareRub": 18.07,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1623704400000,
+        "perShareRub": 6.94,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1633899600000,
+        "perShareRub": 18.03,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1657486800000,
+        "perShareRub": 23.63,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1673470800000,
+        "perShareRub": 20.39,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1689022800000,
+        "perShareRub": 17.97,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1704920400000,
+        "perShareRub": 30.77,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1720472400000,
+        "perShareRub": 29.01,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1736456400000,
+        "perShareRub": 36.47,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1752958800000,
+        "perShareRub": 14.68,
+        "currency": "RUB"
+      }
+    ],
+    "RUAL": [
+      {
+        "recordCloseDateEpochMs": 1666213200000,
+        "perShareRub": 0.02,
+        "currency": "USD"
+      }
+    ],
     "SBER": [
       {
         "recordCloseDateEpochMs": 893793600000,
@@ -195,9 +2091,2781 @@
         "perShareRub": 34.84,
         "currency": "RUB"
       }
+    ],
+    "TATN": [
+      {
+        "recordCloseDateEpochMs": 1530824400000,
+        "perShareRub": 12.16,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1539291600000,
+        "perShareRub": 30.27,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1546981200000,
+        "perShareRub": 22.26,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1562274000000,
+        "perShareRub": 32.38,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1569531600000,
+        "perShareRub": 40.11,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1577653200000,
+        "perShareRub": 24.36,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1602450000000,
+        "perShareRub": 9.94,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1625778000000,
+        "perShareRub": 12.3,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1633986000000,
+        "perShareRub": 16.52,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1641762000000,
+        "perShareRub": 9.98,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1657227600000,
+        "perShareRub": 16.14,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1665435600000,
+        "perShareRub": 32.71,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1673298000000,
+        "perShareRub": 6.86,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1688418000000,
+        "perShareRub": 27.71,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1689022800000,
+        "perShareRub": 27.71,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1696971600000,
+        "perShareRub": 27.54,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1704747600000,
+        "perShareRub": 35.17,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1720040400000,
+        "perShareRub": 25.17,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1720472400000,
+        "perShareRub": 25.17,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1728334800000,
+        "perShareRub": 38.2,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1736283600000,
+        "perShareRub": 17.39,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1748811600000,
+        "perShareRub": 43.11,
+        "currency": "RUB"
+      }
+    ],
+    "VTBR": [
+      {
+        "recordCloseDateEpochMs": 1482699600000,
+        "perShareRub": 0.01,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1561323600000,
+        "perShareRub": 0.00109867761463259,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1601845200000,
+        "perShareRub": 0.00077345337561138,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1624309200000,
+        "perShareRub": 0.0000173965919370917,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1626296400000,
+        "perShareRub": 0.0000173965919370917,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1752181200000,
+        "perShareRub": 25.58,
+        "currency": "RUB"
+      }
+    ],
+    "YDEX": [
+      {
+        "recordCloseDateEpochMs": 1726779600000,
+        "perShareRub": 80,
+        "currency": "RUB"
+      },
+      {
+        "recordCloseDateEpochMs": 1745787600000,
+        "perShareRub": 80,
+        "currency": "RUB"
+      }
     ]
   },
   "couponsBySymbol": {
+    "RU000A0E49M0": [
+      {
+        "startDateEpochMs": 1116878400000,
+        "payDateEpochMs": 1124740800000,
+        "recordDateEpochMs": 1123790400000,
+        "perBondRub": 32.41,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1124740800000,
+        "payDateEpochMs": 1132606800000,
+        "recordDateEpochMs": 1131656400000,
+        "perBondRub": 32.41,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1132606800000,
+        "payDateEpochMs": 1140469200000,
+        "recordDateEpochMs": 1139518800000,
+        "perBondRub": 32.41,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1140469200000,
+        "payDateEpochMs": 1148328000000,
+        "recordDateEpochMs": 1147377600000,
+        "perBondRub": 32.41,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1148328000000,
+        "payDateEpochMs": 1156190400000,
+        "recordDateEpochMs": 1155240000000,
+        "perBondRub": 25.43,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1156190400000,
+        "payDateEpochMs": 1164056400000,
+        "recordDateEpochMs": 1163106000000,
+        "perBondRub": 25.43,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1164056400000,
+        "payDateEpochMs": 1171918800000,
+        "recordDateEpochMs": 1170968400000,
+        "perBondRub": 25.43,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1171918800000,
+        "payDateEpochMs": 1179777600000,
+        "recordDateEpochMs": 1178827200000,
+        "perBondRub": 25.43,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1179777600000,
+        "payDateEpochMs": 1187640000000,
+        "recordDateEpochMs": 1186689600000,
+        "perBondRub": 22.94,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1187640000000,
+        "payDateEpochMs": 1195506000000,
+        "recordDateEpochMs": 1194555600000,
+        "perBondRub": 17.2,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1195506000000,
+        "payDateEpochMs": 1203368400000,
+        "recordDateEpochMs": 1202418000000,
+        "perBondRub": 11.47,
+        "faceValueAtTime": 250
+      },
+      {
+        "startDateEpochMs": 1203368400000,
+        "payDateEpochMs": 1211227200000,
+        "recordDateEpochMs": 1210190400000,
+        "perBondRub": 5.73,
+        "faceValueAtTime": 250
+      }
+    ],
+    "RU000A0JP4V9": [
+      {
+        "startDateEpochMs": 1175630400000,
+        "payDateEpochMs": 1191355200000,
+        "recordDateEpochMs": 1190577600000,
+        "perBondRub": 55.6,
+        "faceValueAtTime": 500
+      },
+      {
+        "startDateEpochMs": 1191355200000,
+        "payDateEpochMs": 1207080000000,
+        "recordDateEpochMs": 1206306000000,
+        "perBondRub": 55.6,
+        "faceValueAtTime": 500
+      },
+      {
+        "startDateEpochMs": 1207080000000,
+        "payDateEpochMs": 1222804800000,
+        "recordDateEpochMs": 1222027200000,
+        "perBondRub": 41.7,
+        "faceValueAtTime": 500
+      },
+      {
+        "startDateEpochMs": 1222804800000,
+        "payDateEpochMs": 1238529600000,
+        "recordDateEpochMs": 1237755600000,
+        "perBondRub": 27.8,
+        "faceValueAtTime": 500
+      }
+    ],
+    "RU000A0JQ185": [
+      {
+        "startDateEpochMs": 1228078800000,
+        "payDateEpochMs": 1235854800000,
+        "recordDateEpochMs": 1235077200000,
+        "perBondRub": 24.66,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1235854800000,
+        "payDateEpochMs": 1243800000000,
+        "recordDateEpochMs": 1243195200000,
+        "perBondRub": 25.21,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1243800000000,
+        "payDateEpochMs": 1251748800000,
+        "recordDateEpochMs": 1251144000000,
+        "perBondRub": 25.21,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1251748800000,
+        "payDateEpochMs": 1259614800000,
+        "recordDateEpochMs": 1259010000000,
+        "perBondRub": 24.93,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1259614800000,
+        "payDateEpochMs": 1267390800000,
+        "recordDateEpochMs": 1266786000000,
+        "perBondRub": 24.66,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1267390800000,
+        "payDateEpochMs": 1275336000000,
+        "recordDateEpochMs": 1274731200000,
+        "perBondRub": 25.21,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1275336000000,
+        "payDateEpochMs": 1283284800000,
+        "recordDateEpochMs": 1282680000000,
+        "perBondRub": 25.21,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1283284800000,
+        "payDateEpochMs": 1291150800000,
+        "recordDateEpochMs": 1290546000000,
+        "perBondRub": 24.93,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1291150800000,
+        "payDateEpochMs": 1298926800000,
+        "recordDateEpochMs": 1298322000000,
+        "perBondRub": 24.66,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1298926800000,
+        "payDateEpochMs": 1306872000000,
+        "recordDateEpochMs": 1306267200000,
+        "perBondRub": 25.21,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A0JQ6A7": [
+      {
+        "startDateEpochMs": 1245096000000,
+        "payDateEpochMs": 1252958400000,
+        "recordDateEpochMs": 1252180800000,
+        "perBondRub": 38.02,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1252958400000,
+        "payDateEpochMs": 1260824400000,
+        "recordDateEpochMs": 1260046800000,
+        "perBondRub": 38.02,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1260824400000,
+        "payDateEpochMs": 1268686800000,
+        "recordDateEpochMs": 1267650000000,
+        "perBondRub": 30.42,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1268686800000,
+        "payDateEpochMs": 1276545600000,
+        "recordDateEpochMs": 1275508800000,
+        "perBondRub": 30.42,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1276545600000,
+        "payDateEpochMs": 1284408000000,
+        "recordDateEpochMs": 1283630400000,
+        "perBondRub": 30.42,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1284408000000,
+        "payDateEpochMs": 1292274000000,
+        "recordDateEpochMs": 1291496400000,
+        "perBondRub": 30.42,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1292274000000,
+        "payDateEpochMs": 1300136400000,
+        "recordDateEpochMs": 1299099600000,
+        "perBondRub": 19.32,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1300136400000,
+        "payDateEpochMs": 1307995200000,
+        "recordDateEpochMs": 1306958400000,
+        "perBondRub": 19.32,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1307995200000,
+        "payDateEpochMs": 1315857600000,
+        "recordDateEpochMs": 1315080000000,
+        "perBondRub": 19.32,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1315857600000,
+        "payDateEpochMs": 1323720000000,
+        "recordDateEpochMs": 1322942400000,
+        "perBondRub": 19.32,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1323720000000,
+        "payDateEpochMs": 1331582400000,
+        "recordDateEpochMs": 1330545600000,
+        "perBondRub": 19.32,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1331582400000,
+        "payDateEpochMs": 1339444800000,
+        "recordDateEpochMs": 1338667200000,
+        "perBondRub": 19.32,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1339444800000,
+        "payDateEpochMs": 1347307200000,
+        "recordDateEpochMs": 1346529600000,
+        "perBondRub": 19.32,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1347307200000,
+        "payDateEpochMs": 1355169600000,
+        "recordDateEpochMs": 1354392000000,
+        "perBondRub": 19.32,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1355169600000,
+        "payDateEpochMs": 1363032000000,
+        "recordDateEpochMs": 1361995200000,
+        "perBondRub": 23.31,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1363032000000,
+        "payDateEpochMs": 1370894400000,
+        "recordDateEpochMs": 1370116800000,
+        "perBondRub": 23.31,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1370894400000,
+        "payDateEpochMs": 1378756800000,
+        "recordDateEpochMs": 1377979200000,
+        "perBondRub": 23.31,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1378756800000,
+        "payDateEpochMs": 1386619200000,
+        "recordDateEpochMs": 1385841600000,
+        "perBondRub": 23.31,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1386619200000,
+        "payDateEpochMs": 1394481600000,
+        "recordDateEpochMs": 1393704000000,
+        "perBondRub": 23.31,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1394481600000,
+        "payDateEpochMs": 1402344000000,
+        "recordDateEpochMs": 1401566400000,
+        "perBondRub": 23.31,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A0JQCC3": [
+      {
+        "startDateEpochMs": 1253563200000,
+        "payDateEpochMs": 1269291600000,
+        "recordDateEpochMs": 1268773200000,
+        "perBondRub": 69.81,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1269291600000,
+        "payDateEpochMs": 1285012800000,
+        "recordDateEpochMs": 1284494400000,
+        "perBondRub": 69.81,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1285012800000,
+        "payDateEpochMs": 1300741200000,
+        "recordDateEpochMs": 1300222800000,
+        "perBondRub": 69.81,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1300741200000,
+        "payDateEpochMs": 1316462400000,
+        "recordDateEpochMs": 1315944000000,
+        "perBondRub": 69.81,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1316462400000,
+        "payDateEpochMs": 1332187200000,
+        "recordDateEpochMs": 1331668800000,
+        "perBondRub": 37.4,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1332187200000,
+        "payDateEpochMs": 1347912000000,
+        "recordDateEpochMs": 1347393600000,
+        "perBondRub": 37.4,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A0JQXR7": [
+      {
+        "startDateEpochMs": 1278619200000,
+        "payDateEpochMs": 1294347600000,
+        "recordDateEpochMs": 1293483600000,
+        "perBondRub": 46.62,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1294347600000,
+        "payDateEpochMs": 1310068800000,
+        "recordDateEpochMs": 1309723200000,
+        "perBondRub": 46.62,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1310068800000,
+        "payDateEpochMs": 1325793600000,
+        "recordDateEpochMs": 1324929600000,
+        "perBondRub": 46.62,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1325793600000,
+        "payDateEpochMs": 1341518400000,
+        "recordDateEpochMs": 1341172800000,
+        "perBondRub": 46.62,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1341518400000,
+        "payDateEpochMs": 1357243200000,
+        "recordDateEpochMs": 1356465600000,
+        "perBondRub": 46.62,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1357243200000,
+        "payDateEpochMs": 1372968000000,
+        "recordDateEpochMs": 1372622400000,
+        "perBondRub": 46.62,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1372968000000,
+        "payDateEpochMs": 1388692800000,
+        "recordDateEpochMs": 1388347200000,
+        "perBondRub": 41.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1388692800000,
+        "payDateEpochMs": 1404417600000,
+        "recordDateEpochMs": 1404072000000,
+        "perBondRub": 41.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1404417600000,
+        "payDateEpochMs": 1420146000000,
+        "recordDateEpochMs": 1419800400000,
+        "perBondRub": 41.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1420146000000,
+        "payDateEpochMs": 1435870800000,
+        "recordDateEpochMs": 1435525200000,
+        "perBondRub": 41.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1435870800000,
+        "payDateEpochMs": 1451595600000,
+        "recordDateEpochMs": 1451250000000,
+        "perBondRub": 41.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1451595600000,
+        "payDateEpochMs": 1467320400000,
+        "recordDateEpochMs": 1466974800000,
+        "perBondRub": 41.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1467320400000,
+        "payDateEpochMs": 1483045200000,
+        "recordDateEpochMs": 1482699600000,
+        "perBondRub": 41.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1483045200000,
+        "payDateEpochMs": 1498770000000,
+        "recordDateEpochMs": 1498424400000,
+        "perBondRub": 41.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1498770000000,
+        "payDateEpochMs": 1514494800000,
+        "recordDateEpochMs": 1514149200000,
+        "perBondRub": 41.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1514494800000,
+        "payDateEpochMs": 1530219600000,
+        "recordDateEpochMs": 1529874000000,
+        "perBondRub": 41.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1530219600000,
+        "payDateEpochMs": 1545944400000,
+        "recordDateEpochMs": 1545598800000,
+        "perBondRub": 0.05,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1545944400000,
+        "payDateEpochMs": 1561669200000,
+        "recordDateEpochMs": 1561323600000,
+        "perBondRub": 0.05,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1561669200000,
+        "payDateEpochMs": 1577394000000,
+        "recordDateEpochMs": 1577048400000,
+        "perBondRub": 0.05,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1577394000000,
+        "payDateEpochMs": 1593118800000,
+        "recordDateEpochMs": 1592514000000,
+        "perBondRub": 0.05,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A0JQY27": [
+      {
+        "startDateEpochMs": 1279051200000,
+        "payDateEpochMs": 1290200400000,
+        "recordDateEpochMs": 1289509200000,
+        "perBondRub": 31.81,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1290200400000,
+        "payDateEpochMs": 1298149200000,
+        "recordDateEpochMs": 1297285200000,
+        "perBondRub": 18.6,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1298149200000,
+        "payDateEpochMs": 1305835200000,
+        "recordDateEpochMs": 1305057600000,
+        "perBondRub": 15.87,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1305835200000,
+        "payDateEpochMs": 1313784000000,
+        "recordDateEpochMs": 1313006400000,
+        "perBondRub": 14.3,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1313784000000,
+        "payDateEpochMs": 1321732800000,
+        "recordDateEpochMs": 1320868800000,
+        "perBondRub": 11.98,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1321732800000,
+        "payDateEpochMs": 1329681600000,
+        "recordDateEpochMs": 1328731200000,
+        "perBondRub": 9.64,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1329681600000,
+        "payDateEpochMs": 1337457600000,
+        "recordDateEpochMs": 1336680000000,
+        "perBondRub": 6.97,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1337457600000,
+        "payDateEpochMs": 1345406400000,
+        "recordDateEpochMs": 1344456000000,
+        "perBondRub": 5.05,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1345406400000,
+        "payDateEpochMs": 1353355200000,
+        "recordDateEpochMs": 1352577600000,
+        "perBondRub": 3.01,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1353355200000,
+        "payDateEpochMs": 1361304000000,
+        "recordDateEpochMs": 1360526400000,
+        "perBondRub": 1.05,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1361304000000,
+        "payDateEpochMs": 1368993600000,
+        "recordDateEpochMs": 1367870400000,
+        "perBondRub": 1.02,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1368993600000,
+        "payDateEpochMs": 1376942400000,
+        "recordDateEpochMs": 1376164800000,
+        "perBondRub": 1.05,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1376942400000,
+        "payDateEpochMs": 1384891200000,
+        "recordDateEpochMs": 1384113600000,
+        "perBondRub": 1.05,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1384891200000,
+        "payDateEpochMs": 1392840000000,
+        "recordDateEpochMs": 1392062400000,
+        "perBondRub": 1.05,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1392840000000,
+        "payDateEpochMs": 1400529600000,
+        "recordDateEpochMs": 1399752000000,
+        "perBondRub": 1.02,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1400529600000,
+        "payDateEpochMs": 1408478400000,
+        "recordDateEpochMs": 1407700800000,
+        "perBondRub": 1.05,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1408478400000,
+        "payDateEpochMs": 1416430800000,
+        "recordDateEpochMs": 1415653200000,
+        "perBondRub": 1.05,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1416430800000,
+        "payDateEpochMs": 1424379600000,
+        "recordDateEpochMs": 1423602000000,
+        "perBondRub": 1.05,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1424379600000,
+        "payDateEpochMs": 1432069200000,
+        "recordDateEpochMs": 1431291600000,
+        "perBondRub": 1.02,
+        "faceValueAtTime": 46.36
+      },
+      {
+        "startDateEpochMs": 1432069200000,
+        "payDateEpochMs": 1440018000000,
+        "recordDateEpochMs": 1439240400000,
+        "perBondRub": 1.05,
+        "faceValueAtTime": 46.36
+      }
+    ],
+    "RU000A0JQY35": [
+      {
+        "startDateEpochMs": 1279051200000,
+        "payDateEpochMs": 1290200400000,
+        "recordDateEpochMs": 1289509200000,
+        "perBondRub": 22.97,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1290200400000,
+        "payDateEpochMs": 1298149200000,
+        "recordDateEpochMs": 1297285200000,
+        "perBondRub": 16.38,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1298149200000,
+        "payDateEpochMs": 1305835200000,
+        "recordDateEpochMs": 1305057600000,
+        "perBondRub": 15.85,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1305835200000,
+        "payDateEpochMs": 1313784000000,
+        "recordDateEpochMs": 1313006400000,
+        "perBondRub": 16.38,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1313784000000,
+        "payDateEpochMs": 1321732800000,
+        "recordDateEpochMs": 1320868800000,
+        "perBondRub": 16.38,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1321732800000,
+        "payDateEpochMs": 1329681600000,
+        "recordDateEpochMs": 1328731200000,
+        "perBondRub": 16.38,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1329681600000,
+        "payDateEpochMs": 1337457600000,
+        "recordDateEpochMs": 1336680000000,
+        "perBondRub": 22.19,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1337457600000,
+        "payDateEpochMs": 1345406400000,
+        "recordDateEpochMs": 1344456000000,
+        "perBondRub": 22.68,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1345406400000,
+        "payDateEpochMs": 1353355200000,
+        "recordDateEpochMs": 1352577600000,
+        "perBondRub": 22.68,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1353355200000,
+        "payDateEpochMs": 1361304000000,
+        "recordDateEpochMs": 1360526400000,
+        "perBondRub": 22.68,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1361304000000,
+        "payDateEpochMs": 1368993600000,
+        "recordDateEpochMs": 1367870400000,
+        "perBondRub": 21.17,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1368993600000,
+        "payDateEpochMs": 1376942400000,
+        "recordDateEpochMs": 1376164800000,
+        "perBondRub": 20.41,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1376942400000,
+        "payDateEpochMs": 1384891200000,
+        "recordDateEpochMs": 1384113600000,
+        "perBondRub": 18.84,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1384891200000,
+        "payDateEpochMs": 1392840000000,
+        "recordDateEpochMs": 1392062400000,
+        "perBondRub": 17.32,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1392840000000,
+        "payDateEpochMs": 1400529600000,
+        "recordDateEpochMs": 1399752000000,
+        "perBondRub": 15.36,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1400529600000,
+        "payDateEpochMs": 1408478400000,
+        "recordDateEpochMs": 1407700800000,
+        "perBondRub": 14.61,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1408478400000,
+        "payDateEpochMs": 1416430800000,
+        "recordDateEpochMs": 1415653200000,
+        "perBondRub": 13.37,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1416430800000,
+        "payDateEpochMs": 1424379600000,
+        "recordDateEpochMs": 1423602000000,
+        "perBondRub": 12.18,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1424379600000,
+        "payDateEpochMs": 1432069200000,
+        "recordDateEpochMs": 1431291600000,
+        "perBondRub": 10.65,
+        "faceValueAtTime": 2.52
+      },
+      {
+        "startDateEpochMs": 1432069200000,
+        "payDateEpochMs": 1440018000000,
+        "recordDateEpochMs": 1439240400000,
+        "perBondRub": 10.11,
+        "faceValueAtTime": 2.52
+      }
+    ],
+    "RU000A0JUD59": [
+      {
+        "startDateEpochMs": 1387915200000,
+        "payDateEpochMs": 1403640000000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1403640000000,
+        "payDateEpochMs": 1419368400000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1419368400000,
+        "payDateEpochMs": 1435093200000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1435093200000,
+        "payDateEpochMs": 1450818000000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1450818000000,
+        "payDateEpochMs": 1466542800000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1466542800000,
+        "payDateEpochMs": 1482267600000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1482267600000,
+        "payDateEpochMs": 1497992400000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1497992400000,
+        "payDateEpochMs": 1513717200000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1513717200000,
+        "payDateEpochMs": 1529442000000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1529442000000,
+        "payDateEpochMs": 1545166800000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1545166800000,
+        "payDateEpochMs": 1560891600000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1560891600000,
+        "payDateEpochMs": 1576616400000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1576616400000,
+        "payDateEpochMs": 1592341200000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1592341200000,
+        "payDateEpochMs": 1608066000000,
+        "recordDateEpochMs": null,
+        "perBondRub": 49.86,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A0ZZFZ4": [
+      {
+        "startDateEpochMs": 1533848400000,
+        "payDateEpochMs": 1549573200000,
+        "recordDateEpochMs": null,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1549573200000,
+        "payDateEpochMs": 1565298000000,
+        "recordDateEpochMs": null,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1565298000000,
+        "payDateEpochMs": 1581022800000,
+        "recordDateEpochMs": null,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1581022800000,
+        "payDateEpochMs": 1596747600000,
+        "recordDateEpochMs": 1596661200000,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1596747600000,
+        "payDateEpochMs": 1612472400000,
+        "recordDateEpochMs": 1612386000000,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1612472400000,
+        "payDateEpochMs": 1628197200000,
+        "recordDateEpochMs": 1628110800000,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1628197200000,
+        "payDateEpochMs": 1643922000000,
+        "recordDateEpochMs": 1643835600000,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1643922000000,
+        "payDateEpochMs": 1659646800000,
+        "recordDateEpochMs": 1659560400000,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1659646800000,
+        "payDateEpochMs": 1675371600000,
+        "recordDateEpochMs": 1675285200000,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1675371600000,
+        "payDateEpochMs": 1691096400000,
+        "recordDateEpochMs": 1691010000000,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1691096400000,
+        "payDateEpochMs": 1706821200000,
+        "recordDateEpochMs": 1706734800000,
+        "perBondRub": 39.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1706821200000,
+        "payDateEpochMs": 1722546000000,
+        "recordDateEpochMs": 1722459600000,
+        "perBondRub": 69.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1722546000000,
+        "payDateEpochMs": 1738270800000,
+        "recordDateEpochMs": 1738184400000,
+        "perBondRub": 69.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1738270800000,
+        "payDateEpochMs": 1753995600000,
+        "recordDateEpochMs": 1753909200000,
+        "perBondRub": 69.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1753995600000,
+        "payDateEpochMs": 1769720400000,
+        "recordDateEpochMs": 1769634000000,
+        "perBondRub": 69.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1769720400000,
+        "payDateEpochMs": 1785445200000,
+        "recordDateEpochMs": 1785358800000,
+        "perBondRub": 69.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1785445200000,
+        "payDateEpochMs": 1801170000000,
+        "recordDateEpochMs": 1801083600000,
+        "perBondRub": 69.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1801170000000,
+        "payDateEpochMs": 1816894800000,
+        "recordDateEpochMs": 1816808400000,
+        "perBondRub": 69.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1816894800000,
+        "payDateEpochMs": 1832619600000,
+        "recordDateEpochMs": 1832533200000,
+        "perBondRub": 69.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1832619600000,
+        "payDateEpochMs": 1848344400000,
+        "recordDateEpochMs": 1848258000000,
+        "perBondRub": 69.86,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A100Y76": [
+      {
+        "startDateEpochMs": 1571691600000,
+        "payDateEpochMs": 1574370000000,
+        "recordDateEpochMs": null,
+        "perBondRub": 0.01,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A102598": [
+      {
+        "startDateEpochMs": 1600722000000,
+        "payDateEpochMs": 1608584400000,
+        "recordDateEpochMs": 1608498000000,
+        "perBondRub": 14.34,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1608584400000,
+        "payDateEpochMs": 1616446800000,
+        "recordDateEpochMs": 1616360400000,
+        "perBondRub": 14.34,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1616446800000,
+        "payDateEpochMs": 1624309200000,
+        "recordDateEpochMs": 1624222800000,
+        "perBondRub": 14.34,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1624309200000,
+        "payDateEpochMs": 1632171600000,
+        "recordDateEpochMs": 1632085200000,
+        "perBondRub": 14.34,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1632171600000,
+        "payDateEpochMs": 1640034000000,
+        "recordDateEpochMs": 1639947600000,
+        "perBondRub": 11.47,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1640034000000,
+        "payDateEpochMs": 1647896400000,
+        "recordDateEpochMs": 1647810000000,
+        "perBondRub": 11.47,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1647896400000,
+        "payDateEpochMs": 1655758800000,
+        "recordDateEpochMs": 1655672400000,
+        "perBondRub": 11.47,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1655758800000,
+        "payDateEpochMs": 1663621200000,
+        "recordDateEpochMs": 1663534800000,
+        "perBondRub": 11.47,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1663621200000,
+        "payDateEpochMs": 1671483600000,
+        "recordDateEpochMs": 1671397200000,
+        "perBondRub": 8.6,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1671483600000,
+        "payDateEpochMs": 1679346000000,
+        "recordDateEpochMs": 1679259600000,
+        "perBondRub": 8.6,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1679346000000,
+        "payDateEpochMs": 1687208400000,
+        "recordDateEpochMs": 1687122000000,
+        "perBondRub": 8.6,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1687208400000,
+        "payDateEpochMs": 1695070800000,
+        "recordDateEpochMs": 1694984400000,
+        "perBondRub": 8.6,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1695070800000,
+        "payDateEpochMs": 1702933200000,
+        "recordDateEpochMs": 1702846800000,
+        "perBondRub": 5.73,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1702933200000,
+        "payDateEpochMs": 1710795600000,
+        "recordDateEpochMs": 1710709200000,
+        "perBondRub": 5.73,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1710795600000,
+        "payDateEpochMs": 1718658000000,
+        "recordDateEpochMs": 1718571600000,
+        "perBondRub": 5.73,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1718658000000,
+        "payDateEpochMs": 1726520400000,
+        "recordDateEpochMs": 1726434000000,
+        "perBondRub": 5.73,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1726520400000,
+        "payDateEpochMs": 1734382800000,
+        "recordDateEpochMs": 1734296400000,
+        "perBondRub": 2.87,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1734382800000,
+        "payDateEpochMs": 1742245200000,
+        "recordDateEpochMs": 1742158800000,
+        "perBondRub": 2.87,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1742245200000,
+        "payDateEpochMs": 1750107600000,
+        "recordDateEpochMs": 1750021200000,
+        "perBondRub": 2.87,
+        "faceValueAtTime": 200
+      },
+      {
+        "startDateEpochMs": 1750107600000,
+        "payDateEpochMs": 1757970000000,
+        "recordDateEpochMs": 1757883600000,
+        "perBondRub": 2.87,
+        "faceValueAtTime": 200
+      }
+    ],
+    "RU000A1040H1": [
+      {
+        "startDateEpochMs": 1636664400000,
+        "payDateEpochMs": 1639256400000,
+        "recordDateEpochMs": null,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1639256400000,
+        "payDateEpochMs": 1641848400000,
+        "recordDateEpochMs": 1641762000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1641848400000,
+        "payDateEpochMs": 1644440400000,
+        "recordDateEpochMs": 1644354000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1644440400000,
+        "payDateEpochMs": 1647032400000,
+        "recordDateEpochMs": 1646946000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1647032400000,
+        "payDateEpochMs": 1649624400000,
+        "recordDateEpochMs": 1649365200000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1649624400000,
+        "payDateEpochMs": 1652216400000,
+        "recordDateEpochMs": 1651784400000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1652216400000,
+        "payDateEpochMs": 1654808400000,
+        "recordDateEpochMs": 1654722000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1654808400000,
+        "payDateEpochMs": 1657400400000,
+        "recordDateEpochMs": 1657227600000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1657400400000,
+        "payDateEpochMs": 1659992400000,
+        "recordDateEpochMs": 1659906000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1659992400000,
+        "payDateEpochMs": 1662584400000,
+        "recordDateEpochMs": 1662498000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1662584400000,
+        "payDateEpochMs": 1665176400000,
+        "recordDateEpochMs": 1665090000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1665176400000,
+        "payDateEpochMs": 1667768400000,
+        "recordDateEpochMs": 1667422800000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1667768400000,
+        "payDateEpochMs": 1670360400000,
+        "recordDateEpochMs": 1670274000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1670360400000,
+        "payDateEpochMs": 1672952400000,
+        "recordDateEpochMs": 1672347600000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1672952400000,
+        "payDateEpochMs": 1675544400000,
+        "recordDateEpochMs": 1675371600000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1675544400000,
+        "payDateEpochMs": 1678136400000,
+        "recordDateEpochMs": 1678050000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1678136400000,
+        "payDateEpochMs": 1680728400000,
+        "recordDateEpochMs": 1680642000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1680728400000,
+        "payDateEpochMs": 1683320400000,
+        "recordDateEpochMs": 1683234000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1683320400000,
+        "payDateEpochMs": 1685912400000,
+        "recordDateEpochMs": 1685653200000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1685912400000,
+        "payDateEpochMs": 1688504400000,
+        "recordDateEpochMs": 1688418000000,
+        "perBondRub": 11.1,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A1050X7": [
+      {
+        "startDateEpochMs": 1659387600000,
+        "payDateEpochMs": 1667250000000,
+        "recordDateEpochMs": 1667163600000,
+        "perBondRub": 44.88,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1667250000000,
+        "payDateEpochMs": 1675112400000,
+        "recordDateEpochMs": 1675026000000,
+        "perBondRub": 44.88,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1675112400000,
+        "payDateEpochMs": 1682974800000,
+        "recordDateEpochMs": 1682629200000,
+        "perBondRub": 44.88,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1682974800000,
+        "payDateEpochMs": 1690837200000,
+        "recordDateEpochMs": 1690750800000,
+        "perBondRub": 44.88,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1690837200000,
+        "payDateEpochMs": 1698699600000,
+        "recordDateEpochMs": 1698613200000,
+        "perBondRub": 37.4,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1698699600000,
+        "payDateEpochMs": 1706562000000,
+        "recordDateEpochMs": 1706475600000,
+        "perBondRub": 37.4,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1706562000000,
+        "payDateEpochMs": 1714424400000,
+        "recordDateEpochMs": 1714165200000,
+        "perBondRub": 32.16,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1714424400000,
+        "payDateEpochMs": 1722286800000,
+        "recordDateEpochMs": 1722200400000,
+        "perBondRub": 26.93,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1722286800000,
+        "payDateEpochMs": 1730149200000,
+        "recordDateEpochMs": 1730062800000,
+        "perBondRub": 20.24,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1730149200000,
+        "payDateEpochMs": 1738011600000,
+        "recordDateEpochMs": 1737925200000,
+        "perBondRub": 15.36,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1738011600000,
+        "payDateEpochMs": 1745874000000,
+        "recordDateEpochMs": 1745787600000,
+        "perBondRub": 10.47,
+        "faceValueAtTime": 160
+      },
+      {
+        "startDateEpochMs": 1745874000000,
+        "payDateEpochMs": 1753736400000,
+        "recordDateEpochMs": 1753650000000,
+        "perBondRub": 5.58,
+        "faceValueAtTime": 160
+      }
+    ],
+    "RU000A105M59": [
+      {
+        "startDateEpochMs": 1671051600000,
+        "payDateEpochMs": 1673643600000,
+        "recordDateEpochMs": 1673557200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1673643600000,
+        "payDateEpochMs": 1676235600000,
+        "recordDateEpochMs": 1675976400000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1676235600000,
+        "payDateEpochMs": 1678827600000,
+        "recordDateEpochMs": 1678741200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1678827600000,
+        "payDateEpochMs": 1681419600000,
+        "recordDateEpochMs": 1681333200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1681419600000,
+        "payDateEpochMs": 1684011600000,
+        "recordDateEpochMs": 1683838800000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1684011600000,
+        "payDateEpochMs": 1686603600000,
+        "recordDateEpochMs": 1686258000000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1686603600000,
+        "payDateEpochMs": 1689195600000,
+        "recordDateEpochMs": 1689109200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1689195600000,
+        "payDateEpochMs": 1691787600000,
+        "recordDateEpochMs": 1691701200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1691787600000,
+        "payDateEpochMs": 1694379600000,
+        "recordDateEpochMs": 1694120400000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1694379600000,
+        "payDateEpochMs": 1696971600000,
+        "recordDateEpochMs": 1696885200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1696971600000,
+        "payDateEpochMs": 1699563600000,
+        "recordDateEpochMs": 1699477200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1699563600000,
+        "payDateEpochMs": 1702155600000,
+        "recordDateEpochMs": 1701982800000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1702155600000,
+        "payDateEpochMs": 1704747600000,
+        "recordDateEpochMs": 1703797200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1704747600000,
+        "payDateEpochMs": 1707339600000,
+        "recordDateEpochMs": 1707253200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1707339600000,
+        "payDateEpochMs": 1709931600000,
+        "recordDateEpochMs": 1709758800000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1709931600000,
+        "payDateEpochMs": 1712523600000,
+        "recordDateEpochMs": 1712264400000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1712523600000,
+        "payDateEpochMs": 1715115600000,
+        "recordDateEpochMs": 1715029200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1715115600000,
+        "payDateEpochMs": 1717707600000,
+        "recordDateEpochMs": 1717621200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1717707600000,
+        "payDateEpochMs": 1720299600000,
+        "recordDateEpochMs": 1720126800000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      },
+      {
+        "startDateEpochMs": 1720299600000,
+        "payDateEpochMs": 1722891600000,
+        "recordDateEpochMs": 1722805200000,
+        "perBondRub": 12.33,
+        "faceValueAtTime": 501.4
+      }
+    ],
+    "RU000A105W08": [
+      {
+        "startDateEpochMs": 1677013200000,
+        "payDateEpochMs": 1692738000000,
+        "recordDateEpochMs": 1692651600000,
+        "perBondRub": 44.78,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1692738000000,
+        "payDateEpochMs": 1708462800000,
+        "recordDateEpochMs": 1708376400000,
+        "perBondRub": 78.18,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1708462800000,
+        "payDateEpochMs": 1724187600000,
+        "recordDateEpochMs": 1724101200000,
+        "perBondRub": 87.3,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1724187600000,
+        "payDateEpochMs": 1739912400000,
+        "recordDateEpochMs": 1739826000000,
+        "perBondRub": 106.43,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1739912400000,
+        "payDateEpochMs": 1755637200000,
+        "recordDateEpochMs": 1755550800000,
+        "perBondRub": 108.4,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1755637200000,
+        "payDateEpochMs": 1771362000000,
+        "recordDateEpochMs": 1771275600000,
+        "perBondRub": 89.82,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A107UW1": [
+      {
+        "startDateEpochMs": 1709067600000,
+        "payDateEpochMs": 1711659600000,
+        "recordDateEpochMs": 1711573200000,
+        "perBondRub": 14.22,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1711659600000,
+        "payDateEpochMs": 1714251600000,
+        "recordDateEpochMs": 1714165200000,
+        "perBondRub": 14.22,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1714251600000,
+        "payDateEpochMs": 1716843600000,
+        "recordDateEpochMs": 1716757200000,
+        "perBondRub": 14.22,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1716843600000,
+        "payDateEpochMs": 1719435600000,
+        "recordDateEpochMs": 1719349200000,
+        "perBondRub": 14.22,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1719435600000,
+        "payDateEpochMs": 1722027600000,
+        "recordDateEpochMs": 1721941200000,
+        "perBondRub": 14.22,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1722027600000,
+        "payDateEpochMs": 1724619600000,
+        "recordDateEpochMs": 1724360400000,
+        "perBondRub": 15.42,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1724619600000,
+        "payDateEpochMs": 1727211600000,
+        "recordDateEpochMs": 1727125200000,
+        "perBondRub": 15.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1727211600000,
+        "payDateEpochMs": 1729803600000,
+        "recordDateEpochMs": 1729717200000,
+        "perBondRub": 16.68,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1729803600000,
+        "payDateEpochMs": 1732395600000,
+        "recordDateEpochMs": 1732222800000,
+        "perBondRub": 17.84,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1732395600000,
+        "payDateEpochMs": 1734987600000,
+        "recordDateEpochMs": 1734901200000,
+        "perBondRub": 18.33,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1734987600000,
+        "payDateEpochMs": 1737579600000,
+        "recordDateEpochMs": 1737493200000,
+        "perBondRub": 18.33,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1737579600000,
+        "payDateEpochMs": 1740171600000,
+        "recordDateEpochMs": 1740085200000,
+        "perBondRub": 18.33,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1740171600000,
+        "payDateEpochMs": 1742763600000,
+        "recordDateEpochMs": 1742504400000,
+        "perBondRub": 18.33,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1742763600000,
+        "payDateEpochMs": 1745355600000,
+        "recordDateEpochMs": 1745269200000,
+        "perBondRub": 18.33,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1745355600000,
+        "payDateEpochMs": 1747947600000,
+        "recordDateEpochMs": 1747861200000,
+        "perBondRub": 18.33,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1747947600000,
+        "payDateEpochMs": 1750539600000,
+        "recordDateEpochMs": 1750366800000,
+        "perBondRub": 18.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1750539600000,
+        "payDateEpochMs": 1753131600000,
+        "recordDateEpochMs": 1753045200000,
+        "perBondRub": 17.51,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1753131600000,
+        "payDateEpochMs": 1755723600000,
+        "recordDateEpochMs": 1755637200000,
+        "perBondRub": 16.52,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1755723600000,
+        "payDateEpochMs": 1758315600000,
+        "recordDateEpochMs": 1758229200000,
+        "perBondRub": 15.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1758315600000,
+        "payDateEpochMs": 1760907600000,
+        "recordDateEpochMs": 1760648400000,
+        "perBondRub": 15.07,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A1089K2": [
+      {
+        "startDateEpochMs": 1712869200000,
+        "payDateEpochMs": 1720731600000,
+        "recordDateEpochMs": 1720645200000,
+        "perBondRub": 236.37,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1720731600000,
+        "payDateEpochMs": 1728594000000,
+        "recordDateEpochMs": 1728507600000,
+        "perBondRub": 269.74,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1728594000000,
+        "payDateEpochMs": 1736456400000,
+        "recordDateEpochMs": 1736370000000,
+        "perBondRub": 269.76,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1736456400000,
+        "payDateEpochMs": 1744318800000,
+        "recordDateEpochMs": 1744232400000,
+        "perBondRub": 227.21,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1744318800000,
+        "payDateEpochMs": 1752181200000,
+        "recordDateEpochMs": 1752094800000,
+        "perBondRub": 213.12,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1752181200000,
+        "payDateEpochMs": 1760043600000,
+        "recordDateEpochMs": 1759957200000,
+        "perBondRub": 223.87,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1760043600000,
+        "payDateEpochMs": 1767906000000,
+        "recordDateEpochMs": 1767819600000,
+        "perBondRub": 219.84,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1767906000000,
+        "payDateEpochMs": 1775768400000,
+        "recordDateEpochMs": 1775682000000,
+        "perBondRub": 223.96,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1775768400000,
+        "payDateEpochMs": 1783630800000,
+        "recordDateEpochMs": 1783544400000,
+        "perBondRub": 207.47,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1783630800000,
+        "payDateEpochMs": 1791493200000,
+        "recordDateEpochMs": 1791406800000,
+        "perBondRub": 207.47,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A109W87": [
+      {
+        "startDateEpochMs": 1765400400000,
+        "payDateEpochMs": 1797800400000,
+        "recordDateEpochMs": 1797541200000,
+        "perBondRub": 0.1,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A10AEB8": [
+      {
+        "startDateEpochMs": 1734555600000,
+        "payDateEpochMs": 1737147600000,
+        "recordDateEpochMs": 1737061200000,
+        "perBondRub": 19.52,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1737147600000,
+        "payDateEpochMs": 1739739600000,
+        "recordDateEpochMs": 1739480400000,
+        "perBondRub": 19.52,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1739739600000,
+        "payDateEpochMs": 1742331600000,
+        "recordDateEpochMs": 1742245200000,
+        "perBondRub": 19.52,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1742331600000,
+        "payDateEpochMs": 1744923600000,
+        "recordDateEpochMs": 1744837200000,
+        "perBondRub": 19.52,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1744923600000,
+        "payDateEpochMs": 1747515600000,
+        "recordDateEpochMs": 1747342800000,
+        "perBondRub": 19.52,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1747515600000,
+        "payDateEpochMs": 1750107600000,
+        "recordDateEpochMs": 1750021200000,
+        "perBondRub": 19.47,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1750107600000,
+        "payDateEpochMs": 1752699600000,
+        "recordDateEpochMs": 1752613200000,
+        "perBondRub": 18.7,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1752699600000,
+        "payDateEpochMs": 1755291600000,
+        "recordDateEpochMs": 1755205200000,
+        "perBondRub": 17.99,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1755291600000,
+        "payDateEpochMs": 1757883600000,
+        "recordDateEpochMs": 1757624400000,
+        "perBondRub": 17.05,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1757883600000,
+        "payDateEpochMs": 1760475600000,
+        "recordDateEpochMs": 1760389200000,
+        "perBondRub": 16.4,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1760475600000,
+        "payDateEpochMs": 1763067600000,
+        "recordDateEpochMs": 1762981200000,
+        "perBondRub": 16.07,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1763067600000,
+        "payDateEpochMs": 1765659600000,
+        "recordDateEpochMs": 1765486800000,
+        "perBondRub": 15.82,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1765659600000,
+        "payDateEpochMs": 1768251600000,
+        "recordDateEpochMs": 1768165200000,
+        "perBondRub": 15.6,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1768251600000,
+        "payDateEpochMs": 1770843600000,
+        "recordDateEpochMs": 1770757200000,
+        "perBondRub": 15.41,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1770843600000,
+        "payDateEpochMs": 1773435600000,
+        "recordDateEpochMs": 1773349200000,
+        "perBondRub": 15.14,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1773435600000,
+        "payDateEpochMs": 1776027600000,
+        "recordDateEpochMs": 1775768400000,
+        "perBondRub": 14.79,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1776027600000,
+        "payDateEpochMs": 1778619600000,
+        "recordDateEpochMs": 1778533200000,
+        "perBondRub": 14.45,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A10AYR2": [
+      {
+        "startDateEpochMs": 1740517200000,
+        "payDateEpochMs": 1772571600000,
+        "recordDateEpochMs": 1772485200000,
+        "perBondRub": 0.1,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A10C6F7": [
+      {
+        "startDateEpochMs": 1753390800000,
+        "payDateEpochMs": 1755982800000,
+        "recordDateEpochMs": 1755810000000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1755982800000,
+        "payDateEpochMs": 1758574800000,
+        "recordDateEpochMs": 1758488400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1758574800000,
+        "payDateEpochMs": 1761166800000,
+        "recordDateEpochMs": 1761080400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1761166800000,
+        "payDateEpochMs": 1763758800000,
+        "recordDateEpochMs": 1763672400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1763758800000,
+        "payDateEpochMs": 1766350800000,
+        "recordDateEpochMs": 1766091600000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1766350800000,
+        "payDateEpochMs": 1768942800000,
+        "recordDateEpochMs": 1768856400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1768942800000,
+        "payDateEpochMs": 1771534800000,
+        "recordDateEpochMs": 1771448400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1771534800000,
+        "payDateEpochMs": 1774126800000,
+        "recordDateEpochMs": 1773954000000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1774126800000,
+        "payDateEpochMs": 1776718800000,
+        "recordDateEpochMs": 1776632400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1776718800000,
+        "payDateEpochMs": 1779310800000,
+        "recordDateEpochMs": 1779224400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1779310800000,
+        "payDateEpochMs": 1781902800000,
+        "recordDateEpochMs": 1781816400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1781902800000,
+        "payDateEpochMs": 1784494800000,
+        "recordDateEpochMs": 1784235600000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1784494800000,
+        "payDateEpochMs": 1787086800000,
+        "recordDateEpochMs": 1787000400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1787086800000,
+        "payDateEpochMs": 1789678800000,
+        "recordDateEpochMs": 1789592400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1789678800000,
+        "payDateEpochMs": 1792270800000,
+        "recordDateEpochMs": 1792098000000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1792270800000,
+        "payDateEpochMs": 1794862800000,
+        "recordDateEpochMs": 1794776400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1794862800000,
+        "payDateEpochMs": 1797454800000,
+        "recordDateEpochMs": 1797368400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1797454800000,
+        "payDateEpochMs": 1800046800000,
+        "recordDateEpochMs": 1799960400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1800046800000,
+        "payDateEpochMs": 1802638800000,
+        "recordDateEpochMs": 1802379600000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1802638800000,
+        "payDateEpochMs": 1805230800000,
+        "recordDateEpochMs": 1805144400000,
+        "perBondRub": 13.77,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "RU000A10CMR3": [
+      {
+        "startDateEpochMs": 1756846800000,
+        "payDateEpochMs": 1759438800000,
+        "recordDateEpochMs": 1759352400000,
+        "perBondRub": 44.82,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1759438800000,
+        "payDateEpochMs": 1762030800000,
+        "recordDateEpochMs": 1761944400000,
+        "perBondRub": 44.54,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1762030800000,
+        "payDateEpochMs": 1764622800000,
+        "recordDateEpochMs": 1764536400000,
+        "perBondRub": 43.03,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1764622800000,
+        "payDateEpochMs": 1767214800000,
+        "recordDateEpochMs": 1767042000000,
+        "perBondRub": 43.02,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1767214800000,
+        "payDateEpochMs": 1769806800000,
+        "recordDateEpochMs": 1769720400000,
+        "perBondRub": 41.81,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1769806800000,
+        "payDateEpochMs": 1772398800000,
+        "recordDateEpochMs": 1772139600000,
+        "perBondRub": 42.5,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1772398800000,
+        "payDateEpochMs": 1774990800000,
+        "recordDateEpochMs": 1774904400000,
+        "perBondRub": 44.71,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1774990800000,
+        "payDateEpochMs": 1777582800000,
+        "recordDateEpochMs": 1777496400000,
+        "perBondRub": 41.18,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1777582800000,
+        "payDateEpochMs": 1780174800000,
+        "recordDateEpochMs": 1780002000000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1780174800000,
+        "payDateEpochMs": 1782766800000,
+        "recordDateEpochMs": 1782680400000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1782766800000,
+        "payDateEpochMs": 1785358800000,
+        "recordDateEpochMs": 1785272400000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1785358800000,
+        "payDateEpochMs": 1787950800000,
+        "recordDateEpochMs": 1787864400000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1787950800000,
+        "payDateEpochMs": 1790542800000,
+        "recordDateEpochMs": 1790283600000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1790542800000,
+        "payDateEpochMs": 1793134800000,
+        "recordDateEpochMs": 1793048400000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1793134800000,
+        "payDateEpochMs": 1795726800000,
+        "recordDateEpochMs": 1795640400000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1795726800000,
+        "payDateEpochMs": 1798318800000,
+        "recordDateEpochMs": 1798146000000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1798318800000,
+        "payDateEpochMs": 1800910800000,
+        "recordDateEpochMs": 1800824400000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1800910800000,
+        "payDateEpochMs": 1803502800000,
+        "recordDateEpochMs": 1803416400000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1803502800000,
+        "payDateEpochMs": 1806094800000,
+        "recordDateEpochMs": 1806008400000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1806094800000,
+        "payDateEpochMs": 1808686800000,
+        "recordDateEpochMs": 1808427600000,
+        "perBondRub": 39.35,
+        "faceValueAtTime": 100
+      }
+    ],
+    "RU000A10CRC4": [
+      {
+        "startDateEpochMs": 1757970000000,
+        "payDateEpochMs": 1760562000000,
+        "recordDateEpochMs": 1760475600000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1760562000000,
+        "payDateEpochMs": 1763154000000,
+        "recordDateEpochMs": 1763067600000,
+        "perBondRub": 42.72,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1763154000000,
+        "payDateEpochMs": 1765746000000,
+        "recordDateEpochMs": 1765486800000,
+        "perBondRub": 42.05,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1765746000000,
+        "payDateEpochMs": 1768338000000,
+        "recordDateEpochMs": 1768251600000,
+        "perBondRub": 41.76,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1768338000000,
+        "payDateEpochMs": 1770930000000,
+        "recordDateEpochMs": 1770843600000,
+        "perBondRub": 41.06,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1770930000000,
+        "payDateEpochMs": 1773522000000,
+        "recordDateEpochMs": 1773349200000,
+        "perBondRub": 41.91,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1773522000000,
+        "payDateEpochMs": 1776114000000,
+        "recordDateEpochMs": 1776027600000,
+        "perBondRub": 40.8,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1776114000000,
+        "payDateEpochMs": 1778706000000,
+        "recordDateEpochMs": 1778619600000,
+        "perBondRub": 39.11,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1778706000000,
+        "payDateEpochMs": 1781298000000,
+        "recordDateEpochMs": 1781125200000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1781298000000,
+        "payDateEpochMs": 1783890000000,
+        "recordDateEpochMs": 1783630800000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1783890000000,
+        "payDateEpochMs": 1786482000000,
+        "recordDateEpochMs": 1786395600000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1786482000000,
+        "payDateEpochMs": 1789074000000,
+        "recordDateEpochMs": 1788987600000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1789074000000,
+        "payDateEpochMs": 1791666000000,
+        "recordDateEpochMs": 1791493200000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1791666000000,
+        "payDateEpochMs": 1794258000000,
+        "recordDateEpochMs": 1794171600000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1794258000000,
+        "payDateEpochMs": 1796850000000,
+        "recordDateEpochMs": 1796763600000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1796850000000,
+        "payDateEpochMs": 1799442000000,
+        "recordDateEpochMs": 1799355600000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1799442000000,
+        "payDateEpochMs": 1802034000000,
+        "recordDateEpochMs": 1801774800000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1802034000000,
+        "payDateEpochMs": 1804626000000,
+        "recordDateEpochMs": 1804539600000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1804626000000,
+        "payDateEpochMs": 1807218000000,
+        "recordDateEpochMs": 1807131600000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1807218000000,
+        "payDateEpochMs": 1809810000000,
+        "recordDateEpochMs": 1809637200000,
+        "perBondRub": 37.92,
+        "faceValueAtTime": 100
+      }
+    ],
+    "RU000A10DHX9": [
+      {
+        "startDateEpochMs": 1763499600000,
+        "payDateEpochMs": 1766091600000,
+        "recordDateEpochMs": 1766005200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1766091600000,
+        "payDateEpochMs": 1768683600000,
+        "recordDateEpochMs": 1768510800000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1768683600000,
+        "payDateEpochMs": 1771275600000,
+        "recordDateEpochMs": 1771189200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1771275600000,
+        "payDateEpochMs": 1773867600000,
+        "recordDateEpochMs": 1773781200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1773867600000,
+        "payDateEpochMs": 1776459600000,
+        "recordDateEpochMs": 1776373200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1776459600000,
+        "payDateEpochMs": 1779051600000,
+        "recordDateEpochMs": 1778792400000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1779051600000,
+        "payDateEpochMs": 1781643600000,
+        "recordDateEpochMs": 1781557200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1781643600000,
+        "payDateEpochMs": 1784235600000,
+        "recordDateEpochMs": 1784149200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1784235600000,
+        "payDateEpochMs": 1786827600000,
+        "recordDateEpochMs": 1786654800000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1786827600000,
+        "payDateEpochMs": 1789419600000,
+        "recordDateEpochMs": 1789333200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1789419600000,
+        "payDateEpochMs": 1792011600000,
+        "recordDateEpochMs": 1791925200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1792011600000,
+        "payDateEpochMs": 1794603600000,
+        "recordDateEpochMs": 1794517200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1794603600000,
+        "payDateEpochMs": 1797195600000,
+        "recordDateEpochMs": 1796936400000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1797195600000,
+        "payDateEpochMs": 1799787600000,
+        "recordDateEpochMs": 1799701200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1799787600000,
+        "payDateEpochMs": 1802379600000,
+        "recordDateEpochMs": 1802293200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1802379600000,
+        "payDateEpochMs": 1804971600000,
+        "recordDateEpochMs": 1804798800000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1804971600000,
+        "payDateEpochMs": 1807563600000,
+        "recordDateEpochMs": 1807477200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1807563600000,
+        "payDateEpochMs": 1810155600000,
+        "recordDateEpochMs": 1810069200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1810155600000,
+        "payDateEpochMs": 1812747600000,
+        "recordDateEpochMs": 1812661200000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1812747600000,
+        "payDateEpochMs": 1815339600000,
+        "recordDateEpochMs": 1815080400000,
+        "perBondRub": 12.95,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "SU25069RMFS4": [
+      {
+        "startDateEpochMs": 1253649600000,
+        "payDateEpochMs": 1269378000000,
+        "recordDateEpochMs": null,
+        "perBondRub": 53.85,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1269378000000,
+        "payDateEpochMs": 1285099200000,
+        "recordDateEpochMs": null,
+        "perBondRub": 53.85,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1285099200000,
+        "payDateEpochMs": 1300827600000,
+        "recordDateEpochMs": null,
+        "perBondRub": 53.85,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1300827600000,
+        "payDateEpochMs": 1316548800000,
+        "recordDateEpochMs": null,
+        "perBondRub": 53.85,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1316548800000,
+        "payDateEpochMs": 1332273600000,
+        "recordDateEpochMs": null,
+        "perBondRub": 53.85,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1332273600000,
+        "payDateEpochMs": 1347998400000,
+        "recordDateEpochMs": 1347912000000,
+        "perBondRub": 53.85,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "SU25072RMFS8": [
+      {
+        "startDateEpochMs": 1263934800000,
+        "payDateEpochMs": 1280260800000,
+        "recordDateEpochMs": null,
+        "perBondRub": 37.02,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1280260800000,
+        "payDateEpochMs": 1295989200000,
+        "recordDateEpochMs": null,
+        "perBondRub": 35.65,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1295989200000,
+        "payDateEpochMs": 1311710400000,
+        "recordDateEpochMs": null,
+        "perBondRub": 35.65,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1311710400000,
+        "payDateEpochMs": 1327435200000,
+        "recordDateEpochMs": null,
+        "perBondRub": 35.65,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1327435200000,
+        "payDateEpochMs": 1343160000000,
+        "recordDateEpochMs": null,
+        "perBondRub": 35.65,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1343160000000,
+        "payDateEpochMs": 1358884800000,
+        "recordDateEpochMs": 1358798400000,
+        "perBondRub": 35.65,
+        "faceValueAtTime": 1000
+      }
+    ],
     "SU25081RMFS9": [
       {
         "startDateEpochMs": 1360094400000,
@@ -267,6 +4935,574 @@
         "payDateEpochMs": 1517346000000,
         "recordDateEpochMs": 1517259600000,
         "perBondRub": 30.92,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "SU26207RMFS9": [
+      {
+        "startDateEpochMs": 1329854400000,
+        "payDateEpochMs": 1345579200000,
+        "recordDateEpochMs": 1345492800000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1345579200000,
+        "payDateEpochMs": 1361304000000,
+        "recordDateEpochMs": 1361217600000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1361304000000,
+        "payDateEpochMs": 1377028800000,
+        "recordDateEpochMs": 1376942400000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1377028800000,
+        "payDateEpochMs": 1392753600000,
+        "recordDateEpochMs": 1392667200000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1392753600000,
+        "payDateEpochMs": 1408478400000,
+        "recordDateEpochMs": 1408392000000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1408478400000,
+        "payDateEpochMs": 1424206800000,
+        "recordDateEpochMs": 1424120400000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1424206800000,
+        "payDateEpochMs": 1439931600000,
+        "recordDateEpochMs": 1439845200000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1439931600000,
+        "payDateEpochMs": 1455656400000,
+        "recordDateEpochMs": 1455570000000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1455656400000,
+        "payDateEpochMs": 1471381200000,
+        "recordDateEpochMs": 1471294800000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1471381200000,
+        "payDateEpochMs": 1487106000000,
+        "recordDateEpochMs": 1487019600000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1487106000000,
+        "payDateEpochMs": 1502830800000,
+        "recordDateEpochMs": 1502744400000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1502830800000,
+        "payDateEpochMs": 1518555600000,
+        "recordDateEpochMs": 1518469200000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1518555600000,
+        "payDateEpochMs": 1534280400000,
+        "recordDateEpochMs": 1534194000000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1534280400000,
+        "payDateEpochMs": 1550005200000,
+        "recordDateEpochMs": 1549918800000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1550005200000,
+        "payDateEpochMs": 1565730000000,
+        "recordDateEpochMs": 1565643600000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1565730000000,
+        "payDateEpochMs": 1581454800000,
+        "recordDateEpochMs": 1581368400000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1581454800000,
+        "payDateEpochMs": 1597179600000,
+        "recordDateEpochMs": 1597093200000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1597179600000,
+        "payDateEpochMs": 1612904400000,
+        "recordDateEpochMs": 1612818000000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1612904400000,
+        "payDateEpochMs": 1628629200000,
+        "recordDateEpochMs": 1628542800000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1628629200000,
+        "payDateEpochMs": 1644354000000,
+        "recordDateEpochMs": 1644267600000,
+        "perBondRub": 40.64,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "SU26212RMFS9": [
+      {
+        "startDateEpochMs": 1358884800000,
+        "payDateEpochMs": 1375819200000,
+        "recordDateEpochMs": 1375732800000,
+        "perBondRub": 37.86,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1375819200000,
+        "payDateEpochMs": 1391544000000,
+        "recordDateEpochMs": 1391457600000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1391544000000,
+        "payDateEpochMs": 1407268800000,
+        "recordDateEpochMs": 1407182400000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1407268800000,
+        "payDateEpochMs": 1422997200000,
+        "recordDateEpochMs": 1422910800000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1422997200000,
+        "payDateEpochMs": 1438722000000,
+        "recordDateEpochMs": 1438635600000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1438722000000,
+        "payDateEpochMs": 1454446800000,
+        "recordDateEpochMs": 1454360400000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1454446800000,
+        "payDateEpochMs": 1470171600000,
+        "recordDateEpochMs": 1470085200000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1470171600000,
+        "payDateEpochMs": 1485896400000,
+        "recordDateEpochMs": 1485810000000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1485896400000,
+        "payDateEpochMs": 1501621200000,
+        "recordDateEpochMs": 1501534800000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1501621200000,
+        "payDateEpochMs": 1517346000000,
+        "recordDateEpochMs": 1517259600000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1517346000000,
+        "payDateEpochMs": 1533070800000,
+        "recordDateEpochMs": 1532984400000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1533070800000,
+        "payDateEpochMs": 1548795600000,
+        "recordDateEpochMs": 1548709200000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1548795600000,
+        "payDateEpochMs": 1564520400000,
+        "recordDateEpochMs": 1564434000000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1564520400000,
+        "payDateEpochMs": 1580245200000,
+        "recordDateEpochMs": 1580158800000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1580245200000,
+        "payDateEpochMs": 1595970000000,
+        "recordDateEpochMs": 1595883600000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1595970000000,
+        "payDateEpochMs": 1611694800000,
+        "recordDateEpochMs": 1611608400000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1611694800000,
+        "payDateEpochMs": 1627419600000,
+        "recordDateEpochMs": 1627333200000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1627419600000,
+        "payDateEpochMs": 1643144400000,
+        "recordDateEpochMs": 1643058000000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1643144400000,
+        "payDateEpochMs": 1658869200000,
+        "recordDateEpochMs": 1658782800000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1658869200000,
+        "payDateEpochMs": 1674594000000,
+        "recordDateEpochMs": 1674507600000,
+        "perBondRub": 35.15,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "SU26218RMFS6": [
+      {
+        "startDateEpochMs": 1445979600000,
+        "payDateEpochMs": 1459890000000,
+        "recordDateEpochMs": null,
+        "perBondRub": 37.49,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1459890000000,
+        "payDateEpochMs": 1475614800000,
+        "recordDateEpochMs": 1475528400000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1475614800000,
+        "payDateEpochMs": 1491339600000,
+        "recordDateEpochMs": 1491253200000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1491339600000,
+        "payDateEpochMs": 1507064400000,
+        "recordDateEpochMs": 1506978000000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1507064400000,
+        "payDateEpochMs": 1522789200000,
+        "recordDateEpochMs": 1522702800000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1522789200000,
+        "payDateEpochMs": 1538514000000,
+        "recordDateEpochMs": 1538427600000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1538514000000,
+        "payDateEpochMs": 1554238800000,
+        "recordDateEpochMs": 1554152400000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1554238800000,
+        "payDateEpochMs": 1569963600000,
+        "recordDateEpochMs": 1569877200000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1569963600000,
+        "payDateEpochMs": 1585688400000,
+        "recordDateEpochMs": 1585602000000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1585688400000,
+        "payDateEpochMs": 1601413200000,
+        "recordDateEpochMs": 1601326800000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1601413200000,
+        "payDateEpochMs": 1617138000000,
+        "recordDateEpochMs": 1617051600000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1617138000000,
+        "payDateEpochMs": 1632862800000,
+        "recordDateEpochMs": 1632776400000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1632862800000,
+        "payDateEpochMs": 1648587600000,
+        "recordDateEpochMs": 1648501200000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1648587600000,
+        "payDateEpochMs": 1664312400000,
+        "recordDateEpochMs": 1664226000000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1664312400000,
+        "payDateEpochMs": 1680037200000,
+        "recordDateEpochMs": 1679950800000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1680037200000,
+        "payDateEpochMs": 1695762000000,
+        "recordDateEpochMs": 1695675600000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1695762000000,
+        "payDateEpochMs": 1711486800000,
+        "recordDateEpochMs": 1711400400000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1711486800000,
+        "payDateEpochMs": 1727211600000,
+        "recordDateEpochMs": 1727125200000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1727211600000,
+        "payDateEpochMs": 1742936400000,
+        "recordDateEpochMs": 1742850000000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1742936400000,
+        "payDateEpochMs": 1758661200000,
+        "recordDateEpochMs": 1758574800000,
+        "perBondRub": 42.38,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "SU26221RMFS0": [
+      {
+        "startDateEpochMs": 1487106000000,
+        "payDateEpochMs": 1507669200000,
+        "recordDateEpochMs": 1507582800000,
+        "perBondRub": 50.21,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1507669200000,
+        "payDateEpochMs": 1523394000000,
+        "recordDateEpochMs": 1523307600000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1523394000000,
+        "payDateEpochMs": 1539118800000,
+        "recordDateEpochMs": 1539032400000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1539118800000,
+        "payDateEpochMs": 1554843600000,
+        "recordDateEpochMs": 1554757200000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1554843600000,
+        "payDateEpochMs": 1570568400000,
+        "recordDateEpochMs": 1570482000000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1570568400000,
+        "payDateEpochMs": 1586293200000,
+        "recordDateEpochMs": 1586206800000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1586293200000,
+        "payDateEpochMs": 1602018000000,
+        "recordDateEpochMs": 1601931600000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1602018000000,
+        "payDateEpochMs": 1617742800000,
+        "recordDateEpochMs": 1617656400000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1617742800000,
+        "payDateEpochMs": 1633467600000,
+        "recordDateEpochMs": 1633381200000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1633467600000,
+        "payDateEpochMs": 1649192400000,
+        "recordDateEpochMs": 1649106000000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1649192400000,
+        "payDateEpochMs": 1664917200000,
+        "recordDateEpochMs": 1664830800000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1664917200000,
+        "payDateEpochMs": 1680642000000,
+        "recordDateEpochMs": 1680555600000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1680642000000,
+        "payDateEpochMs": 1696366800000,
+        "recordDateEpochMs": 1696280400000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1696366800000,
+        "payDateEpochMs": 1712091600000,
+        "recordDateEpochMs": 1712005200000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1712091600000,
+        "payDateEpochMs": 1727816400000,
+        "recordDateEpochMs": 1727730000000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1727816400000,
+        "payDateEpochMs": 1743541200000,
+        "recordDateEpochMs": 1743454800000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1743541200000,
+        "payDateEpochMs": 1759266000000,
+        "recordDateEpochMs": 1759179600000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1759266000000,
+        "payDateEpochMs": 1774990800000,
+        "recordDateEpochMs": 1774904400000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1774990800000,
+        "payDateEpochMs": 1790715600000,
+        "recordDateEpochMs": 1790629200000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1790715600000,
+        "payDateEpochMs": 1806440400000,
+        "recordDateEpochMs": 1806354000000,
+        "perBondRub": 38.39,
         "faceValueAtTime": 1000
       }
     ],
@@ -346,6 +5582,148 @@
         "payDateEpochMs": 1721163600000,
         "recordDateEpochMs": 1721077200000,
         "perBondRub": 36.9,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "SU26230RMFS1": [
+      {
+        "startDateEpochMs": 1559682000000,
+        "payDateEpochMs": 1570568400000,
+        "recordDateEpochMs": null,
+        "perBondRub": 26.58,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1570568400000,
+        "payDateEpochMs": 1586293200000,
+        "recordDateEpochMs": 1586206800000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1586293200000,
+        "payDateEpochMs": 1602018000000,
+        "recordDateEpochMs": 1601931600000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1602018000000,
+        "payDateEpochMs": 1617742800000,
+        "recordDateEpochMs": 1617656400000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1617742800000,
+        "payDateEpochMs": 1633467600000,
+        "recordDateEpochMs": 1633381200000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1633467600000,
+        "payDateEpochMs": 1649192400000,
+        "recordDateEpochMs": 1649106000000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1649192400000,
+        "payDateEpochMs": 1664917200000,
+        "recordDateEpochMs": 1664830800000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1664917200000,
+        "payDateEpochMs": 1680642000000,
+        "recordDateEpochMs": 1680555600000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1680642000000,
+        "payDateEpochMs": 1696366800000,
+        "recordDateEpochMs": 1696280400000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1696366800000,
+        "payDateEpochMs": 1712091600000,
+        "recordDateEpochMs": 1712005200000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1712091600000,
+        "payDateEpochMs": 1727816400000,
+        "recordDateEpochMs": 1727730000000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1727816400000,
+        "payDateEpochMs": 1743541200000,
+        "recordDateEpochMs": 1743454800000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1743541200000,
+        "payDateEpochMs": 1759266000000,
+        "recordDateEpochMs": 1759179600000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1759266000000,
+        "payDateEpochMs": 1774990800000,
+        "recordDateEpochMs": 1774904400000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1774990800000,
+        "payDateEpochMs": 1790715600000,
+        "recordDateEpochMs": 1790629200000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1790715600000,
+        "payDateEpochMs": 1806440400000,
+        "recordDateEpochMs": 1806354000000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1806440400000,
+        "payDateEpochMs": 1822165200000,
+        "recordDateEpochMs": 1822078800000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1822165200000,
+        "payDateEpochMs": 1837890000000,
+        "recordDateEpochMs": 1837803600000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1837890000000,
+        "payDateEpochMs": 1853614800000,
+        "recordDateEpochMs": 1853528400000,
+        "perBondRub": 38.39,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1853614800000,
+        "payDateEpochMs": 1869339600000,
+        "recordDateEpochMs": 1869253200000,
+        "perBondRub": 38.39,
         "faceValueAtTime": 1000
       }
     ],
@@ -490,12 +5868,1153 @@
         "perBondRub": 61.08,
         "faceValueAtTime": 1000
       }
+    ],
+    "SU29010RMFS4": [
+      {
+        "startDateEpochMs": 1419973200000,
+        "payDateEpochMs": 1435698000000,
+        "recordDateEpochMs": 1435611600000,
+        "perBondRub": 54.6,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1435698000000,
+        "payDateEpochMs": 1451422800000,
+        "recordDateEpochMs": 1451336400000,
+        "perBondRub": 80.43,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1451422800000,
+        "payDateEpochMs": 1467147600000,
+        "recordDateEpochMs": 1467061200000,
+        "perBondRub": 64.02,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1467147600000,
+        "payDateEpochMs": 1482872400000,
+        "recordDateEpochMs": 1482786000000,
+        "perBondRub": 62.03,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1482872400000,
+        "payDateEpochMs": 1498597200000,
+        "recordDateEpochMs": 1498510800000,
+        "perBondRub": 58.89,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1498597200000,
+        "payDateEpochMs": 1514322000000,
+        "recordDateEpochMs": 1514235600000,
+        "perBondRub": 56.44,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1514322000000,
+        "payDateEpochMs": 1530046800000,
+        "recordDateEpochMs": 1529960400000,
+        "perBondRub": 49.46,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1530046800000,
+        "payDateEpochMs": 1545771600000,
+        "recordDateEpochMs": 1545685200000,
+        "perBondRub": 43.18,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1545771600000,
+        "payDateEpochMs": 1561496400000,
+        "recordDateEpochMs": 1561410000000,
+        "perBondRub": 43.88,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1561496400000,
+        "payDateEpochMs": 1577221200000,
+        "recordDateEpochMs": 1577134800000,
+        "perBondRub": 45.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1577221200000,
+        "payDateEpochMs": 1592946000000,
+        "recordDateEpochMs": 1592859600000,
+        "perBondRub": 41.93,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1592946000000,
+        "payDateEpochMs": 1608670800000,
+        "recordDateEpochMs": 1608584400000,
+        "perBondRub": 36.8,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1608670800000,
+        "payDateEpochMs": 1624395600000,
+        "recordDateEpochMs": 1624309200000,
+        "perBondRub": 28.72,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1624395600000,
+        "payDateEpochMs": 1640120400000,
+        "recordDateEpochMs": 1640034000000,
+        "perBondRub": 29.97,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1640120400000,
+        "payDateEpochMs": 1655845200000,
+        "recordDateEpochMs": 1655758800000,
+        "perBondRub": 40.59,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1655845200000,
+        "payDateEpochMs": 1671570000000,
+        "recordDateEpochMs": 1671483600000,
+        "perBondRub": 72.95,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1671570000000,
+        "payDateEpochMs": 1687294800000,
+        "recordDateEpochMs": 1687208400000,
+        "perBondRub": 47.52,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1687294800000,
+        "payDateEpochMs": 1703019600000,
+        "recordDateEpochMs": 1702933200000,
+        "perBondRub": 43.98,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1703019600000,
+        "payDateEpochMs": 1718744400000,
+        "recordDateEpochMs": 1718658000000,
+        "perBondRub": 65.77,
+        "faceValueAtTime": 1000
+      },
+      {
+        "startDateEpochMs": 1718744400000,
+        "payDateEpochMs": 1734469200000,
+        "recordDateEpochMs": 1734382800000,
+        "perBondRub": 86.31,
+        "faceValueAtTime": 1000
+      }
+    ],
+    "SU46023RMFS6": [
+      {
+        "startDateEpochMs": 1317326400000,
+        "payDateEpochMs": 1328731200000,
+        "recordDateEpochMs": 1328644800000,
+        "perBondRub": 29.51,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1328731200000,
+        "payDateEpochMs": 1344456000000,
+        "recordDateEpochMs": 1344369600000,
+        "perBondRub": 40.69,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1344456000000,
+        "payDateEpochMs": 1360180800000,
+        "recordDateEpochMs": 1360094400000,
+        "perBondRub": 40.69,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1360180800000,
+        "payDateEpochMs": 1375905600000,
+        "recordDateEpochMs": 1375819200000,
+        "perBondRub": 40.69,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1375905600000,
+        "payDateEpochMs": 1391630400000,
+        "recordDateEpochMs": 1391544000000,
+        "perBondRub": 40.69,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1391630400000,
+        "payDateEpochMs": 1407355200000,
+        "recordDateEpochMs": 1407268800000,
+        "perBondRub": 40.69,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1407355200000,
+        "payDateEpochMs": 1423083600000,
+        "recordDateEpochMs": 1422997200000,
+        "perBondRub": 40.69,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1423083600000,
+        "payDateEpochMs": 1438808400000,
+        "recordDateEpochMs": 1438722000000,
+        "perBondRub": 40.69,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1438808400000,
+        "payDateEpochMs": 1454533200000,
+        "recordDateEpochMs": 1454446800000,
+        "perBondRub": 40.69,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1454533200000,
+        "payDateEpochMs": 1470258000000,
+        "recordDateEpochMs": 1470171600000,
+        "perBondRub": 40.69,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1470258000000,
+        "payDateEpochMs": 1485982800000,
+        "recordDateEpochMs": 1485896400000,
+        "perBondRub": 40.69,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1485982800000,
+        "payDateEpochMs": 1501707600000,
+        "recordDateEpochMs": 1501621200000,
+        "perBondRub": 36.62,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1501707600000,
+        "payDateEpochMs": 1517432400000,
+        "recordDateEpochMs": 1517346000000,
+        "perBondRub": 36.62,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1517432400000,
+        "payDateEpochMs": 1533157200000,
+        "recordDateEpochMs": 1533070800000,
+        "perBondRub": 32.55,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1533157200000,
+        "payDateEpochMs": 1548882000000,
+        "recordDateEpochMs": 1548795600000,
+        "perBondRub": 32.55,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1548882000000,
+        "payDateEpochMs": 1564606800000,
+        "recordDateEpochMs": 1564520400000,
+        "perBondRub": 28.48,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1564606800000,
+        "payDateEpochMs": 1580331600000,
+        "recordDateEpochMs": 1580245200000,
+        "perBondRub": 28.48,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1580331600000,
+        "payDateEpochMs": 1596056400000,
+        "recordDateEpochMs": 1595970000000,
+        "perBondRub": 24.41,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1596056400000,
+        "payDateEpochMs": 1611781200000,
+        "recordDateEpochMs": 1611694800000,
+        "perBondRub": 24.41,
+        "faceValueAtTime": 100
+      },
+      {
+        "startDateEpochMs": 1611781200000,
+        "payDateEpochMs": 1627506000000,
+        "recordDateEpochMs": 1627419600000,
+        "perBondRub": 20.34,
+        "faceValueAtTime": 100
+      }
     ]
   },
   "amortizationsBySymbol": {
+    "RU000A0E49M0": [
+      {
+        "amortDateEpochMs": 1187640000000,
+        "faceValueRub": 250,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 250,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1195506000000,
+        "faceValueRub": 250,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 250,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1203368400000,
+        "faceValueRub": 250,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 250,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1211227200000,
+        "faceValueRub": 250,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 250,
+        "dataSource": "amortization"
+      }
+    ],
+    "RU000A0JP4V9": [
+      {
+        "amortDateEpochMs": 1207080000000,
+        "faceValueRub": 500,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 250,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1222804800000,
+        "faceValueRub": 500,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 250,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1238529600000,
+        "faceValueRub": 500,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 500,
+        "dataSource": "amortization"
+      }
+    ],
+    "RU000A0JQ185": [
+      {
+        "amortDateEpochMs": 1306872000000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A0JQ6A7": [
+      {
+        "amortDateEpochMs": 1402344000000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A0JQCC3": [
+      {
+        "amortDateEpochMs": 1347912000000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A0JQXR7": [
+      {
+        "amortDateEpochMs": 1593118800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A0JQY27": [
+      {
+        "amortDateEpochMs": 1290200400000,
+        "faceValueRub": 46.36,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 180.22,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1298149200000,
+        "faceValueRub": 46.36,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 96.8,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1305835200000,
+        "faceValueRub": 46.36,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 92.52,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1313784000000,
+        "faceValueRub": 46.36,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 102.38,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1321732800000,
+        "faceValueRub": 46.36,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 103.1,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1329681600000,
+        "faceValueRub": 46.36,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 110.95,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1337457600000,
+        "faceValueRub": 46.36,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 91.59,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1345406400000,
+        "faceValueRub": 46.36,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 89.94,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1353355200000,
+        "faceValueRub": 46.36,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 86.14,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 2300043600000,
+        "faceValueRub": 46.36,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 46.36,
+        "dataSource": "amortization"
+      }
+    ],
+    "RU000A0JQY35": [
+      {
+        "amortDateEpochMs": 1361304000000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 35.18,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1368993600000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 64.99,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1376942400000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 69.54,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1384891200000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 66.98,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1392840000000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 63.26,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1400529600000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 55.81,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1408478400000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 54.94,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1416430800000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 52.35,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1424379600000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 51.62,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1432069200000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 39.62,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1440018000000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 37.28,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1447966800000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 32.13,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1455915600000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 34.23,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1463691600000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 33.1,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1471640400000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 30.27,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1479589200000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 26.18,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1487538000000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 32.74,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1495227600000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 26.18,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1503176400000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.08,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1511125200000,
+        "faceValueRub": 2.52,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 26.14,
+        "dataSource": "amortization"
+      }
+    ],
+    "RU000A0JQY68": [
+      {
+        "amortDateEpochMs": 1374436800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A0JUD59": [
+      {
+        "amortDateEpochMs": 1608066000000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A100Y76": [
+      {
+        "amortDateEpochMs": 1574370000000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A102598": [
+      {
+        "amortDateEpochMs": 1632171600000,
+        "faceValueRub": 200,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 200,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1663621200000,
+        "faceValueRub": 200,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 200,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1695070800000,
+        "faceValueRub": 200,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 200,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1726520400000,
+        "faceValueRub": 200,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 200,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1757970000000,
+        "faceValueRub": 200,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 200,
+        "dataSource": "amortization"
+      }
+    ],
+    "RU000A1040H1": [
+      {
+        "amortDateEpochMs": 1732568400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1735160400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1737752400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1740344400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1742936400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1745528400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1748120400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1750712400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1753304400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1755896400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1758488400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 83,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1761080400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 87,
+        "dataSource": "amortization"
+      }
+    ],
+    "RU000A1050X7": [
+      {
+        "amortDateEpochMs": 1706562000000,
+        "faceValueRub": 160,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 140,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1714424400000,
+        "faceValueRub": 160,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 140,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1722286800000,
+        "faceValueRub": 160,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 140,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1730149200000,
+        "faceValueRub": 160,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 140,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1738011600000,
+        "faceValueRub": 160,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 140,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1745874000000,
+        "faceValueRub": 160,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 140,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1753736400000,
+        "faceValueRub": 160,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 160,
+        "dataSource": "amortization"
+      }
+    ],
+    "RU000A105M59": [
+      {
+        "amortDateEpochMs": 1735851600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1738443600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1741035600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1743627600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1746219600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1748811600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1751403600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1753995600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1756587600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1759179600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1761771600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1764363600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1766955600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1769547600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1772139600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1774731600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1777323600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1779915600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1782507600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1785099600000,
+        "faceValueRub": 501.4,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 27.7,
+        "dataSource": "amortization"
+      }
+    ],
+    "RU000A105W08": [
+      {
+        "amortDateEpochMs": 1802811600000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A107UW1": [
+      {
+        "amortDateEpochMs": 1802379600000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A1089K2": [
+      {
+        "amortDateEpochMs": 1791493200000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 10531.7,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A109W87": [
+      {
+        "amortDateEpochMs": 1797800400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A10AEB8": [
+      {
+        "amortDateEpochMs": 1796763600000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A10AYR2": [
+      {
+        "amortDateEpochMs": 1772571600000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A10C6F7": [
+      {
+        "amortDateEpochMs": 1823374800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 125,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1831150800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 125,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1838926800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 125,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1846702800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 125,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1854478800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 125,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1862254800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 125,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1870030800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 125,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1877806800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 125,
+        "dataSource": "amortization"
+      }
+    ],
+    "RU000A10C8S6": [
+      {
+        "amortDateEpochMs": 1912280400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A10CMR3": [
+      {
+        "amortDateEpochMs": 1912366800000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 100,
+        "amortRubPerBond": 7154.6,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A10CRC4": [
+      {
+        "amortDateEpochMs": 1882386000000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 100,
+        "amortRubPerBond": 7154.6,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A10DHX9": [
+      {
+        "amortDateEpochMs": 1856811600000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "RU000A10F7T3": [
+      {
+        "amortDateEpochMs": 1857416400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "SU25069RMFS4": [
+      {
+        "amortDateEpochMs": 1347998400000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "SU25072RMFS8": [
+      {
+        "amortDateEpochMs": 1358884800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
     "SU25081RMFS9": [
       {
         "amortDateEpochMs": 1517346000000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "SU26207RMFS9": [
+      {
+        "amortDateEpochMs": 1801602000000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "SU26212RMFS9": [
+      {
+        "amortDateEpochMs": 1831842000000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "SU26218RMFS6": [
+      {
+        "amortDateEpochMs": 1947358800000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "SU26221RMFS0": [
+      {
+        "amortDateEpochMs": 1995138000000,
         "faceValueRub": 1000,
         "initialFaceValueRub": 1000,
         "amortRubPerBond": 1000,
@@ -511,6 +7030,15 @@
         "dataSource": "maturity"
       }
     ],
+    "SU26230RMFS1": [
+      {
+        "amortDateEpochMs": 2183835600000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
     "SU26247RMFS5": [
       {
         "amortDateEpochMs": 2188674000000,
@@ -519,19 +7047,244 @@
         "amortRubPerBond": 1000,
         "dataSource": "maturity"
       }
+    ],
+    "SU29010RMFS4": [
+      {
+        "amortDateEpochMs": 2048965200000,
+        "faceValueRub": 1000,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 1000,
+        "dataSource": "maturity"
+      }
+    ],
+    "SU46023RMFS6": [
+      {
+        "amortDateEpochMs": 1485982800000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 100,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1517432400000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 100,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1548882000000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 100,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1580331600000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 100,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1611781200000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 100,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1643230800000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 100,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1674680400000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 100,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1706130000000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 100,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1737579600000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 100,
+        "dataSource": "amortization"
+      },
+      {
+        "amortDateEpochMs": 1784754000000,
+        "faceValueRub": 100,
+        "initialFaceValueRub": 1000,
+        "amortRubPerBond": 100,
+        "dataSource": "amortization"
+      }
     ]
   },
   "redemptionBySymbol": {
+    "RU000A0E49M0": {
+      "maturityEpochMs": 1211227200000,
+      "faceValueRub": 1000
+    },
+    "RU000A0JP4V9": {
+      "maturityEpochMs": 1238529600000,
+      "faceValueRub": 1000
+    },
+    "RU000A0JQ185": {
+      "maturityEpochMs": 1306872000000,
+      "faceValueRub": 1000
+    },
+    "RU000A0JQ6A7": {
+      "maturityEpochMs": 1402344000000,
+      "faceValueRub": 1000
+    },
+    "RU000A0JQCC3": {
+      "maturityEpochMs": 1347912000000,
+      "faceValueRub": 1000
+    },
+    "RU000A0JQXR7": {
+      "maturityEpochMs": 1593118800000,
+      "faceValueRub": 1000
+    },
+    "RU000A0JQY27": {
+      "maturityEpochMs": 2300043600000,
+      "faceValueRub": 1000
+    },
+    "RU000A0JQY35": {
+      "maturityEpochMs": 2300043600000,
+      "faceValueRub": 1000
+    },
+    "RU000A0JQY68": {
+      "maturityEpochMs": 1374436800000,
+      "faceValueRub": 1000
+    },
+    "RU000A0JUD59": {
+      "maturityEpochMs": 1608066000000,
+      "faceValueRub": 1000
+    },
+    "RU000A100Y76": {
+      "maturityEpochMs": 1574370000000,
+      "faceValueRub": 1000
+    },
+    "RU000A102598": {
+      "maturityEpochMs": 1757970000000,
+      "faceValueRub": 1000
+    },
+    "RU000A1040H1": {
+      "maturityEpochMs": 1761080400000,
+      "faceValueRub": 1000
+    },
+    "RU000A1050X7": {
+      "maturityEpochMs": 1753736400000,
+      "faceValueRub": 1000
+    },
+    "RU000A105M59": {
+      "maturityEpochMs": 1826571600000,
+      "faceValueRub": 1000
+    },
+    "RU000A105W08": {
+      "maturityEpochMs": 1802811600000,
+      "faceValueRub": 1000
+    },
+    "RU000A107UW1": {
+      "maturityEpochMs": 1802379600000,
+      "faceValueRub": 1000
+    },
+    "RU000A1089K2": {
+      "maturityEpochMs": 1791493200000,
+      "faceValueRub": 1000
+    },
+    "RU000A109W87": {
+      "maturityEpochMs": 1797800400000,
+      "faceValueRub": 1000
+    },
+    "RU000A10AEB8": {
+      "maturityEpochMs": 1796763600000,
+      "faceValueRub": 1000
+    },
+    "RU000A10AYR2": {
+      "maturityEpochMs": 1772571600000,
+      "faceValueRub": 1000
+    },
+    "RU000A10C6F7": {
+      "maturityEpochMs": 1877806800000,
+      "faceValueRub": 1000
+    },
+    "RU000A10C8S6": {
+      "maturityEpochMs": 1912280400000,
+      "faceValueRub": 1000
+    },
+    "RU000A10CMR3": {
+      "maturityEpochMs": 1912366800000,
+      "faceValueRub": 100
+    },
+    "RU000A10CRC4": {
+      "maturityEpochMs": 1882386000000,
+      "faceValueRub": 100
+    },
+    "RU000A10DHX9": {
+      "maturityEpochMs": 1856811600000,
+      "faceValueRub": 1000
+    },
+    "RU000A10F7T3": {
+      "maturityEpochMs": 1857416400000,
+      "faceValueRub": 1000
+    },
+    "SU25069RMFS4": {
+      "maturityEpochMs": 1347998400000,
+      "faceValueRub": 1000
+    },
+    "SU25072RMFS8": {
+      "maturityEpochMs": 1358884800000,
+      "faceValueRub": 1000
+    },
     "SU25081RMFS9": {
       "maturityEpochMs": 1517346000000,
+      "faceValueRub": 1000
+    },
+    "SU26207RMFS9": {
+      "maturityEpochMs": 1801602000000,
+      "faceValueRub": 1000
+    },
+    "SU26212RMFS9": {
+      "maturityEpochMs": 1831842000000,
+      "faceValueRub": 1000
+    },
+    "SU26218RMFS6": {
+      "maturityEpochMs": 1947358800000,
+      "faceValueRub": 1000
+    },
+    "SU26221RMFS0": {
+      "maturityEpochMs": 1995138000000,
       "faceValueRub": 1000
     },
     "SU26227RMFS7": {
       "maturityEpochMs": 1721163600000,
       "faceValueRub": 1000
     },
+    "SU26230RMFS1": {
+      "maturityEpochMs": 2183835600000,
+      "faceValueRub": 1000
+    },
     "SU26247RMFS5": {
       "maturityEpochMs": 2188674000000,
+      "faceValueRub": 1000
+    },
+    "SU29010RMFS4": {
+      "maturityEpochMs": 2048965200000,
+      "faceValueRub": 1000
+    },
+    "SU46023RMFS6": {
+      "maturityEpochMs": 1784754000000,
       "faceValueRub": 1000
     }
   }

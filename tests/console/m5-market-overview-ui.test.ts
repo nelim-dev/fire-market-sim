@@ -1,5 +1,7 @@
 import { LogicManager } from '../../src/logic/managers/LogicManager';
 import { selectEducationIsSymbolUnlocked } from '../../src/logic/modules/education/selectors';
+import { isEducationDefaultLocked } from '../../src/logic/modules/education/state';
+import { selectIsInstrumentActiveOnMarket } from '../../src/logic/modules/market/selectors';
 import {
   selectMarketOverviewRows,
   selectUiSelectedSymbol,
@@ -45,13 +47,16 @@ run('uiState/select-instrument обновляет selectedSymbol', () => {
   );
 });
 
-run('selectEducationIsSymbolUnlocked — все символы каталога после bootstrap', () => {
+run('selectEducationIsSymbolUnlocked — bootstrap учитывает default locked', () => {
   const lm = new LogicManager();
   const state = lm.getState();
   for (const row of state.market.instrumentCatalog) {
+    const expectedUnlocked = !isEducationDefaultLocked(row.symbol);
     assert(
-      selectEducationIsSymbolUnlocked(row.symbol)(state),
-      `${row.symbol} должен быть разблокирован`
+      selectEducationIsSymbolUnlocked(row.symbol)(state) === expectedUnlocked,
+      expectedUnlocked
+        ? `${row.symbol} должен быть разблокирован`
+        : `${row.symbol} должен быть заблокирован по умолчанию`
     );
   }
 });
@@ -94,7 +99,12 @@ run('selectMarketOverviewRows — поиск по тикеру', () => {
 
 run('education/lock-symbol — инструмент в секции закрытых', () => {
   const lm = new LogicManager();
-  const target = lm.getState().market.instrumentCatalog[0]?.symbol;
+  const initialState = lm.getState();
+  const target = initialState.market.instrumentCatalog.find(
+    (row) =>
+      selectIsInstrumentActiveOnMarket(row.symbol)(initialState) &&
+      selectEducationIsSymbolUnlocked(row.symbol)(initialState)
+  )?.symbol;
   assert(Boolean(target), 'каталог пуст');
   lm.dispatchCommand({ type: 'education/lock-symbol', symbol: target! });
   const state = lm.getState();

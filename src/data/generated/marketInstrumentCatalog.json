@@ -2,11 +2,195 @@
   "items": [
     {
       "assetKind": "bond",
+      "ticker": "RU000A0JQCC3",
+      "symbol": "RU000A0JQCC3",
+      "displayName": "RU000A0JQCC3",
+      "isin": "TBD-RU000A0JQCC3",
+      "sourceFilePath": "bonds/RU000A0JQCC3.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A102598",
+      "symbol": "RU000A102598",
+      "displayName": "RU000A102598",
+      "isin": "TBD-RU000A102598",
+      "sourceFilePath": "bonds/RU000A102598.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A1040H1",
+      "symbol": "RU000A1040H1",
+      "displayName": "RU000A1040H1",
+      "isin": "TBD-RU000A1040H1",
+      "sourceFilePath": "bonds/RU000A1040H1.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A1050X7",
+      "symbol": "RU000A1050X7",
+      "displayName": "RU000A1050X7",
+      "isin": "TBD-RU000A1050X7",
+      "sourceFilePath": "bonds/RU000A1050X7.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A105M59",
+      "symbol": "RU000A105M59",
+      "displayName": "RU000A105M59",
+      "isin": "TBD-RU000A105M59",
+      "sourceFilePath": "bonds/RU000A105M59.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A107UW1",
+      "symbol": "RU000A107UW1",
+      "displayName": "RU000A107UW1",
+      "isin": "TBD-RU000A107UW1",
+      "sourceFilePath": "bonds/RU000A107UW1.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A1089K2",
+      "symbol": "RU000A1089K2",
+      "displayName": "RU000A1089K2",
+      "isin": "TBD-RU000A1089K2",
+      "sourceFilePath": "bonds/RU000A1089K2.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A10AEB8",
+      "symbol": "RU000A10AEB8",
+      "displayName": "RU000A10AEB8",
+      "isin": "TBD-RU000A10AEB8",
+      "sourceFilePath": "bonds/RU000A10AEB8.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A10C6F7",
+      "symbol": "RU000A10C6F7",
+      "displayName": "RU000A10C6F7",
+      "isin": "TBD-RU000A10C6F7",
+      "sourceFilePath": "bonds/RU000A10C6F7.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A10C8S6",
+      "symbol": "RU000A10C8S6",
+      "displayName": "RU000A10C8S6",
+      "isin": "TBD-RU000A10C8S6",
+      "sourceFilePath": "bonds/RU000A10C8S6.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A10CMR3",
+      "symbol": "RU000A10CMR3",
+      "displayName": "RU000A10CMR3",
+      "isin": "TBD-RU000A10CMR3",
+      "sourceFilePath": "bonds/RU000A10CMR3.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A10CRC4",
+      "symbol": "RU000A10CRC4",
+      "displayName": "RU000A10CRC4",
+      "isin": "TBD-RU000A10CRC4",
+      "sourceFilePath": "bonds/RU000A10CRC4.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "RU000A10DHX9",
+      "symbol": "RU000A10DHX9",
+      "displayName": "RU000A10DHX9",
+      "isin": "TBD-RU000A10DHX9",
+      "sourceFilePath": "bonds/RU000A10DHX9.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "SU25072RMFS8",
+      "symbol": "SU25072RMFS8",
+      "displayName": "SU25072RMFS8",
+      "isin": "TBD-SU25072RMFS8",
+      "sourceFilePath": "bonds/SU25072RMFS8.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "SU25081RMFS9",
+      "symbol": "SU25081RMFS9",
+      "displayName": "SU25081RMFS9",
+      "isin": "TBD-SU25081RMFS9",
+      "sourceFilePath": "bonds/SU25081RMFS9.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "SU26207RMFS9",
+      "symbol": "SU26207RMFS9",
+      "displayName": "SU26207RMFS9",
+      "isin": "TBD-SU26207RMFS9",
+      "sourceFilePath": "bonds/SU26207RMFS9.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "SU26212RMFS9",
+      "symbol": "SU26212RMFS9",
+      "displayName": "SU26212RMFS9",
+      "isin": "TBD-SU26212RMFS9",
+      "sourceFilePath": "bonds/SU26212RMFS9.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "SU26218RMFS6",
+      "symbol": "SU26218RMFS6",
+      "displayName": "SU26218RMFS6",
+      "isin": "TBD-SU26218RMFS6",
+      "sourceFilePath": "bonds/SU26218RMFS6.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "SU26221RMFS0",
+      "symbol": "SU26221RMFS0",
+      "displayName": "SU26221RMFS0",
+      "isin": "TBD-SU26221RMFS0",
+      "sourceFilePath": "bonds/SU26221RMFS0.txt"
+    },
+    {
+      "assetKind": "bond",
       "ticker": "SU26227RMFS7",
       "symbol": "SU26227RMFS7",
       "displayName": "SU26227RMFS7",
       "isin": "TBD-SU26227RMFS7",
       "sourceFilePath": "bonds/SU26227RMFS7.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "SU26230RMFS1",
+      "symbol": "SU26230RMFS1",
+      "displayName": "SU26230RMFS1",
+      "isin": "TBD-SU26230RMFS1",
+      "sourceFilePath": "bonds/SU26230RMFS1.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "SU29010RMFS4",
+      "symbol": "SU29010RMFS4",
+      "displayName": "SU29010RMFS4",
+      "isin": "TBD-SU29010RMFS4",
+      "sourceFilePath": "bonds/SU29010RMFS4.txt"
+    },
+    {
+      "assetKind": "bond",
+      "ticker": "SU46023RMFS6",
+      "symbol": "SU46023RMFS6",
+      "displayName": "SU46023RMFS6",
+      "isin": "TBD-SU46023RMFS6",
+      "sourceFilePath": "bonds/SU46023RMFS6.txt"
+    },
+    {
+      "assetKind": "fund",
+      "ticker": "FIREIDX",
+      "symbol": "FIREIDX",
+      "displayName": "FIRE Market Index",
+      "isin": "FIREIDX-SYNTH",
+      "sourceFilePath": ""
     },
     {
       "assetKind": "fund",
@@ -34,6 +218,14 @@
     },
     {
       "assetKind": "index",
+      "ticker": "GLDRUB_TOM",
+      "symbol": "GLDRUB_TOM",
+      "displayName": "GLDRUB_TOM",
+      "isin": "TBD-GLDRUB_TOM",
+      "sourceFilePath": "indexes/GLDRUB_TOM.txt"
+    },
+    {
+      "assetKind": "index",
       "ticker": "RGBI",
       "symbol": "RGBI",
       "displayName": "RGBI",
@@ -50,6 +242,14 @@
     },
     {
       "assetKind": "index",
+      "ticker": "SLVRUB_TOM",
+      "symbol": "SLVRUB_TOM",
+      "displayName": "SLVRUB_TOM",
+      "isin": "TBD-SLVRUB_TOM",
+      "sourceFilePath": "indexes/SLVRUB_TOM.txt"
+    },
+    {
+      "assetKind": "index",
       "ticker": "USD000UTSTOM",
       "symbol": "USD000UTSTOM",
       "displayName": "USD000UTSTOM",
@@ -58,11 +258,155 @@
     },
     {
       "assetKind": "stock",
+      "ticker": "AFLT",
+      "symbol": "AFLT",
+      "displayName": "AFLT",
+      "isin": "TBD-AFLT",
+      "sourceFilePath": "tickers/AFLT.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "CHMF",
+      "symbol": "CHMF",
+      "displayName": "CHMF",
+      "isin": "TBD-CHMF",
+      "sourceFilePath": "tickers/CHMF.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "GAZP",
+      "symbol": "GAZP",
+      "displayName": "GAZP",
+      "isin": "TBD-GAZP",
+      "sourceFilePath": "tickers/GAZP.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "GMKN",
+      "symbol": "GMKN",
+      "displayName": "GMKN",
+      "isin": "TBD-GMKN",
+      "sourceFilePath": "tickers/GMKN.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "HYDR",
+      "symbol": "HYDR",
+      "displayName": "HYDR",
+      "isin": "TBD-HYDR",
+      "sourceFilePath": "tickers/HYDR.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "IRAO",
+      "symbol": "IRAO",
+      "displayName": "IRAO",
+      "isin": "TBD-IRAO",
+      "sourceFilePath": "tickers/IRAO.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "LKOH",
+      "symbol": "LKOH",
+      "displayName": "LKOH",
+      "isin": "TBD-LKOH",
+      "sourceFilePath": "tickers/LKOH.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "MGNT",
+      "symbol": "MGNT",
+      "displayName": "MGNT",
+      "isin": "TBD-MGNT",
+      "sourceFilePath": "tickers/MGNT.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "MOEX",
+      "symbol": "MOEX",
+      "displayName": "MOEX",
+      "isin": "TBD-MOEX",
+      "sourceFilePath": "tickers/MOEX.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "MTSS",
+      "symbol": "MTSS",
+      "displayName": "MTSS",
+      "isin": "TBD-MTSS",
+      "sourceFilePath": "tickers/MTSS.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "NLMK",
+      "symbol": "NLMK",
+      "displayName": "NLMK",
+      "isin": "TBD-NLMK",
+      "sourceFilePath": "tickers/NLMK.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "NVTK",
+      "symbol": "NVTK",
+      "displayName": "NVTK",
+      "isin": "TBD-NVTK",
+      "sourceFilePath": "tickers/NVTK.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "PLZL",
+      "symbol": "PLZL",
+      "displayName": "PLZL",
+      "isin": "TBD-PLZL",
+      "sourceFilePath": "tickers/PLZL.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "ROSN",
+      "symbol": "ROSN",
+      "displayName": "ROSN",
+      "isin": "TBD-ROSN",
+      "sourceFilePath": "tickers/ROSN.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "RUAL",
+      "symbol": "RUAL",
+      "displayName": "RUAL",
+      "isin": "TBD-RUAL",
+      "sourceFilePath": "tickers/RUAL.txt"
+    },
+    {
+      "assetKind": "stock",
       "ticker": "SBER",
       "symbol": "SBER",
       "displayName": "SBER",
       "isin": "TBD-SBER",
       "sourceFilePath": "tickers/SBER.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "TATN",
+      "symbol": "TATN",
+      "displayName": "TATN",
+      "isin": "TBD-TATN",
+      "sourceFilePath": "tickers/TATN.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "VTBR",
+      "symbol": "VTBR",
+      "displayName": "VTBR",
+      "isin": "TBD-VTBR",
+      "sourceFilePath": "tickers/VTBR.txt"
+    },
+    {
+      "assetKind": "stock",
+      "ticker": "YDEX",
+      "symbol": "YDEX",
+      "displayName": "YDEX",
+      "isin": "TBD-YDEX",
+      "sourceFilePath": "tickers/YDEX.txt"
     }
   ]
 }

@@ -9,6 +9,8 @@ export interface InstrumentMetaDetail {
   initialFaceValueRub: number | null;
   faceUnit: string | null;
   maturityEpochMs: number | null;
+  /** Первая минутная котировка в файле ряда (Europe/Moscow), из gen:instrument-details. */
+  firstTradeEpochMs?: number | null;
   isin: string | null;
   groupRaw: string | null;
 }
@@ -44,6 +46,8 @@ export interface RedemptionDetail {
 export interface InstrumentDetailsCatalog {
   generatedAt?: string;
   lotSizeBySymbol: Record<string, number>;
+  /** Количество акций в обращении (MOEX ISSUESIZE), шт. */
+  sharesOutstandingBySymbol?: Record<string, number>;
   instrumentMetaBySymbol: Record<string, InstrumentMetaDetail>;
   dividendsBySymbol: Record<string, DividendDetail[]>;
   couponsBySymbol: Record<string, CouponDetail[]>;
@@ -72,6 +76,7 @@ export function loadInstrumentDetailsCatalog(): InstrumentDetailsCatalog {
   cachedCatalog = {
     generatedAt: raw.generatedAt,
     lotSizeBySymbol: raw.lotSizeBySymbol ?? {},
+    sharesOutstandingBySymbol: raw.sharesOutstandingBySymbol ?? {},
     instrumentMetaBySymbol: raw.instrumentMetaBySymbol ?? {},
     dividendsBySymbol: raw.dividendsBySymbol ?? {},
     couponsBySymbol: raw.couponsBySymbol ?? {},

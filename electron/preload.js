@@ -12,4 +12,7 @@ contextBridge.exposeInMainWorld('marketData', {
   prefetchDay(payload) {
     return ipcRenderer.invoke('market:prefetch-day', payload);
   },
+  getDaySlices(payload) {
+    return ipcRenderer.invoke('market:get-day-slices', payload);
+  },
 });

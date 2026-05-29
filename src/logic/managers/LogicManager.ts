@@ -117,6 +117,11 @@ export class LogicManager {
   private readonly moduleContext: ModuleContext;
   /** Глубина вложенной диспетчеризации: notifySubscribers — только на нулевой глубине. */
   private commandDepth = 0;
+  private lastHydrateScheduleEpochMs: number | null = null;
+  /** Последний wall-clock момент вызова notifySubscribers — для троттлинга. */
+  private lastNotifyWallMs = 0;
+  /** Минимальный реальный интервал между notifySubscribers: ~60fps. */
+  private static readonly NOTIFY_MIN_INTERVAL_WALL_MS = 16;
 
   constructor() {
     console.log('[LogicManager] Инициализация...');
@@ -128,6 +133,7 @@ export class LogicManager {
     this.sessionTimeline = new SessionTimelineController(calendar);
     this.timeModule = new TimeModuleService(this.sessionTimeline);
     this.marketModule = new MarketModuleService(calendar);
+    this.marketModule.setNotifyHook(() => this.notifySubscribers());
     this.portfolioModule = new PortfolioModuleService();
     this.tradingModule = new TradingModuleService();
     this.educationModule = new EducationModuleService();
@@ -316,7 +322,14 @@ export class LogicManager {
    * Каждый wrapper передаёт текущий срез подписчику; лишние обновления отсекает React
    */
   private notifySubscribers(): void {
-    // Передаём текущее состояние каждому wrapper'у
+    // Троттлинг по реальному времени: не чаще ~60fps.
+    // Предотвращает лишние React-диффы при высоких скоростях симуляции (100x/1000x),
+    // когда update() вызывается гораздо чаще, чем браузер успевает рисовать.
+    const now = performance.now();
+    if (now - this.lastNotifyWallMs < LogicManager.NOTIFY_MIN_INTERVAL_WALL_MS) {
+      return;
+    }
+    this.lastNotifyWallMs = now;
     this.stateSubscribers.forEach(wrapper => wrapper(this.state));
   }
 
@@ -450,7 +463,28 @@ export class LogicManager {
     }
   }
 
+  /**
+   * Адаптивный интервал гидрации в симуляционном времени.
+   * Формула 60_000 × max(1, timeScale / 10) обеспечивает ~10 гидраций/сек при
+   * любой скорости, не перегружая главный поток на высоких скоростях:
+   *   1x   → 60_000   (1 гидрация/сек)
+   *   10x  → 60_000   (~10/сек)
+   *   100x → 600_000  (~10/сек)
+   *   1000x→ 6_000_000(~10/сек)
+   */
+  private getHydrateMinIntervalMs(): number {
+    return Math.min(60_000 * Math.max(1, this.state.timeScale / 10), 6_000_000);
+  }
+
   private scheduleMarketHydrateFromDatabase(previousEpochMs: number): void {
+    const epoch = this.state.simulationEpochMs;
+    if (
+      this.lastHydrateScheduleEpochMs !== null &&
+      epoch - this.lastHydrateScheduleEpochMs < this.getHydrateMinIntervalMs()
+    ) {
+      return;
+    }
+    this.lastHydrateScheduleEpochMs = epoch;
     void this.marketModule
       .hydrateFromDatabaseTick(this.state, previousEpochMs)
       .then((changed) => {

@@ -4,7 +4,13 @@ import {
   COMMISSION_CHARGED,
   CAPITAL_GAIN_TAX_WITHHELD,
   NKD_SETTLED,
+  ORDER_PLACED,
+  ORDER_PARTIALLY_FILLED,
+  ORDER_FILLED,
+  ORDER_CANCELLED,
   type ConsumedLot,
+  type OrderLifecyclePayload,
+  type RestingOrderView,
   type TradeExecutionPayload,
   type TradeRejectedPayload,
 } from '@/logic/logicEvents';
@@ -12,19 +18,25 @@ import type {
   LogicCommand,
   LogicModule,
   ModuleContext,
+  TradingCancelOrderCommand,
+  TradingSubmitLimitOrderCommand,
   TradingSubmitMarketOrderCommand,
 } from '@/logic/modules/contracts';
 import type { GameState } from '@/logic/managers/LogicManager';
+import { isInstrumentActiveOnMarket } from '@/logic/modules/market/instrumentLifecycle';
 import { positionTotalQuantity } from '@/logic/modules/portfolio/selectors';
 import { calcCapitalGainFifo } from './tax/capitalGainHandler';
 import { NDFL_RATE } from './tax/taxCalculator';
 import { TaxSubservice } from './tax/corporateActionHandler';
-import type {
-  ModuleAttachContext,
-} from '@/logic/modules/contracts';
-import type { PendingMarketOrder, TradingModuleState } from './state';
+import type { ModuleAttachContext } from '@/logic/modules/contracts';
+import {
+  orderRemainingQuantity,
+  type RestingOrder,
+  type TradingModuleState,
+} from './state';
+import { walkOrderBook } from './orderBookMatch';
+import { toOrderView } from './selectors';
 
-/** Комиссия брокера+биржи, доли единицы (см. план §3). */
 const TRADE_COMMISSION_RATE = 0.001;
 
 function asUpperSymbol(value: string): string {
@@ -36,35 +48,36 @@ function calcCommissionRub(priceRub: number, quantity: number): number {
   return Math.round(raw * 100) / 100;
 }
 
+function floorToLot(qty: number, lotSize: number): number {
+  if (lotSize <= 1) {
+    return Math.floor(qty);
+  }
+  return Math.floor(qty / lotSize) * lotSize;
+}
+
 export class TradingModuleService implements LogicModule<GameState> {
   readonly id = 'trading';
   private tradeSequence = 0;
+  private orderSequence = 0;
   private lastProcessedEpochMs: number | null = null;
-  /** Сабсервис налогов — слушает MARKET_*_DECLARED и применяет НДФЛ. */
   private readonly tax = new TaxSubservice();
+  private lastAttachedState: GameState | null = null;
 
   createInitialState(): TradingModuleState {
     this.tradeSequence = 0;
+    this.orderSequence = 0;
     this.lastProcessedEpochMs = null;
     return {
       ready: true,
       lastExecution: null,
       lastRejection: null,
-      pendingOrders: [],
+      openOrders: [],
     };
   }
 
   attach(context: ModuleAttachContext): void {
-    // Сабсервис налогов подписывается на MARKET_*_DECLARED и применяет НДФЛ к нашей
-    // (брокерской) системе портфеля. См. план §8/§9.
     this.tax.attach(() => this.lastAttachedState, context);
   }
-
-  /**
-   * Внутренний reference на GameState; устанавливается каждый update/handleCommand,
-   * чтобы tax-сабсервис мог читать актуальные позиции при обработке MARKET_*_DECLARED.
-   */
-  private lastAttachedState: GameState | null = null;
 
   update(state: GameState, _deltaTime: number, context: ModuleContext): void {
     this.lastAttachedState = state;
@@ -72,7 +85,11 @@ export class TradingModuleService implements LogicModule<GameState> {
       return;
     }
     this.lastProcessedEpochMs = state.simulationEpochMs;
-    if (state.trading.pendingOrders.length === 0) {
+
+    const active = state.trading.openOrders.filter(
+      (o) => o.status === 'open' || o.status === 'partially_filled'
+    );
+    if (active.length === 0) {
       return;
     }
 
@@ -83,172 +100,486 @@ export class TradingModuleService implements LogicModule<GameState> {
         positionTotalQuantity(position)
       );
     }
-    const projectedOrderbookQty = new Map<string, number>();
-    const keyOf = (side: 'buy' | 'sell', symbol: string) => `${side}:${symbol}`;
-    const projectedCash = { value: state.portfolio.cashRub };
+    for (const [sym, reserved] of Object.entries(
+      state.portfolio.reservedQtyBySymbol
+    )) {
+      projectedQtyBySymbol.set(
+        sym,
+        Math.max(0, (projectedQtyBySymbol.get(sym) ?? 0) - reserved)
+      );
+    }
 
-    const queue = state.trading.pendingOrders;
-    const remainingQueue: PendingMarketOrder[] = [];
     let changed = false;
-    for (const order of queue) {
-      if (order.queuedAtSimulationEpochMs >= state.simulationEpochMs) {
-        remainingQueue.push(order);
+    const nextOrders: RestingOrder[] = [];
+
+    for (const order of state.trading.openOrders) {
+      if (order.status === 'filled' || order.status === 'cancelled') {
+        nextOrders.push(order);
         continue;
       }
+      if (order.placedAtSimulationEpochMs >= state.simulationEpochMs) {
+        nextOrders.push(order);
+        continue;
+      }
+
+      const remaining = orderRemainingQuantity(order);
+      if (remaining <= 0) {
+        nextOrders.push({ ...order, status: 'filled' });
+        changed = true;
+        continue;
+      }
+
       const symbol = asUpperSymbol(order.symbol);
       const asset = state.market.assetsBySymbol[symbol];
-      if (!asset) {
-        this.reject(state, context, {
-          simulationEpochMs: state.simulationEpochMs,
-          symbol,
-          side: order.side,
-          requestedQuantity: order.quantity,
-          reason: 'ASSET_NOT_FOUND',
-        });
-        changed = true;
+      if (!asset || !Number.isFinite(asset.currentPriceRub)) {
+        nextOrders.push(order);
         continue;
       }
-      if (!Number.isFinite(asset.currentPriceRub)) {
-        this.reject(state, context, {
-          simulationEpochMs: state.simulationEpochMs,
-          symbol,
-          side: order.side,
-          requestedQuantity: order.quantity,
-          reason: 'PRICE_UNAVAILABLE',
-        });
-        changed = true;
-        continue;
-      }
+
       const lotSize = Math.max(1, asset.lotSize);
-      if (order.quantity % lotSize !== 0) {
-        this.reject(state, context, {
-          simulationEpochMs: state.simulationEpochMs,
-          symbol,
-          side: order.side,
-          requestedQuantity: order.quantity,
-          reason: 'INVALID_LOT_QUANTITY',
-          lotSize,
-        });
-        changed = true;
+      const walk = walkOrderBook(
+        order.side,
+        order.orderKind,
+        order.limitPriceRub,
+        remaining,
+        asset.orderBook
+      );
+      let fillQty = floorToLot(walk.fillQty, lotSize);
+      if (fillQty <= 0) {
+        nextOrders.push(order);
         continue;
       }
-      const priceRub = asset.currentPriceRub as number;
-      const bookKey = keyOf(order.side, symbol);
-      if (!projectedOrderbookQty.has(bookKey)) {
-        projectedOrderbookQty.set(
-          bookKey,
-          order.side === 'buy'
-            ? asset.orderBook.asks[0]?.qty ?? 0
-            : asset.orderBook.bids[0]?.qty ?? 0
-        );
-      }
-      const availableBookQty = projectedOrderbookQty.get(bookKey) ?? 0;
-      if (order.quantity > availableBookQty) {
-        this.reject(state, context, {
-          simulationEpochMs: state.simulationEpochMs,
-          symbol,
-          side: order.side,
-          requestedQuantity: order.quantity,
-          reason: 'INSUFFICIENT_ORDERBOOK_LIQUIDITY',
-          availableOrderbookQuantity: availableBookQty,
-        });
-        changed = true;
-        continue;
-      }
-      const commissionRub = calcCommissionRub(priceRub, order.quantity);
+
+      const priceRub = walk.vwapPriceRub;
+      const commissionRub = calcCommissionRub(priceRub, fillQty);
       const nkdPerBond = asset.isBond ? Math.max(0, asset.nkdPerBondRub) : 0;
-      const nkdRub = asset.isBond ? nkdPerBond * order.quantity : 0;
+      const nkdRub = asset.isBond ? nkdPerBond * fillQty : 0;
 
       if (order.side === 'buy') {
-        const requiredCash = priceRub * order.quantity + commissionRub + nkdRub;
-        if (requiredCash > projectedCash.value) {
-          this.reject(state, context, {
-            simulationEpochMs: state.simulationEpochMs,
-            symbol,
-            side: order.side,
-            requestedQuantity: order.quantity,
-            reason: 'INSUFFICIENT_FUNDS',
-            availableCashRub: projectedCash.value,
-            requiredCashRub: requiredCash,
-          });
-          changed = true;
+        const requiredCash = priceRub * fillQty + commissionRub + nkdRub;
+        if (requiredCash > state.portfolio.cashRub + 0.001) {
+          nextOrders.push(order);
           continue;
         }
-        projectedCash.value -= requiredCash;
-        projectedOrderbookQty.set(bookKey, availableBookQty - order.quantity);
-        projectedQtyBySymbol.set(
-          symbol,
-          (projectedQtyBySymbol.get(symbol) ?? 0) + order.quantity
+      } else {
+        const remainingForOrder = orderRemainingQuantity(order);
+        // Собственный резерв sell-заявки не должен уменьшать доступный объём для её исполнения.
+        const availableQty = Math.min(
+          remainingForOrder,
+          (projectedQtyBySymbol.get(symbol) ?? 0) + remainingForOrder
         );
-        this.executeBuy(state, context, order, symbol, priceRub, commissionRub, nkdRub);
-        changed = true;
-        continue;
+        if (fillQty > availableQty) {
+          fillQty = floorToLot(availableQty, lotSize);
+          if (fillQty <= 0) {
+            nextOrders.push(order);
+            continue;
+          }
+        }
       }
 
-      // sell
-      const availablePositionQty = projectedQtyBySymbol.get(symbol) ?? 0;
-      if (order.quantity > availablePositionQty) {
-        this.reject(state, context, {
-          simulationEpochMs: state.simulationEpochMs,
-          symbol,
-          side: order.side,
-          requestedQuantity: order.quantity,
-          reason: 'INSUFFICIENT_POSITION_QTY',
-          availableQuantity: availablePositionQty,
-        });
-        changed = true;
-        continue;
-      }
-      const position = state.portfolio.positions.find(
-        (p) => p.ticker.toUpperCase() === symbol
-      );
-      if (!position) {
-        this.reject(state, context, {
-          simulationEpochMs: state.simulationEpochMs,
-          symbol,
-          side: order.side,
-          requestedQuantity: order.quantity,
-          reason: 'INSUFFICIENT_POSITION_QTY',
-          availableQuantity: 0,
-        });
-        changed = true;
-        continue;
-      }
-      const gain = calcCapitalGainFifo(position, {
-        quantity: order.quantity,
-        proceedsPerUnitRub: priceRub,
-        extraProceedsRub: nkdRub,
-        commissionRub,
+      const fillSlices = walk.slices;
+      const scaledSlices =
+        fillQty < walk.fillQty
+          ? [{ priceRub, qty: fillQty }]
+          : fillSlices;
+
+      context.dispatchCommand({
+        type: 'market/consume-orderbook-liquidity',
+        symbol,
+        takerSide: order.side,
+        slices: scaledSlices,
       });
-      const capitalGainTaxRub =
-        gain.realizedGainRub > 0
-          ? Math.round(gain.realizedGainRub * NDFL_RATE * 100) / 100
-          : 0;
-      const cashFlow =
-        priceRub * order.quantity + nkdRub - commissionRub - capitalGainTaxRub;
-      projectedCash.value += cashFlow;
-      projectedOrderbookQty.set(bookKey, availableBookQty - order.quantity);
-      projectedQtyBySymbol.set(symbol, availablePositionQty - order.quantity);
-      this.executeSell(
+
+      const executed = this.executeOrderFill(
         state,
         context,
         order,
         symbol,
+        fillQty,
         priceRub,
         commissionRub,
         nkdRub,
-        gain.realizedGainRub,
-        capitalGainTaxRub,
-        gain.consumedLots
+        projectedQtyBySymbol
       );
+      if (!executed) {
+        nextOrders.push(order);
+        continue;
+      }
+
+      const newFilled = order.filledQuantity + fillQty;
+      const done = newFilled >= order.quantity;
+      const updated: RestingOrder = {
+        ...order,
+        filledQuantity: newFilled,
+        status: done ? 'filled' : 'partially_filled',
+      };
+      nextOrders.push(updated);
       changed = true;
+
+      this.releaseReservationPartial(state, context, order, fillQty, priceRub, commissionRub, nkdRub);
+
+      const view = toOrderView(updated) as RestingOrderView;
+      const payload: OrderLifecyclePayload = {
+        order: view,
+        simulationEpochMs: state.simulationEpochMs,
+        fillQuantity: fillQty,
+        fillPriceRub: priceRub,
+      };
+      context.emit(done ? ORDER_FILLED : ORDER_PARTIALLY_FILLED, payload);
     }
 
-    if (changed || remainingQueue.length !== queue.length) {
+    if (changed) {
       state.trading = {
         ...state.trading,
-        pendingOrders: remainingQueue,
+        openOrders: nextOrders,
       };
+    }
+  }
+
+  private executeOrderFill(
+    state: GameState,
+    context: ModuleContext,
+    order: RestingOrder,
+    symbol: string,
+    fillQty: number,
+    priceRub: number,
+    commissionRub: number,
+    nkdRub: number,
+    projectedQtyBySymbol: Map<string, number>
+  ): boolean {
+    if (order.side === 'buy') {
+      projectedQtyBySymbol.set(
+        symbol,
+        (projectedQtyBySymbol.get(symbol) ?? 0) + fillQty
+      );
+      return this.executeBuy(state, context, order, symbol, fillQty, priceRub, commissionRub, nkdRub);
+    }
+
+    const position = state.portfolio.positions.find(
+      (p) => p.ticker.toUpperCase() === symbol
+    );
+    if (!position) {
+      return false;
+    }
+    const gain = calcCapitalGainFifo(position, {
+      quantity: fillQty,
+      proceedsPerUnitRub: priceRub,
+      extraProceedsRub: nkdRub,
+      commissionRub,
+    });
+    const capitalGainTaxRub =
+      gain.realizedGainRub > 0
+        ? Math.round(gain.realizedGainRub * NDFL_RATE * 100) / 100
+        : 0;
+    projectedQtyBySymbol.set(
+      symbol,
+      (projectedQtyBySymbol.get(symbol) ?? 0) - fillQty
+    );
+    return this.executeSell(
+      state,
+      context,
+      order,
+      symbol,
+      fillQty,
+      priceRub,
+      commissionRub,
+      nkdRub,
+      gain.realizedGainRub,
+      capitalGainTaxRub,
+      gain.consumedLots
+    );
+  }
+
+  handleCommand(
+    state: GameState,
+    command: LogicCommand,
+    context: ModuleContext
+  ): boolean {
+    this.lastAttachedState = state;
+    switch (command.type) {
+      case 'trading/submit-market-order':
+        return this.placeOrder(state, context, {
+          side: command.side,
+          symbol: command.symbol,
+          quantity: command.quantity,
+          orderKind: 'market',
+          limitPriceRub: null,
+          source: command.source,
+        });
+      case 'trading/submit-limit-order':
+        return this.placeOrder(state, context, {
+          side: command.side,
+          symbol: command.symbol,
+          quantity: command.quantity,
+          orderKind: 'limit',
+          limitPriceRub: command.limitPriceRub,
+          source: command.source,
+        });
+      case 'trading/cancel-order':
+        return this.cancelOrder(state, context, command);
+      default:
+        return false;
+    }
+  }
+
+  private placeOrder(
+    state: GameState,
+    context: ModuleContext,
+    input: {
+      side: 'buy' | 'sell';
+      symbol: string;
+      quantity: number;
+      orderKind: 'market' | 'limit';
+      limitPriceRub: number | null;
+      source: 'right-panel' | 'modal';
+    }
+  ): boolean {
+    if (!Number.isFinite(input.quantity) || input.quantity <= 0) {
+      return this.reject(state, context, {
+        simulationEpochMs: state.simulationEpochMs,
+        symbol: input.symbol,
+        side: input.side,
+        requestedQuantity: input.quantity,
+        reason: 'INVALID_QUANTITY',
+      });
+    }
+
+    const symbol = asUpperSymbol(input.symbol);
+    const asset = state.market.assetsBySymbol[symbol];
+    if (!asset) {
+      return this.reject(state, context, {
+        simulationEpochMs: state.simulationEpochMs,
+        symbol,
+        side: input.side,
+        requestedQuantity: input.quantity,
+        reason: 'ASSET_NOT_FOUND',
+      });
+    }
+    if (asset.assetKind === 'index') {
+      return this.reject(state, context, {
+        simulationEpochMs: state.simulationEpochMs,
+        symbol,
+        side: input.side,
+        requestedQuantity: input.quantity,
+        reason: 'NON_TRADABLE_INSTRUMENT',
+      });
+    }
+    if (!isInstrumentActiveOnMarket(state.market, symbol, state.simulationEpochMs)) {
+      return this.reject(state, context, {
+        simulationEpochMs: state.simulationEpochMs,
+        symbol,
+        side: input.side,
+        requestedQuantity: input.quantity,
+        reason: 'INSTRUMENT_NOT_TRADING',
+      });
+    }
+
+    const lotSize = Math.max(1, asset.lotSize);
+    if (input.quantity % lotSize !== 0) {
+      return this.reject(state, context, {
+        simulationEpochMs: state.simulationEpochMs,
+        symbol,
+        side: input.side,
+        requestedQuantity: input.quantity,
+        reason: 'INVALID_LOT_QUANTITY',
+        lotSize,
+      });
+    }
+
+    if (
+      input.orderKind === 'limit' &&
+      (input.limitPriceRub == null ||
+        !Number.isFinite(input.limitPriceRub) ||
+        input.limitPriceRub <= 0)
+    ) {
+      return this.reject(state, context, {
+        simulationEpochMs: state.simulationEpochMs,
+        symbol,
+        side: input.side,
+        requestedQuantity: input.quantity,
+        reason: 'PRICE_UNAVAILABLE',
+      });
+    }
+
+    const priceForReserve =
+      input.orderKind === 'limit'
+        ? (input.limitPriceRub as number)
+        : (asset.currentPriceRub ?? 0);
+    if (priceForReserve <= 0) {
+      return this.reject(state, context, {
+        simulationEpochMs: state.simulationEpochMs,
+        symbol,
+        side: input.side,
+        requestedQuantity: input.quantity,
+        reason: 'PRICE_UNAVAILABLE',
+      });
+    }
+
+    if (input.side === 'buy') {
+      const commissionRub = calcCommissionRub(priceForReserve, input.quantity);
+      const nkdRub = asset.isBond
+        ? Math.max(0, asset.nkdPerBondRub) * input.quantity
+        : 0;
+      const required = priceForReserve * input.quantity + commissionRub + nkdRub;
+      const available =
+        state.portfolio.cashRub - state.portfolio.cashReservedRub;
+      if (required > available + 0.001) {
+        return this.reject(state, context, {
+          simulationEpochMs: state.simulationEpochMs,
+          symbol,
+          side: input.side,
+          requestedQuantity: input.quantity,
+          reason: 'INSUFFICIENT_FUNDS',
+          availableCashRub: available,
+          requiredCashRub: required,
+        });
+      }
+      context.dispatchCommand({
+        type: 'portfolio/adjust-reservation',
+        symbol,
+        deltaCashReservedRub: required,
+        deltaQtyReserved: 0,
+      });
+    } else {
+      const position = state.portfolio.positions.find(
+        (p) => p.ticker.toUpperCase() === symbol
+      );
+      const held = position ? positionTotalQuantity(position) : 0;
+      const reserved = state.portfolio.reservedQtyBySymbol[symbol] ?? 0;
+      const available = held - reserved;
+      if (input.quantity > available) {
+        return this.reject(state, context, {
+          simulationEpochMs: state.simulationEpochMs,
+          symbol,
+          side: input.side,
+          requestedQuantity: input.quantity,
+          reason: 'INSUFFICIENT_POSITION_QTY',
+          availableQuantity: available,
+        });
+      }
+      context.dispatchCommand({
+        type: 'portfolio/adjust-reservation',
+        symbol,
+        deltaCashReservedRub: 0,
+        deltaQtyReserved: input.quantity,
+      });
+    }
+
+    this.orderSequence += 1;
+    const order: RestingOrder = {
+      id: `ord-${state.simulationEpochMs}-${symbol}-${this.orderSequence}`,
+      symbol,
+      side: input.side,
+      orderKind: input.orderKind,
+      limitPriceRub: input.limitPriceRub,
+      quantity: input.quantity,
+      filledQuantity: 0,
+      placedAtSimulationEpochMs: state.simulationEpochMs,
+      status: 'open',
+      source: input.source,
+    };
+
+    state.trading = {
+      ...state.trading,
+      openOrders: [...state.trading.openOrders, order],
+      lastRejection: null,
+    };
+
+    context.emit(ORDER_PLACED, {
+      order: toOrderView(order) as RestingOrderView,
+      simulationEpochMs: state.simulationEpochMs,
+    });
+    return true;
+  }
+
+  private cancelOrder(
+    state: GameState,
+    context: ModuleContext,
+    command: TradingCancelOrderCommand
+  ): boolean {
+    const idx = state.trading.openOrders.findIndex((o) => o.id === command.orderId);
+    if (idx < 0) {
+      return false;
+    }
+    const order = state.trading.openOrders[idx];
+    if (order.status === 'filled' || order.status === 'cancelled') {
+      return false;
+    }
+    const remaining = orderRemainingQuantity(order);
+    const asset = state.market.assetsBySymbol[order.symbol];
+    const price =
+      order.limitPriceRub ??
+      asset?.currentPriceRub ??
+      0;
+    this.releaseReservationRemaining(state, context, order, remaining, price);
+    const cancelled: RestingOrder = { ...order, status: 'cancelled' };
+    const next = [...state.trading.openOrders];
+    next[idx] = cancelled;
+    state.trading = { ...state.trading, openOrders: next };
+    context.emit(ORDER_CANCELLED, {
+      order: toOrderView(cancelled) as RestingOrderView,
+      simulationEpochMs: state.simulationEpochMs,
+    });
+    return true;
+  }
+
+  private releaseReservationPartial(
+    state: GameState,
+    context: ModuleContext,
+    order: RestingOrder,
+    fillQty: number,
+    priceRub: number,
+    commissionRub: number,
+    nkdRub: number
+  ): void {
+    if (order.side === 'buy') {
+      const released = priceRub * fillQty + commissionRub + nkdRub;
+      context.dispatchCommand({
+        type: 'portfolio/adjust-reservation',
+        symbol: order.symbol,
+        deltaCashReservedRub: -released,
+        deltaQtyReserved: 0,
+      });
+    } else {
+      context.dispatchCommand({
+        type: 'portfolio/adjust-reservation',
+        symbol: order.symbol,
+        deltaCashReservedRub: 0,
+        deltaQtyReserved: -fillQty,
+      });
+    }
+  }
+
+  private releaseReservationRemaining(
+    state: GameState,
+    context: ModuleContext,
+    order: RestingOrder,
+    remaining: number,
+    priceRub: number
+  ): void {
+    if (remaining <= 0) {
+      return;
+    }
+    const asset = state.market.assetsBySymbol[order.symbol];
+    if (order.side === 'buy') {
+      const commissionRub = calcCommissionRub(priceRub, remaining);
+      const nkdRub = asset?.isBond
+        ? Math.max(0, asset.nkdPerBondRub) * remaining
+        : 0;
+      const release = priceRub * remaining + commissionRub + nkdRub;
+      context.dispatchCommand({
+        type: 'portfolio/adjust-reservation',
+        symbol: order.symbol,
+        deltaCashReservedRub: -release,
+        deltaQtyReserved: 0,
+      });
+    } else {
+      context.dispatchCommand({
+        type: 'portfolio/adjust-reservation',
+        symbol: order.symbol,
+        deltaCashReservedRub: 0,
+        deltaQtyReserved: -remaining,
+      });
     }
   }
 
@@ -268,16 +599,18 @@ export class TradingModuleService implements LogicModule<GameState> {
   private executeBuy(
     state: GameState,
     context: ModuleContext,
-    command: Pick<TradingSubmitMarketOrderCommand, 'side' | 'quantity' | 'source'>,
+    order: Pick<RestingOrder, 'side' | 'source'>,
     symbol: string,
+    quantity: number,
     priceRub: number,
     commissionRub: number,
     nkdRub: number
   ): boolean {
     const payload = this.buildExecutionPayload(
       state,
-      command,
+      order,
       symbol,
+      quantity,
       priceRub,
       commissionRub,
       nkdRub,
@@ -289,8 +622,9 @@ export class TradingModuleService implements LogicModule<GameState> {
   private executeSell(
     state: GameState,
     context: ModuleContext,
-    command: Pick<TradingSubmitMarketOrderCommand, 'side' | 'quantity' | 'source'>,
+    order: Pick<RestingOrder, 'side' | 'source'>,
     symbol: string,
+    quantity: number,
     priceRub: number,
     commissionRub: number,
     nkdRub: number,
@@ -300,8 +634,9 @@ export class TradingModuleService implements LogicModule<GameState> {
   ): boolean {
     const payload = this.buildExecutionPayload(
       state,
-      command,
+      order,
       symbol,
+      quantity,
       priceRub,
       commissionRub,
       nkdRub,
@@ -312,8 +647,9 @@ export class TradingModuleService implements LogicModule<GameState> {
 
   private buildExecutionPayload(
     state: GameState,
-    command: Pick<TradingSubmitMarketOrderCommand, 'side' | 'quantity' | 'source'>,
+    command: Pick<RestingOrder, 'side' | 'source'>,
     symbol: string,
+    quantity: number,
     priceRub: number,
     commissionRub: number,
     nkdRub: number,
@@ -323,7 +659,7 @@ export class TradingModuleService implements LogicModule<GameState> {
       consumedLots: ConsumedLot[] | undefined;
     }
   ): TradeExecutionPayload {
-    const amountRub = priceRub * command.quantity;
+    const amountRub = priceRub * quantity;
     this.tradeSequence += 1;
     return {
       tradeId: `${state.simulationEpochMs}-${symbol}-${command.side}-${this.tradeSequence}`,
@@ -331,7 +667,7 @@ export class TradingModuleService implements LogicModule<GameState> {
       symbol,
       assetKind: state.market.assetsBySymbol[symbol]?.assetKind ?? 'stock',
       side: command.side,
-      quantity: command.quantity,
+      quantity,
       priceRub,
       amountRub,
       commissionRub,
@@ -353,7 +689,6 @@ export class TradingModuleService implements LogicModule<GameState> {
       lastExecution: payload,
       lastRejection: null,
     };
-    // Применяем эффект через PortfolioModule (cash + lots + ledger).
     context.dispatchCommand({
       type: 'portfolio/apply-trade-execution',
       execution: payload,
@@ -389,63 +724,6 @@ export class TradingModuleService implements LogicModule<GameState> {
         simulationEpochMs: payload.simulationEpochMs,
       });
     }
-    return true;
-  }
-
-  handleCommand(
-    state: GameState,
-    command: LogicCommand,
-    context: ModuleContext
-  ): boolean {
-    this.lastAttachedState = state;
-    if (command.type !== 'trading/submit-market-order') {
-      return false;
-    }
-
-    if (!Number.isFinite(command.quantity) || command.quantity <= 0) {
-      return this.reject(state, context, {
-        simulationEpochMs: state.simulationEpochMs,
-        symbol: command.symbol,
-        side: command.side,
-        requestedQuantity: command.quantity,
-        reason: 'INVALID_QUANTITY',
-      });
-    }
-
-    const symbol = asUpperSymbol(command.symbol);
-    const asset = state.market.assetsBySymbol[symbol];
-    if (!asset) {
-      return this.reject(state, context, {
-        simulationEpochMs: state.simulationEpochMs,
-        symbol,
-        side: command.side,
-        requestedQuantity: command.quantity,
-        reason: 'ASSET_NOT_FOUND',
-      });
-    }
-    if (asset.assetKind === 'index') {
-      // Индексы/фьючерсы доступны только для просмотра — торговля запрещена на уровне домена.
-      return this.reject(state, context, {
-        simulationEpochMs: state.simulationEpochMs,
-        symbol,
-        side: command.side,
-        requestedQuantity: command.quantity,
-        reason: 'NON_TRADABLE_INSTRUMENT',
-      });
-    }
-    state.trading = {
-      ...state.trading,
-      pendingOrders: [
-        ...state.trading.pendingOrders,
-        {
-          symbol,
-          side: command.side,
-          quantity: command.quantity,
-          source: command.source,
-          queuedAtSimulationEpochMs: state.simulationEpochMs,
-        },
-      ],
-    };
     return true;
   }
 }

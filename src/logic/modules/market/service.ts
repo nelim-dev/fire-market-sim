@@ -8,16 +8,32 @@ import type { TradingDayChangedPayload } from '@/logic/logicEvents';
 import type { GameState } from '@/logic/managers/LogicManager';
 import type { TradingCalendar } from '@/logic/time/TradingCalendar';
 import type { MarketInstrumentCatalogItem } from './contracts';
-import { emptyChartSeriesBundle } from './chartWindows';
+import { emptyChartSeriesBundle, type MarketChartSeriesBundle } from './chartWindows';
 import {
+  fetchDaySlicesFromElectron,
   fetchMarketSlicesFromElectron,
-  prefetchDayFromElectron,
-  prefetchNextDayFromElectron,
 } from './marketElectronBridge';
 import type { MarketPriceBar } from './priceSeries';
-import { applyMarketQuotesForSimulationEpoch } from './quoteApply';
+import {
+  applyMarketQuotesForSimulationEpoch,
+  refreshQuotesForSymbol,
+} from './quoteApply';
+import {
+  FIREIDX_SYMBOL,
+  stockSymbolsFromCatalog,
+  syncFireidxAsset,
+  updateCompositeIndex,
+} from './compositeIndex';
+import {
+  advanceFireidxIntradayFromConstituents,
+  advanceFireidxMinuteBar,
+  applyFireidxBundlesToChartSeries,
+  rebuildFireidxSeriesFromConstituents,
+  shouldFullRebuildFireidx,
+} from './fireidxSeries';
 import { trimChartSeriesBundleForStorage } from './chartSeriesRetention';
 import {
+  applyChartSeriesBundleToMarket,
   createMarketModuleState,
   type MarketModuleState,
 } from './state';
@@ -27,12 +43,37 @@ import {
 } from './corporateActions/state';
 import { scanScheduleWindow } from './corporateActions/scheduleScanner';
 import { emitDeclarations } from './corporateActions/emitter';
+import { applyOrderBookConsumption } from './orderBookConsume';
 
 type CatalogFileShape = { items: MarketInstrumentCatalogItem[] };
+type DayLoadState = 'idle' | 'preloadingCurrent' | 'readyCurrent' | 'rollingNext';
 
 function readCatalogItems(): MarketInstrumentCatalogItem[] {
   const raw = marketInstrumentCatalogJson as CatalogFileShape;
   return Array.isArray(raw.items) ? raw.items : [];
+}
+
+export function pickHydrateSymbolsFromCatalog(
+  catalog: readonly MarketInstrumentCatalogItem[]
+): string[] {
+  return catalog
+    .filter((item) => {
+      const symbol = item.symbol.toUpperCase();
+      if (symbol === FIREIDX_SYMBOL) {
+        return false;
+      }
+      if (item.assetKind === 'index') {
+        // BR/EU/RTSI/USD... нужны для динамики обзора и шапки.
+        return item.sourceFilePath.length > 0;
+      }
+      return (
+        item.assetKind === 'stock' ||
+        item.assetKind === 'bond' ||
+        (item.assetKind === 'fund' && item.sourceFilePath.length > 0)
+      );
+    })
+    .map((item) => item.symbol.toUpperCase())
+    .filter((symbol, index, arr) => arr.indexOf(symbol) === index);
 }
 
 export class MarketModuleService implements LogicModule<GameState> {
@@ -64,7 +105,41 @@ export class MarketModuleService implements LogicModule<GameState> {
     lastReportAtMs: 0,
   };
   private prefetchedDays = new Set<string>();
+  /** Дни, для которых минутные ряды уже целиком загружены в renderer-state. */
+  private rendererPreloadedDays = new Set<string>();
+  private dayLoadState: DayLoadState = 'idle';
+  private activeDayKey: string | null = null;
+  private nextDayKey: string | null = null;
+  private bufferReady = false;
+  private nextDayPreloadInFlight = false;
+  /** Стадированные day-bundles (обычно current/next), ещё не влиты в chartSeries. */
+  private stagedDayBundles = new Map<string, MarketChartSeriesBundle>();
+  private dayBufferProbe = {
+    dayPreloads: 0,
+    ramBufferSkips: 0,
+    minuteFallbacks: 0,
+    lastReportAtMs: 0,
+  };
   private waitingDayForBoundary: string | null = null;
+  /**
+   * Промежуточный callback: вызывается после фазы 1 (смерж баров) внутри
+   * гидрации, до выдержки setTimeout. Позволяет LogicManager уведомить
+   * подписчиков до тяжёлой фазы 2 (пересчёт котировок), не создавая обратной
+   * зависимости модуля от оркестратора.
+   */
+  private notifyHook: (() => void) | null = null;
+
+  setNotifyHook(fn: () => void): void {
+    this.notifyHook = fn;
+  }
+
+  private perfProbe = {
+    lastReportAtMs: 0,
+    quotesApplyMs: 0,
+    fireidxFullMs: 0,
+    fireidxIncrementalCount: 0,
+    fireidxFullCount: 0,
+  };
 
   shouldHoldSimulationAtBoundary(state: GameState): boolean {
     const currentDay = state.currentTradingSession?.mskDateYyyymmdd;
@@ -74,13 +149,140 @@ export class MarketModuleService implements LogicModule<GameState> {
     return this.waitingDayForBoundary === currentDay;
   }
 
+  private reportPerfProbeIfNeeded(): void {
+    if (typeof window === 'undefined' || process.env.NODE_ENV !== 'development') {
+      return;
+    }
+    const now = Date.now();
+    if (now - this.perfProbe.lastReportAtMs < 5_000) {
+      return;
+    }
+    console.debug('[market-perf-probe]', {
+      quotesApplyMs: Number(this.perfProbe.quotesApplyMs.toFixed(2)),
+      fireidxFullMs: Number(this.perfProbe.fireidxFullMs.toFixed(2)),
+      fireidxIncrementalCount: this.perfProbe.fireidxIncrementalCount,
+      fireidxFullCount: this.perfProbe.fireidxFullCount,
+    });
+    this.perfProbe.quotesApplyMs = 0;
+    this.perfProbe.fireidxFullMs = 0;
+    this.perfProbe.fireidxIncrementalCount = 0;
+    this.perfProbe.fireidxFullCount = 0;
+    this.perfProbe.lastReportAtMs = now;
+  }
+
+  private applyQuotesAndCompositeIndex(
+    state: MarketModuleState,
+    simulationEpochMs: number,
+    options?: {
+      forceFullFireidx?: boolean;
+      stockBarsChanged?: boolean;
+      currentMskDate?: string | null;
+    }
+  ): void {
+    const quotesStart = performance.now();
+    applyMarketQuotesForSimulationEpoch(
+      state,
+      simulationEpochMs,
+      this.tradingCalendar,
+      { excludeSymbols: [FIREIDX_SYMBOL] }
+    );
+
+    const fireidxMinute = state.chartSeries.minute[FIREIDX_SYMBOL] ?? [];
+    const needsFull = shouldFullRebuildFireidx({
+      forceFull: options?.forceFullFireidx,
+      stockBarsChanged: options?.stockBarsChanged,
+      fireidxMinuteEmpty: fireidxMinute.length === 0,
+      currentMskDate: options?.currentMskDate ?? null,
+      lastDailyRebuildMskDate: state.fireidxRuntime.lastDailyRebuildMskDate,
+    });
+
+    if (needsFull) {
+      const fireidxStart = performance.now();
+      const rebuilt = rebuildFireidxSeriesFromConstituents({
+        catalog: state.instrumentCatalog,
+        chartSeries: state.chartSeries,
+        details: state.details,
+        simulationEpochMs,
+        calendar: this.tradingCalendar,
+      });
+      applyFireidxBundlesToChartSeries(
+        state.chartSeries,
+        rebuilt,
+        this.tradingCalendar
+      );
+      state.fireidxRuntime.lastFullRebuildEpochMs = simulationEpochMs;
+      if (options?.currentMskDate) {
+        state.fireidxRuntime.lastDailyRebuildMskDate = options.currentMskDate;
+      }
+      const baseIndex =
+        rebuilt.compositeIndex.constituents.length > 0
+          ? rebuilt.compositeIndex
+          : state.compositeIndex;
+      state.compositeIndex = updateCompositeIndex(
+        baseIndex,
+        state.instrumentCatalog,
+        state.assetsBySymbol,
+        state.details,
+        simulationEpochMs,
+        this.tradingCalendar
+      );
+      this.perfProbe.fireidxFullMs += performance.now() - fireidxStart;
+      this.perfProbe.fireidxFullCount += 1;
+    } else {
+      state.compositeIndex = updateCompositeIndex(
+        state.compositeIndex,
+        state.instrumentCatalog,
+        state.assetsBySymbol,
+        state.details,
+        simulationEpochMs,
+        this.tradingCalendar
+      );
+      advanceFireidxMinuteBar(
+        state.chartSeries,
+        state.instrumentCatalog,
+        state.compositeIndex,
+        simulationEpochMs,
+        this.tradingCalendar
+      );
+      advanceFireidxIntradayFromConstituents(
+        state.chartSeries,
+        state.instrumentCatalog,
+        state.compositeIndex,
+        simulationEpochMs
+      );
+      this.perfProbe.fireidxIncrementalCount += 1;
+    }
+
+    syncFireidxAsset(state.assetsBySymbol, state.compositeIndex);
+    refreshQuotesForSymbol(
+      state,
+      FIREIDX_SYMBOL,
+      simulationEpochMs,
+      this.tradingCalendar
+    );
+
+    this.perfProbe.quotesApplyMs += performance.now() - quotesStart;
+    this.reportPerfProbeIfNeeded();
+  }
+
   createInitialState(simulationEpochMs: number): MarketModuleState {
     const items = readCatalogItems();
     const state = createMarketModuleState(items, emptyChartSeriesBundle());
-    applyMarketQuotesForSimulationEpoch(state, simulationEpochMs, this.tradingCalendar);
+    this.applyQuotesAndCompositeIndex(state, simulationEpochMs);
     this.lastQuotedSimulationEpochMs = simulationEpochMs;
     this.lastHydratedEpochMs = null;
     this.prefetchedDays.clear();
+    this.rendererPreloadedDays.clear();
+    this.dayLoadState = 'idle';
+    this.activeDayKey = null;
+    this.nextDayKey = null;
+    this.bufferReady = false;
+    this.nextDayPreloadInFlight = false;
+    this.stagedDayBundles.clear();
+    this.dayBufferProbe.dayPreloads = 0;
+    this.dayBufferProbe.ramBufferSkips = 0;
+    this.dayBufferProbe.minuteFallbacks = 0;
+    this.dayBufferProbe.lastReportAtMs = 0;
     this.waitingDayForBoundary = null;
     // Сбрасываем сабсервис corporateActions. Все события до текущей эпохи
     // считаем «уже произошедшими» (без эмиссии): начинаем сканировать с simulationEpochMs.
@@ -89,9 +291,25 @@ export class MarketModuleService implements LogicModule<GameState> {
     return state;
   }
 
-  /** После загрузки рядов из SQLite (Electron) пересчитать котировки и сбросить кэш эпохи. */
-  afterExternalHydrate(state: MarketModuleState, simulationEpochMs: number): void {
-    applyMarketQuotesForSimulationEpoch(state, simulationEpochMs, this.tradingCalendar);
+  /** После загрузки рядов из SQLite (Electron) пересчитать котировки. */
+  afterExternalHydrate(
+    gameState: GameState,
+    simulationEpochMs: number,
+    hydrateMeta?: { stockBarsChanged: boolean }
+  ): void {
+    if (
+      simulationEpochMs === this.lastQuotedSimulationEpochMs &&
+      hydrateMeta?.stockBarsChanged !== true
+    ) {
+      return;
+    }
+    // Не форсируем full rebuild FIREIDX при каждой гидрации:
+    // applyMarketQuotesForSimulationEpoch обновит assetsBySymbol из новых баров,
+    // затем incremental-путь (advanceFireidxMinuteBar) подхватит актуальные цены.
+    // Full rebuild произойдёт автоматически при смене торгового дня или пустой серии.
+    this.applyQuotesAndCompositeIndex(gameState.market, simulationEpochMs, {
+      currentMskDate: gameState.currentTradingSession?.mskDateYyyymmdd ?? null,
+    });
     this.lastQuotedSimulationEpochMs = simulationEpochMs;
   }
 
@@ -99,8 +317,216 @@ export class MarketModuleService implements LogicModule<GameState> {
     if (typeof window === 'undefined') {
       return false;
     }
-    const w = window as unknown as { marketData?: { getSlices?: unknown } };
-    return typeof w.marketData?.getSlices === 'function';
+    const w = window as unknown as {
+      marketData?: { getSlices?: unknown; getDaySlices?: unknown };
+    };
+    return (
+      typeof w.marketData?.getDaySlices === 'function' ||
+      typeof w.marketData?.getSlices === 'function'
+    );
+  }
+
+  private rememberRendererPreloadedDay(mskDateYyyymmdd: string): void {
+    this.rendererPreloadedDays.delete(mskDateYyyymmdd);
+    this.rendererPreloadedDays.add(mskDateYyyymmdd);
+    // Храним небольшой LRU-хвост, чтобы не раздувать Set при длинной сессии.
+    while (this.rendererPreloadedDays.size > 8) {
+      const first = this.rendererPreloadedDays.keys().next().value;
+      if (typeof first !== 'string') {
+        break;
+      }
+      this.rendererPreloadedDays.delete(first);
+    }
+  }
+
+  private reportDayBufferProbeIfNeeded(): void {
+    if (typeof window === 'undefined' || process.env.NODE_ENV !== 'development') {
+      return;
+    }
+    const now = Date.now();
+    if (now - this.dayBufferProbe.lastReportAtMs < 5_000) {
+      return;
+    }
+    console.debug('[market-day-buffer-probe]', {
+      dayLoadState: this.dayLoadState,
+      activeDayKey: this.activeDayKey,
+      nextDayKey: this.nextDayKey,
+      bufferReady: this.bufferReady,
+      dayPreloads: this.dayBufferProbe.dayPreloads,
+      ramBufferSkips: this.dayBufferProbe.ramBufferSkips,
+      minuteFallbacks: this.dayBufferProbe.minuteFallbacks,
+    });
+    this.dayBufferProbe.lastReportAtMs = now;
+  }
+
+  private isCurrentDayPreloadedInRenderer(state: GameState): boolean {
+    const day = state.currentTradingSession?.mskDateYyyymmdd;
+    return Boolean(day && this.rendererPreloadedDays.has(day));
+  }
+
+  private markActiveAndNextDay(state: GameState): void {
+    this.activeDayKey = state.currentTradingSession?.mskDateYyyymmdd ?? null;
+    this.nextDayKey = state.nextTradingSession?.mskDateYyyymmdd ?? null;
+    this.bufferReady = this.activeDayKey
+      ? this.rendererPreloadedDays.has(this.activeDayKey)
+      : false;
+  }
+
+  private async fetchDayBundleCoverage(
+    state: GameState,
+    symbols: readonly string[],
+    mskDateYyyymmdd: string
+  ): Promise<{
+    bundle: MarketChartSeriesBundle | null;
+    hasData: boolean;
+    hasStockData: boolean;
+  }> {
+    const dayBundle = await fetchDaySlicesFromElectron(mskDateYyyymmdd, symbols);
+    if (!dayBundle) {
+      return { bundle: null, hasData: false, hasStockData: false };
+    }
+    const kindBySymbol = new Map(
+      state.market.instrumentCatalog.map((item) => [
+        item.symbol.toUpperCase(),
+        item.assetKind,
+      ])
+    );
+    const hasData = symbols.some((sym) => {
+      const key = sym.toUpperCase();
+      return (
+        (dayBundle.minute[key]?.length ?? 0) > 0 ||
+        (dayBundle.dailyClose[key]?.length ?? 0) > 0 ||
+        (dayBundle.fiveMinute[key]?.length ?? 0) > 0 ||
+        (dayBundle.thirtyMinute[key]?.length ?? 0) > 0 ||
+        (dayBundle.oneHour[key]?.length ?? 0) > 0 ||
+        (dayBundle.weekly[key]?.length ?? 0) > 0
+      );
+    });
+    const hasStockData = symbols.some((sym) => {
+      const key = sym.toUpperCase();
+      if (kindBySymbol.get(key) !== 'stock') {
+        return false;
+      }
+      return (
+        (dayBundle.minute[key]?.length ?? 0) > 0 ||
+        (dayBundle.dailyClose[key]?.length ?? 0) > 0
+      );
+    });
+    return { bundle: dayBundle, hasData, hasStockData };
+  }
+
+  private async preloadDayBundleIntoRenderer(
+    state: GameState,
+    symbols: readonly string[],
+    mskDateYyyymmdd: string
+  ): Promise<{
+    changed: boolean;
+    stockBarsChanged: boolean;
+    hasData: boolean;
+    hasStockData: boolean;
+  }> {
+    const { bundle: dayBundle, hasData, hasStockData } =
+      await this.fetchDayBundleCoverage(state, symbols, mskDateYyyymmdd);
+    if (!dayBundle || !hasData) {
+      return {
+        changed: false,
+        stockBarsChanged: false,
+        hasData: false,
+        hasStockData,
+      };
+    }
+    this.dayBufferProbe.dayPreloads += 1;
+    const merged = this.applyMergedBarsToSeries(
+      state,
+      symbols,
+      dayBundle,
+      state.simulationEpochMs
+    );
+    return { ...merged, hasData: true, hasStockData };
+  }
+
+  /**
+   * Подготовить двухдневный буфер (`current + next`) в renderer-state.
+   * Данные дня загружаются один раз через `market:get-day-slices`, далее внутри
+   * дня логика работает из RAM без minute DB hydrate.
+   */
+  private async preloadCurrentAndNextDayIntoRenderer(
+    state: GameState,
+    symbols: readonly string[]
+  ): Promise<boolean> {
+    const currentDay = state.currentTradingSession?.mskDateYyyymmdd ?? null;
+    if (!currentDay || symbols.length === 0) {
+      return false;
+    }
+    const switchedDay =
+      this.activeDayKey !== null && this.activeDayKey !== currentDay;
+    this.dayLoadState = switchedDay ? 'rollingNext' : 'preloadingCurrent';
+    let changedAny = false;
+    let stockBarsChangedAny = false;
+    let currentHasData = this.rendererPreloadedDays.has(currentDay);
+    const hasStocksInCatalog = state.market.instrumentCatalog.some(
+      (item) => item.assetKind === 'stock'
+    );
+
+    if (!this.rendererPreloadedDays.has(currentDay)) {
+      const cur = await this.preloadDayBundleIntoRenderer(state, symbols, currentDay);
+      changedAny = changedAny || cur.changed;
+      stockBarsChangedAny = stockBarsChangedAny || cur.stockBarsChanged;
+      const currentReadyByCoverage =
+        cur.hasData && (!hasStocksInCatalog || cur.hasStockData);
+      if (currentReadyByCoverage) {
+        this.rememberRendererPreloadedDay(currentDay);
+        this.prefetchedDays.add(currentDay);
+      }
+      currentHasData = currentHasData || currentReadyByCoverage;
+    }
+
+    // Следующий торговый день держим тёплым в RAM заранее (staged), но не вливаем
+    // в chartSeries, чтобы не вызывать фоновые merge/trim лаги и артефакты.
+    const nextDay = state.nextTradingSession?.mskDateYyyymmdd ?? null;
+    if (
+      nextDay &&
+      !this.rendererPreloadedDays.has(nextDay) &&
+      !this.nextDayPreloadInFlight
+    ) {
+      this.nextDayPreloadInFlight = true;
+      void this.fetchDayBundleCoverage(state, symbols, nextDay)
+        .then((nxt) => {
+          if (!nxt.bundle) {
+            return;
+          }
+          const nextReadyByCoverage = nxt.hasData && (!hasStocksInCatalog || nxt.hasStockData);
+          if (nextReadyByCoverage) {
+            this.stagedDayBundles.set(nextDay, nxt.bundle);
+            while (this.stagedDayBundles.size > 4) {
+              const first = this.stagedDayBundles.keys().next().value;
+              if (typeof first !== 'string') break;
+              this.stagedDayBundles.delete(first);
+            }
+          }
+        })
+        .finally(() => {
+          this.nextDayPreloadInFlight = false;
+        });
+    }
+
+    this.markActiveAndNextDay(state);
+    this.bufferReady = currentHasData;
+    this.dayLoadState = currentHasData ? 'readyCurrent' : 'idle';
+    this.reportDayBufferProbeIfNeeded();
+
+    if (!changedAny) {
+      return false;
+    }
+    // Не двигаем симуляцию вперёд: пересчёт только на текущий simulationEpochMs.
+    this.lastHydratedEpochMs = state.simulationEpochMs;
+    this.notifyHook?.();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    this.afterExternalHydrate(state, state.simulationEpochMs, {
+      stockBarsChanged: stockBarsChangedAny,
+    });
+    this.notifyHook?.();
+    return true;
   }
 
   private mergeBarsByEpoch(
@@ -162,22 +588,21 @@ export class MarketModuleService implements LogicModule<GameState> {
       return [];
     }
     // Важно: рынок не должен зависеть от состава портфеля пользователя.
-    // Подгружаем по каталогу рынка, чтобы котировки и графики обновлялись
-    // независимо от наличия позиции в PortfolioModule.
-    return catalog
-      .map((item) => item.symbol.toUpperCase())
-      .filter((symbol, index, arr) => arr.indexOf(symbol) === index);
+    // Подгружаем по полному каталогу рынка.
+    return pickHydrateSymbolsFromCatalog(catalog);
   }
 
-  private applyHydratedBundle(
+  /**
+   * Фаза 1 гидрации: смержить бары из bundle в chartSeries и обрезать ряды.
+   * НЕ вызывает afterExternalHydrate — пересчёт котировок откладывается на фазу 2.
+   */
+  private applyMergedBarsToSeries(
     state: GameState,
     symbols: readonly string[],
-    bundle: Awaited<ReturnType<typeof fetchMarketSlicesFromElectron>>,
+    bundle: NonNullable<Awaited<ReturnType<typeof fetchMarketSlicesFromElectron>>>,
     currentEpoch: number
-  ): boolean {
-    if (!bundle) {
-      return false;
-    }
+  ): { changed: boolean; stockBarsChanged: boolean } {
+    void currentEpoch;
     const catalog = state.market.instrumentCatalog;
     const prevSeries = state.market.chartSeries;
     const merged = {
@@ -189,6 +614,8 @@ export class MarketModuleService implements LogicModule<GameState> {
       weekly: { ...prevSeries.weekly } as Record<string, readonly MarketPriceBar[]>,
     };
     let changed = false;
+    let stockBarsChanged = false;
+    const stockSet = new Set(stockSymbolsFromCatalog(catalog));
     for (const key of symbols) {
       const prevMinute = prevSeries.minute[key] ?? [];
       const nextMinute = this.mergeBarsByEpoch(prevMinute, bundle.minute[key] ?? []);
@@ -210,6 +637,16 @@ export class MarketModuleService implements LogicModule<GameState> {
       changed = changed || nextThirty !== prevThirty;
       merged.thirtyMinute[key] = nextThirty;
 
+      if (
+        stockSet.has(key) &&
+        (nextMinute !== prevMinute ||
+          nextDaily !== prevDaily ||
+          nextFive !== prevFive ||
+          nextThirty !== prevThirty)
+      ) {
+        stockBarsChanged = true;
+      }
+
       const prevHour = prevSeries.oneHour[key] ?? [];
       const nextHour = this.mergeBarsByEpoch(prevHour, bundle.oneHour[key] ?? []);
       changed = changed || nextHour !== prevHour;
@@ -222,13 +659,12 @@ export class MarketModuleService implements LogicModule<GameState> {
     }
 
     if (!changed) {
-      return false;
+      return { changed: false, stockBarsChanged: false };
     }
     const trimmed = trimChartSeriesBundleForStorage(merged);
-    state.market = createMarketModuleState(catalog, trimmed);
-    this.afterExternalHydrate(state.market, currentEpoch);
+    applyChartSeriesBundleToMarket(state.market, trimmed);
     this.hydrateProbe.applied += 1;
-    return true;
+    return { changed: true, stockBarsChanged };
   }
 
   private async runHydrateCycle(
@@ -253,9 +689,26 @@ export class MarketModuleService implements LogicModule<GameState> {
     if (!bundle) {
       return false;
     }
-    const changed = this.applyHydratedBundle(state, symbols, bundle, currentEpoch);
+
+    // ── Фаза 1: смерж баров (~10 мс) ──
+    const { changed, stockBarsChanged } = this.applyMergedBarsToSeries(
+      state, symbols, bundle, currentEpoch
+    );
+    if (!changed) {
+      return false;
+    }
     this.lastHydratedEpochMs = currentEpoch;
-    return changed;
+
+    // Промежуточное уведомление: UI видит новые бары до тяжёлой фазы 2.
+    this.notifyHook?.();
+
+    // Выдержка: браузер может отрисовать кадр до запуска пересчёта котировок.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    // ── Фаза 2: пересчёт котировок + FIREIDX (~3–30 мс) ──
+    this.afterExternalHydrate(state, currentEpoch, { stockBarsChanged });
+
+    return true;
   }
 
   async hydrateFromDatabaseTick(
@@ -270,6 +723,35 @@ export class MarketModuleService implements LogicModule<GameState> {
     if (!Number.isFinite(currentEpoch) || currentEpoch <= previousEpochMs) {
       return false;
     }
+    const symbols = this.pickHydrateSymbols(state);
+    if (symbols.length === 0) {
+      return false;
+    }
+    // Приоритетный путь: day-buffer. Для текущего дня minute hydrate отключён.
+    if (this.isCurrentDayPreloadedInRenderer(state)) {
+      this.markActiveAndNextDay(state);
+      this.dayBufferProbe.ramBufferSkips += 1;
+      this.reportDayBufferProbeIfNeeded();
+      return false;
+    }
+    // На старте/после границы дня сначала пытаемся восстановить day-buffer,
+    // и только при неуспехе откатываемся на старый minute hydrate.
+    if (!this.marketHydrateInFlight) {
+      this.marketHydrateInFlight = true;
+      try {
+        const dayChanged = await this.preloadCurrentAndNextDayIntoRenderer(
+          state,
+          symbols
+        );
+        if (this.isCurrentDayPreloadedInRenderer(state)) {
+          return dayChanged;
+        }
+      } finally {
+        this.marketHydrateInFlight = false;
+      }
+    }
+    this.dayBufferProbe.minuteFallbacks += 1;
+    this.reportDayBufferProbeIfNeeded();
     if (this.marketHydrateInFlight) {
       this.pendingHydrateEpochMs =
         this.pendingHydrateEpochMs === null
@@ -286,7 +768,11 @@ export class MarketModuleService implements LogicModule<GameState> {
     let fallbackFromEpoch = previousEpochMs;
     try {
       while (Number.isFinite(targetEpoch)) {
-        const changed = await this.runHydrateCycle(state, targetEpoch, fallbackFromEpoch);
+        const changed = await this.runHydrateCycle(
+          state,
+          targetEpoch,
+          fallbackFromEpoch
+        );
         changedAny = changedAny || changed;
         fallbackFromEpoch = targetEpoch;
         const pending = this.pendingHydrateEpochMs;
@@ -314,7 +800,9 @@ export class MarketModuleService implements LogicModule<GameState> {
     }
     const prevEpoch = this.lastScannedEpochMs ?? epoch;
     this.lastQuotedSimulationEpochMs = epoch;
-    applyMarketQuotesForSimulationEpoch(state.market, epoch, this.tradingCalendar);
+    this.applyQuotesAndCompositeIndex(state.market, epoch, {
+      currentMskDate: state.currentTradingSession?.mskDateYyyymmdd ?? null,
+    });
     // Сабсервис corporateActions: scan & emit (слой A) — после обновления котировок,
     // чтобы консьюмеры могли уже опираться на актуальные позиции/цены.
     // Передаём календарь: для дивидендов scanner вычисляет cut-off реестра
@@ -337,33 +825,85 @@ export class MarketModuleService implements LogicModule<GameState> {
       return;
     }
     const currentDay = state.currentTradingSession?.mskDateYyyymmdd;
-    if (currentDay && !this.prefetchedDays.has(currentDay)) {
+    if (currentDay && !this.rendererPreloadedDays.has(currentDay)) {
       this.waitingDayForBoundary = currentDay;
-      void prefetchDayFromElectron(currentDay, symbols).then((res) => {
-        if (res?.ok && res.prefetched) {
-          if (res.mskDateYyyymmdd) {
-            this.prefetchedDays.add(res.mskDateYyyymmdd);
-          } else {
-            this.prefetchedDays.add(currentDay);
+      void (async () => {
+        if (this.marketHydrateInFlight) {
+          // Не блокируем симуляцию навсегда: если preload занят/неуспешен,
+          // разрешаем minute-fallback в обычном тике.
+          if (this.waitingDayForBoundary === currentDay) {
+            this.waitingDayForBoundary = null;
           }
+          return;
         }
+        this.marketHydrateInFlight = true;
+        try {
+          const stagedKey = state.currentTradingSession?.mskDateYyyymmdd ?? null;
+          if (
+            stagedKey &&
+            this.stagedDayBundles.has(stagedKey) &&
+            !this.rendererPreloadedDays.has(stagedKey)
+          ) {
+            const stagedBundle = this.stagedDayBundles.get(stagedKey)!;
+            const { changed, stockBarsChanged } = this.applyMergedBarsToSeries(
+              state,
+              symbols,
+              stagedBundle,
+              state.simulationEpochMs
+            );
+            this.stagedDayBundles.delete(stagedKey);
+            this.rememberRendererPreloadedDay(stagedKey);
+            this.prefetchedDays.add(stagedKey);
+            if (changed) {
+              this.lastHydratedEpochMs = state.simulationEpochMs;
+              this.notifyHook?.();
+              await new Promise<void>((resolve) => setTimeout(resolve, 0));
+              this.afterExternalHydrate(state, state.simulationEpochMs, {
+                stockBarsChanged,
+              });
+              this.notifyHook?.();
+            }
+            // Критично для smooth-переходов "каждый день":
+            // сразу после swap текущего дня запускаем фоновую подготовку N+2.
+            await this.preloadCurrentAndNextDayIntoRenderer(state, symbols);
+          } else {
+            await this.preloadCurrentAndNextDayIntoRenderer(state, symbols);
+          }
+        } finally {
+          this.marketHydrateInFlight = false;
+        }
+        // Boundary hold снимаем всегда: если буфер не собрался, работает minute-fallback.
         if (this.waitingDayForBoundary === currentDay) {
           this.waitingDayForBoundary = null;
         }
-      });
+      })();
+    } else if (this.waitingDayForBoundary === currentDay) {
+      this.waitingDayForBoundary = null;
     }
-    void prefetchNextDayFromElectron(state.simulationEpochMs, symbols).then((res) => {
-      if (res?.ok && res.prefetched && res.mskDateYyyymmdd) {
-        this.prefetchedDays.add(res.mskDateYyyymmdd);
-      }
-    });
   }
 
   handleCommand(
-    _state: GameState,
-    _command: LogicCommand,
+    state: GameState,
+    command: LogicCommand,
     _context: ModuleContext
   ): boolean {
-    return false;
+    if (command.type !== 'market/consume-orderbook-liquidity') {
+      return false;
+    }
+    const symbol = command.symbol.toUpperCase();
+    const asset = state.market.assetsBySymbol[symbol];
+    if (!asset) {
+      return false;
+    }
+    const nextBook = applyOrderBookConsumption(
+      asset.orderBook,
+      command.takerSide,
+      command.slices
+    );
+    state.market.assetsBySymbol[symbol] = {
+      ...asset,
+      orderBook: nextBook,
+    };
+    return true;
   }
 }

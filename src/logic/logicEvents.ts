@@ -2,6 +2,10 @@
 export const TRADING_DAY_CHANGED = 'TRADING_DAY_CHANGED';
 export const TRADE_EXECUTED = 'TRADE_EXECUTED';
 export const TRADE_REJECTED = 'TRADE_REJECTED';
+export const ORDER_PARTIALLY_FILLED = 'ORDER_PARTIALLY_FILLED';
+export const ORDER_FILLED = 'ORDER_FILLED';
+export const ORDER_CANCELLED = 'ORDER_CANCELLED';
+export const ORDER_PLACED = 'ORDER_PLACED';
 
 // === Слой A — рыночные декларации (MarketModule.corporateActions) ===
 export const MARKET_DIVIDEND_DECLARED = 'MARKET_DIVIDEND_DECLARED';
@@ -67,7 +71,31 @@ export type TradeRejectReason =
   | 'INSUFFICIENT_FUNDS'
   | 'INSUFFICIENT_POSITION_QTY'
   | 'INSUFFICIENT_ORDERBOOK_LIQUIDITY'
-  | 'NON_TRADABLE_INSTRUMENT';
+  | 'NON_TRADABLE_INSTRUMENT'
+  | 'INSTRUMENT_NOT_TRADING';
+
+export type OrderKind = 'market' | 'limit';
+
+export type OrderStatus = 'open' | 'partially_filled' | 'filled' | 'cancelled';
+
+export type RestingOrderView = {
+  id: string;
+  symbol: string;
+  side: TradeSide;
+  orderKind: OrderKind;
+  limitPriceRub: number | null;
+  quantity: number;
+  filledQuantity: number;
+  placedAtSimulationEpochMs: number;
+  status: OrderStatus;
+};
+
+export type OrderLifecyclePayload = {
+  order: RestingOrderView;
+  simulationEpochMs: number;
+  fillQuantity?: number;
+  fillPriceRub?: number;
+};
 
 export type TradeRejectedPayload = {
   simulationEpochMs: number;
@@ -157,6 +185,10 @@ export interface LogicEventMap {
   [TRADING_DAY_CHANGED]: TradingDayChangedPayload;
   [TRADE_EXECUTED]: TradeExecutionPayload;
   [TRADE_REJECTED]: TradeRejectedPayload;
+  [ORDER_PLACED]: OrderLifecyclePayload;
+  [ORDER_PARTIALLY_FILLED]: OrderLifecyclePayload;
+  [ORDER_FILLED]: OrderLifecyclePayload;
+  [ORDER_CANCELLED]: OrderLifecyclePayload;
   [MARKET_DIVIDEND_DECLARED]: MarketDividendDeclaredPayload;
   [MARKET_COUPON_DECLARED]: MarketCouponDeclaredPayload;
   [MARKET_BOND_MATURED]: MarketBondMaturedPayload;

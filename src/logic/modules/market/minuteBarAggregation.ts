@@ -2,9 +2,64 @@ import { getISOWeek, getISOWeekYear } from 'date-fns';
 import { formatInTimeZone, toDate } from 'date-fns-tz';
 import type { MarketPriceBar } from './priceSeries';
 
-const FIVE_MS = 5 * 60 * 1000;
-const THIRTY_MS = 30 * 60 * 1000;
+export const INTRADAY_FIVE_MIN_MS = 5 * 60 * 1000;
+export const INTRADAY_THIRTY_MIN_MS = 30 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
+const FIVE_MS = INTRADAY_FIVE_MIN_MS;
+const THIRTY_MS = INTRADAY_THIRTY_MIN_MS;
+
+function bucketStartMs(tBar: number, stepMs: number): number {
+  return Math.floor(tBar / stepMs) * stepMs;
+}
+
+function foldMinuteRowsIntoBucket(
+  rows: readonly MarketPriceBar[],
+  bucketT: number
+): MarketPriceBar {
+  let bar: MarketPriceBar | null = null;
+  for (const row of rows) {
+    bar = bar
+      ? {
+          t: bucketT,
+          o: bar.o,
+          h: Math.max(bar.h, row.h),
+          l: Math.min(bar.l, row.l),
+          c: row.c,
+          v: bar.v + row.v,
+        }
+      : { t: bucketT, o: row.o, h: row.h, l: row.l, c: row.c, v: row.v };
+  }
+  return bar!;
+}
+
+/**
+ * Обновляет один 5m/30m/1h бар по минуткам в том же bucket, сохраняя остальную историю.
+ * Нужен для инкрементального FIREIDX: нельзя пересобирать агрегаты только из trimmed minute.
+ */
+export function mergeMinuteBucketIntoAggregatedBars(
+  aggregated: readonly MarketPriceBar[],
+  minuteBars: readonly MarketPriceBar[],
+  stepMs: number,
+  triggerMinute: MarketPriceBar
+): MarketPriceBar[] {
+  const bucketT = bucketStartMs(triggerMinute.t, stepMs);
+  const inBucket = minuteBars.filter(
+    (b) => bucketStartMs(b.t, stepMs) === bucketT
+  );
+  if (inBucket.length === 0) {
+    return [...aggregated];
+  }
+  const merged = foldMinuteRowsIntoBucket(inBucket, bucketT);
+  const next = [...aggregated];
+  const idx = next.findIndex((b) => b.t === bucketT);
+  if (idx >= 0) {
+    next[idx] = merged;
+  } else {
+    next.push(merged);
+    next.sort((a, b) => a.t - b.t);
+  }
+  return next;
+}
 
 /** Ключ даты МСК YYYYMMDD для строки баров. */
 export function mskYyyymmddFromEpochMs(epochMs: number): string {

@@ -67,6 +67,13 @@ export class PortfolioModuleService
           command.simulationEpochMs,
           command.navRub
         );
+      case 'portfolio/adjust-reservation':
+        return this.adjustReservation(
+          state,
+          command.symbol,
+          command.deltaCashReservedRub,
+          command.deltaQtyReserved
+        );
       default:
         return false;
     }
@@ -343,6 +350,33 @@ export class PortfolioModuleService
     state.portfolio = {
       ...state.portfolio,
       navHistory: [...history, snap],
+    };
+    return true;
+  }
+
+  private adjustReservation(
+    state: PortfolioRoot,
+    symbol: string,
+    deltaCashReservedRub: number,
+    deltaQtyReserved: number
+  ): boolean {
+    const sym = symbol.toUpperCase();
+    const nextCashReserved = Math.max(
+      0,
+      state.portfolio.cashReservedRub + deltaCashReservedRub
+    );
+    const prevQty = state.portfolio.reservedQtyBySymbol[sym] ?? 0;
+    const nextQty = Math.max(0, prevQty + deltaQtyReserved);
+    const nextMap = { ...state.portfolio.reservedQtyBySymbol };
+    if (nextQty <= 0) {
+      delete nextMap[sym];
+    } else {
+      nextMap[sym] = nextQty;
+    }
+    state.portfolio = {
+      ...state.portfolio,
+      cashReservedRub: nextCashReserved,
+      reservedQtyBySymbol: nextMap,
     };
     return true;
   }

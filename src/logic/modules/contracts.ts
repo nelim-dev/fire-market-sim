@@ -10,12 +10,34 @@ export type MarketSyncPricesCommand = {
   pricesBySymbol: Readonly<Record<string, number>>;
 };
 
+export type MarketConsumeOrderbookLiquidityCommand = {
+  type: 'market/consume-orderbook-liquidity';
+  symbol: string;
+  /** Сторона заявки тейкера: buy съедает asks, sell — bids. */
+  takerSide: 'buy' | 'sell';
+  slices: ReadonlyArray<{ priceRub: number; qty: number }>;
+};
+
 export type TradingSubmitMarketOrderCommand = {
   type: 'trading/submit-market-order';
   side: 'buy' | 'sell';
   symbol: string;
   quantity: number;
   source: 'right-panel' | 'modal';
+};
+
+export type TradingSubmitLimitOrderCommand = {
+  type: 'trading/submit-limit-order';
+  side: 'buy' | 'sell';
+  symbol: string;
+  quantity: number;
+  limitPriceRub: number;
+  source: 'right-panel' | 'modal';
+};
+
+export type TradingCancelOrderCommand = {
+  type: 'trading/cancel-order';
+  orderId: string;
 };
 
 export type PortfolioApplyTradeExecutionCommand = {
@@ -85,10 +107,21 @@ export type PortfolioRecordNavSnapshotCommand = {
   navRub: number;
 };
 
+/** Резервирование cash/qty под открытые заявки (TradingModule). */
+export type PortfolioAdjustReservationCommand = {
+  type: 'portfolio/adjust-reservation';
+  symbol: string;
+  deltaCashReservedRub: number;
+  deltaQtyReserved: number;
+};
+
 export type LogicCommand =
   | RuntimeCommand
   | MarketSyncPricesCommand
+  | MarketConsumeOrderbookLiquidityCommand
   | TradingSubmitMarketOrderCommand
+  | TradingSubmitLimitOrderCommand
+  | TradingCancelOrderCommand
   | PortfolioApplyTradeExecutionCommand
   | PortfolioCreditCashCommand
   | PortfolioDebitCashCommand
@@ -96,6 +129,7 @@ export type LogicCommand =
   | PortfolioClosePositionCommand
   | PortfolioClearLotNkdAtBuyCommand
   | PortfolioRecordNavSnapshotCommand
+  | PortfolioAdjustReservationCommand
   | EducationCommand
   | UiStateCommand;
 

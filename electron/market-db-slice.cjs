@@ -1,14 +1,14 @@
 'use strict';
 
 /**
- * Чтение minute_bars из SQLite (через sql.js / WASM) и агрегация в ряды для MarketModule.
- * В Electron main не используется better-sqlite3 — иначе нужна пересборка под ABI Electron.
+ * Чтение minute_bars из SQLite (better-sqlite3, readonly) и агрегация в ряды для MarketModule.
+ * sql.js не подходит: загружает весь файл в RAM (лимит Node ~2 GiB).
  * Дублирует алгоритм src/logic/modules/market/minuteBarAggregation.ts — при правках синхронизировать.
  */
 
 const fs = require('fs');
 const path = require('path');
-const initSqlJs = require('sql.js');
+const Database = require('better-sqlite3');
 const { formatInTimeZone, toDate } = require('date-fns-tz');
 const { getISOWeek, getISOWeekYear } = require('date-fns');
 
@@ -20,24 +20,11 @@ const HOUR_MS = 60 * 60 * 1000;
 const DAY_CACHE_MAX_ENTRIES = 480;
 const PROBE_REPORT_MS = 2_000;
 
-/** @type {Promise<any> | null} */
-let sqlModulePromise = null;
-
-function getSqlJs() {
-  if (!sqlModulePromise) {
-    sqlModulePromise = initSqlJs({
-      locateFile: (file) =>
-        path.join(__dirname, '..', 'node_modules', 'sql.js', 'dist', file),
-    });
-  }
-  return sqlModulePromise;
-}
-
-/** Кэш открытой БД по пути (файл читается в память один раз). */
-let cachedDbPath = null;
-/** @type {any} */
+/** @type {import('better-sqlite3').Database | null} */
 let cachedDb = null;
-/** @type {Map<string, any>} */
+/** Кэш открытой БД по пути (readonly handle, без загрузки файла в RAM). */
+let cachedDbPath = null;
+/** @type {Map<string, object>} */
 let dayBundleCache = new Map();
 /** @type {{ days: any[], sessionEndByDate: Map<string, number> } | null} */
 let cachedCalendar = null;
@@ -84,9 +71,8 @@ async function getDatabase(dbPath) {
     cachedDb = null;
     cachedDbPath = null;
   }
-  const SQL = await getSqlJs();
-  const buf = fs.readFileSync(dbPath);
-  cachedDb = new SQL.Database(buf);
+  cachedDb = new Database(dbPath, { readonly: true, fileMustExist: true });
+  cachedDb.pragma('journal_mode = WAL');
   cachedDbPath = dbPath;
   dayBundleCache = new Map();
   minuteBarsColumns = null;
@@ -331,13 +317,7 @@ function aggregateMinuteRows(sortedMinutes, sessionEndByDate) {
 }
 
 function hasColumn(db, tableName, columnName) {
-  const sql = `PRAGMA table_info(${tableName})`;
-  const stmt = db.prepare(sql);
-  const rows = [];
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject());
-  }
-  stmt.free();
+  const rows = db.prepare(`PRAGMA table_info(${tableName})`).all();
   return rows.some((row) => String(row.name).toLowerCase() === columnName.toLowerCase());
 }
 
@@ -366,22 +346,14 @@ function queryMinuteRows(db, upper, minTs, maxTs) {
     WHERE symbol = ? AND ts_ms >= ? AND ts_ms <= ?
     ORDER BY ts_ms ASC
   `;
-  const stmt = db.prepare(sql);
-  stmt.bind([upper, minTs, maxTs]);
-  const rows = [];
-  while (stmt.step()) {
-    const o = stmt.getAsObject();
-    rows.push({
-      t: Number(o.t),
-      o: Number(o.o),
-      h: Number(o.h),
-      l: Number(o.l),
-      c: Number(o.c),
-      v: Number(o.v),
-    });
-  }
-  stmt.free();
-  return rows;
+  return db.prepare(sql).all(upper, minTs, maxTs).map((o) => ({
+    t: Number(o.t),
+    o: Number(o.o),
+    h: Number(o.h),
+    l: Number(o.l),
+    c: Number(o.c),
+    v: Number(o.v),
+  }));
 }
 
 function cloneBars(bars) {
@@ -608,8 +580,70 @@ async function prefetchDayPayload(params) {
   return { ok: true, prefetched: true, mskDateYyyymmdd };
 }
 
+/**
+ * Получить полный bundle конкретного торгового дня по символам.
+ * @param {{ mskDateYyyymmdd: string, symbols: string[] }} params
+ */
+async function buildDaySlicesPayload(params) {
+  const mskDateYyyymmdd = String(params?.mskDateYyyymmdd ?? '');
+  const symbols = Array.isArray(params?.symbols) ? params.symbols : [];
+  if (!/^\d{8}$/.test(mskDateYyyymmdd) || symbols.length === 0) {
+    return { ok: false, error: 'invalid_payload' };
+  }
+  const dbPath = resolveDbPath();
+  const calPath = resolveCalendarPath();
+  if (!fs.existsSync(dbPath)) {
+    return { ok: false, error: 'db_missing', path: dbPath };
+  }
+  if (!fs.existsSync(calPath)) {
+    return { ok: false, error: 'calendar_missing', path: calPath };
+  }
+  const { days, sessionEndByDate } = loadCalendar(calPath);
+  const day = getDayByMskDate(days, mskDateYyyymmdd);
+  if (!day) {
+    return {
+      ok: true,
+      minuteBySymbol: {},
+      dailyCloseBySymbol: {},
+      fiveMinuteBySymbol: {},
+      thirtyMinuteBySymbol: {},
+      oneHourBySymbol: {},
+      weeklyBySymbol: {},
+    };
+  }
+  const db = await getDatabase(dbPath);
+  const dailyCloseBySymbol = {};
+  const minuteBySymbol = {};
+  const fiveMinuteBySymbol = {};
+  const thirtyMinuteBySymbol = {};
+  const oneHourBySymbol = {};
+  const weeklyBySymbol = {};
+
+  for (const sym of symbols) {
+    const upper = String(sym).toUpperCase();
+    const bundle = loadDayBundle(db, upper, day, sessionEndByDate);
+    minuteBySymbol[upper] = cloneBars(bundle.minute);
+    dailyCloseBySymbol[upper] = cloneBars(bundle.dailyClose);
+    fiveMinuteBySymbol[upper] = cloneBars(bundle.fiveMinute);
+    thirtyMinuteBySymbol[upper] = cloneBars(bundle.thirtyMinute);
+    oneHourBySymbol[upper] = cloneBars(bundle.oneHour);
+    weeklyBySymbol[upper] = cloneBars(bundle.weekly);
+  }
+
+  return {
+    ok: true,
+    minuteBySymbol,
+    dailyCloseBySymbol,
+    fiveMinuteBySymbol,
+    thirtyMinuteBySymbol,
+    oneHourBySymbol,
+    weeklyBySymbol,
+  };
+}
+
 module.exports = {
   buildSlicesPayload,
+  buildDaySlicesPayload,
   prefetchNextDayPayload,
   prefetchDayPayload,
   resolveDbPath,

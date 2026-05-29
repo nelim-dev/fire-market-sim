@@ -4,6 +4,7 @@ import {
   catalogSectionsInDisplayOrder,
   groupInstrumentsByAssetKind,
 } from './catalogSort';
+import { isInstrumentActiveOnMarket } from './instrumentLifecycle';
 import type { MarketMacroSnapshot } from './macro';
 import type { MarketAssetState, MarketModuleState } from './state';
 
@@ -12,6 +13,16 @@ export const selectMarketModule = (state: GameState): MarketModuleState =>
 
 export const selectMarketReady = (state: GameState): boolean =>
   state.market.ready;
+
+/** Листинг / погашение: виден в обзоре рынка и доступен для торговли (кроме index). */
+export const selectIsInstrumentActiveOnMarket =
+  (symbol: string) =>
+  (state: GameState): boolean =>
+    isInstrumentActiveOnMarket(
+      state.market,
+      symbol,
+      state.simulationEpochMs
+    );
 
 /**
  * Каталог инструментов в стабильном порядке: `assetKind`, затем `ticker`
@@ -61,3 +72,55 @@ export const selectMarketCatalogSectionsOrdered = (
   catalogSectionsInDisplayOrder(
     groupInstrumentsByAssetKind(state.market.instrumentCatalog)
   );
+
+export const selectCompositeIndex = (state: GameState) =>
+  state.market.compositeIndex;
+
+export type InstrumentPayoutRow =
+  | {
+      kind: 'dividend';
+      dateEpochMs: number;
+      amountRub: number;
+      currency: string;
+    }
+  | {
+      kind: 'coupon';
+      dateEpochMs: number;
+      amountRub: number;
+      currency: string;
+    };
+
+export function selectInstrumentPayoutHistory(
+  symbol: string,
+  simulationEpochMs: number,
+  state: GameState
+): InstrumentPayoutRow[] {
+  const sym = symbol.toUpperCase();
+  const asset = state.market.assetsBySymbol[sym];
+  const details = state.market.details;
+  if (!asset) {
+    return [];
+  }
+  if (asset.isBond) {
+    const coupons = details.couponsBySymbol[sym] ?? [];
+    return coupons
+      .filter((c) => c.payDateEpochMs <= simulationEpochMs)
+      .map((c) => ({
+        kind: 'coupon' as const,
+        dateEpochMs: c.payDateEpochMs,
+        amountRub: c.perBondRub,
+        currency: 'RUB',
+      }))
+      .sort((a, b) => b.dateEpochMs - a.dateEpochMs);
+  }
+  const divs = details.dividendsBySymbol[sym] ?? [];
+  return divs
+    .filter((d) => d.recordCloseDateEpochMs <= simulationEpochMs)
+    .map((d) => ({
+      kind: 'dividend' as const,
+      dateEpochMs: d.recordCloseDateEpochMs,
+      amountRub: d.perShareRub,
+      currency: d.currency,
+    }))
+    .sort((a, b) => b.dateEpochMs - a.dateEpochMs);
+}

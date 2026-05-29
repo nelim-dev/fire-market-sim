@@ -4,10 +4,17 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useMemo, useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { gameLoop } from '@/logic/runners/GameLoop';
-import type { AssetKind } from '@/logic/modules/market/contracts';
+import type { AssetKind, OrderBookLevel } from '@/logic/modules/market/contracts';
 import type { ChartTimeframeId } from '@/logic/modules/market/chartTimeframes';
-import { selectMarketAsset } from '@/logic/modules/market/selectors';
-import { selectMarketInstrumentCatalog } from '@/logic/modules/market/selectors';
+import {
+  FIREIDX_SYMBOL,
+  type CompositeIndexState,
+} from '@/logic/modules/market/compositeIndex';
+import {
+  selectInstrumentPayoutHistory,
+  selectMarketAsset,
+  selectMarketInstrumentCatalog,
+} from '@/logic/modules/market/selectors';
 import type { PortfolioPosition } from '@/logic/domain/portfolio';
 import {
   positionAvgPriceRub,
@@ -16,6 +23,9 @@ import {
 import { MarketCloseLineChart } from '@/components/market/MarketCloseLineChart';
 
 export type { ChartTimeframeId };
+
+type PanelTab = 'chart' | 'about' | 'payouts' | 'structure';
+type OrderKind = 'market' | 'limit';
 
 const TIMEFRAMES: { id: ChartTimeframeId; label: string }[] = [
   { id: '1d', label: 'День' },
@@ -46,6 +56,34 @@ function formatRub(n: number): string {
   return new Intl.NumberFormat('ru-RU', {
     maximumFractionDigits: n >= 100 ? 0 : 2,
   }).format(n);
+}
+
+/** Цены в стакане — с дробной частью, иначе уровни около 250₽ сливаются в «253». */
+function formatOrderBookPrice(n: number): string {
+  const digits = n >= 10_000 ? 0 : n >= 1_000 ? 1 : 2;
+  return new Intl.NumberFormat('ru-RU', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(n);
+}
+
+function formatDateMsk(epochMs: number): string {
+  return formatInTimeZone(epochMs, 'Europe/Moscow', 'dd.MM.yyyy');
+}
+
+function assetKindLabel(kind: AssetKind): string {
+  switch (kind) {
+    case 'stock':
+      return 'Акция';
+    case 'bond':
+      return 'Облигация';
+    case 'fund':
+      return 'Фонд (ETF/БПИФ)';
+    case 'index':
+      return 'Индекс';
+    default:
+      return kind;
+  }
 }
 
 function formatPct(n: number | null): string {
@@ -90,13 +128,22 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
   const catalog = useGameState(selectMarketInstrumentCatalog);
   const simulationEpochMs = useGameState((s) => s.simulationEpochMs);
   const cashRub = useGameState((s) => s.portfolio.cashRub);
+  const cashReservedRub = useGameState((s) => s.portfolio.cashReservedRub);
   const tradingState = useGameState((s) => s.trading);
+  const compositeIndex = useGameState((s) => s.market.compositeIndex);
+  const details = useGameState((s) => s.market.details);
   const [timeframe, setTimeframe] = useState<ChartTimeframeId>('1d');
+  const [panelTab, setPanelTab] = useState<PanelTab>('chart');
   const [tradeModal, setTradeModal] = useState<{
     side: 'buy' | 'sell';
     quantity: number;
+    orderKind: OrderKind;
+    limitPriceRub: number;
   } | null>(null);
   const lm = gameLoop.getLogicManager();
+
+  const symUpper = symbol.toUpperCase();
+  const isFireIdx = symUpper === FIREIDX_SYMBOL;
 
   const selectedSlice = useGameState(
     (s) => {
@@ -106,7 +153,7 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
       return {
         asset: selectMarketAsset(symbol)(s),
         position: s.portfolio.positions.find(
-          (p) => p.ticker.toUpperCase() === symbol.toUpperCase()
+          (p) => p.ticker.toUpperCase() === symUpper
         ),
       };
     },
@@ -114,6 +161,10 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
   );
   const asset = selectedSlice.asset;
   const position = selectedSlice.position;
+
+  const payoutRows = useGameState((s) =>
+    selectInstrumentPayoutHistory(symbol, simulationEpochMs, s)
+  );
 
   const gameDateLabel = useMemo(
     () =>
@@ -139,15 +190,34 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
   const changePct = asset?.periodChangePctByTimeframe[timeframe];
   const orderBook = asset?.orderBook;
   const isTradable = asset ? asset.assetKind !== 'index' : false;
-  const maxBuyByCash = priceRub ? Math.max(0, Math.floor(cashRub / priceRub)) : 0;
-  const maxBuyByBook = orderBook?.asks[0]?.qty ?? 0;
-  const maxSellByBook = orderBook?.bids[0]?.qty ?? 0;
-  const maxSellByPosition = position ? positionTotalQuantity(position) : 0;
-  const maxBuyQty = Math.min(maxBuyByCash, maxBuyByBook);
-  const maxSellQty = Math.min(maxSellByPosition, maxSellByBook);
+  const lotSize = details.lotSizeBySymbol[symUpper] ?? 1;
+  const availableCash = Math.max(0, cashRub - cashReservedRub);
+  const maxBuyQty =
+    priceRub && priceRub > 0
+      ? Math.max(0, Math.floor(availableCash / priceRub))
+      : 0;
+  const maxSellQty = position ? positionTotalQuantity(position) : 0;
+  const showPayoutsTab =
+    asset != null && (asset.assetKind === 'stock' || asset.isBond);
+  const meta = details.instrumentMetaBySymbol[symUpper];
+  const showOrderBook =
+    isTradable &&
+    orderBook != null &&
+    (orderBook.bids.length > 0 || orderBook.asks.length > 0);
+  const panelTabs: { id: PanelTab; label: string }[] = isFireIdx
+    ? [
+        { id: 'chart', label: 'График' },
+        { id: 'structure', label: 'Структура' },
+        { id: 'about', label: 'О бумаге' },
+      ]
+    : [
+        { id: 'chart', label: 'График' },
+        { id: 'about', label: 'О бумаге' },
+        ...(showPayoutsTab ? [{ id: 'payouts' as const, label: 'Выплаты' }] : []),
+      ];
   const lastRejection =
     tradingState.lastRejection &&
-    tradingState.lastRejection.symbol.toUpperCase() === symbol.toUpperCase()
+    tradingState.lastRejection.symbol.toUpperCase() === symUpper
       ? tradingState.lastRejection
       : null;
   const rejectionText = useMemo(() => {
@@ -160,20 +230,20 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
       case 'INSUFFICIENT_POSITION_QTY':
         return 'Недостаточно актива в портфеле для продажи.';
       case 'INSUFFICIENT_ORDERBOOK_LIQUIDITY':
-        return 'Недостаточный объём заявок в псевдостакане.';
+        return 'Недостаточная ликвидность (заявка ожидает исполнения).';
       case 'PRICE_UNAVAILABLE':
         return 'Текущая цена недоступна.';
       case 'ASSET_NOT_FOUND':
         return 'Инструмент не найден.';
       case 'INVALID_LOT_QUANTITY':
-        return `Количество должно быть кратно лоту (${lastRejection.lotSize ?? 1}).`;
+        return `Количество должно быть кратно лоту (${lastRejection.lotSize ?? lotSize}).`;
       case 'NON_TRADABLE_INSTRUMENT':
         return 'Инструмент недоступен для торговли (только просмотр).';
       case 'INVALID_QUANTITY':
       default:
         return 'Некорректное количество для сделки.';
     }
-  }, [lastRejection]);
+  }, [lastRejection, lotSize]);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 text-zinc-100">
@@ -203,6 +273,24 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
         </p>
       </div>
 
+      <div className="flex flex-wrap gap-1.5">
+        {panelTabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setPanelTab(tab.id)}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
+              panelTab === tab.id
+                ? 'bg-sky-700 text-white'
+                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {panelTab === 'chart' ? (
       <section className="space-y-2">
         <div className="flex flex-wrap gap-1.5">
           {TIMEFRAMES.map((tf) => (
@@ -238,56 +326,41 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
           </div>
         </div>
       </section>
+      ) : null}
 
+      {panelTab === 'about' && asset ? (
+        <AboutTab
+          assetKind={asset.assetKind}
+          displayName={asset.displayName}
+          isin={isin}
+          lotSize={lotSize}
+          groupRaw={meta?.groupRaw ?? null}
+          isBond={asset.isBond}
+          faceValueRub={meta?.initialFaceValueRub ?? null}
+          maturityEpochMs={meta?.maturityEpochMs ?? null}
+        />
+      ) : null}
+
+      {panelTab === 'payouts' ? (
+        <PayoutsTab rows={payoutRows} assetKind={asset?.assetKind} />
+      ) : null}
+
+      {panelTab === 'structure' && isFireIdx ? (
+        <StructureTab compositeIndex={compositeIndex} />
+      ) : null}
+
+      {showOrderBook ? (
       <section className="space-y-2">
         <h3 className="text-sm font-semibold text-zinc-300">Биржевой стакан</h3>
-        <div className="grid grid-cols-2 gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 p-3 text-xs">
-          <div>
-            <p className="mb-2 font-medium text-emerald-500/90">Покупка</p>
-            {orderBook && orderBook.bids.length > 0 ? (
-              <ul className="space-y-1 font-mono text-zinc-400">
-                {orderBook.bids.map((row, i) => (
-                  <li key={i}>
-                    {formatRub(row.priceRub)} × {row.qty}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-zinc-600">Нет заявок (заглушка)</p>
-            )}
-          </div>
-          <div>
-            <p className="mb-2 font-medium text-red-400/90">Продажа</p>
-            {orderBook && orderBook.asks.length > 0 ? (
-              <ul className="space-y-1 font-mono text-zinc-400">
-                {orderBook.asks.map((row, i) => (
-                  <li key={i}>
-                    {formatRub(row.priceRub)} × {row.qty}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-zinc-600">Нет заявок (заглушка)</p>
-            )}
-          </div>
-        </div>
+        <OrderBookDepth bids={orderBook!.bids} asks={orderBook!.asks} />
       </section>
-
-      <section className="space-y-2">
-        <h3 className="text-sm font-semibold text-zinc-300">Описание</h3>
-        <p className="text-sm leading-relaxed text-zinc-400">
-          {asset
-            ? assetDescription(asset.assetKind, asset.displayName)
-            : 'Выберите инструмент.'}
-        </p>
-      </section>
+      ) : null}
 
       <section className="space-y-2">
         <h3 className="text-sm font-semibold text-zinc-300">Ваша позиция</h3>
         <PositionStatsBlock
           assetKind={asset?.assetKind}
           position={position}
-          payoutNote={asset ? payoutNote(asset.assetKind) : null}
         />
       </section>
 
@@ -296,8 +369,15 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => setTradeModal({ side: 'buy', quantity: Math.max(1, Math.min(1, maxBuyQty)) })}
-              disabled={!asset || maxBuyQty <= 0}
+              onClick={() =>
+                setTradeModal({
+                  side: 'buy',
+                  quantity: lotSize,
+                  orderKind: 'market',
+                  limitPriceRub: priceRub ?? 0,
+                })
+              }
+              disabled={!asset || maxBuyQty < lotSize}
               className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
             >
               Купить
@@ -307,10 +387,12 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
               onClick={() =>
                 setTradeModal({
                   side: 'sell',
-                  quantity: Math.max(1, Math.min(1, maxSellQty)),
+                  quantity: Math.min(lotSize, maxSellQty) || lotSize,
+                  orderKind: 'market',
+                  limitPriceRub: priceRub ?? 0,
                 })
               }
-              disabled={!asset || maxSellQty <= 0}
+              disabled={!asset || maxSellQty < lotSize}
               className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
             >
               Продать
@@ -318,8 +400,7 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
           </div>
         ) : (
           <p className="rounded-md border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-xs text-zinc-400">
-            Инструмент доступен только для просмотра. Торговля фьючерсами/индексами
-            появится в следующих итерациях.
+            Инструмент доступен только для просмотра.
           </p>
         )}
         {rejectionText ? (
@@ -335,26 +416,260 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
           symbol={symbol}
           displayName={displayName}
           priceRub={priceRub ?? null}
-          cashRub={cashRub}
+          cashRub={availableCash}
           averagePriceRub={position ? positionAvgPriceRub(position) : undefined}
           maxQty={tradeModal.side === 'buy' ? maxBuyQty : maxSellQty}
+          lotSize={lotSize}
           quantity={tradeModal.quantity}
+          orderKind={tradeModal.orderKind}
+          limitPriceRub={tradeModal.limitPriceRub}
+          onOrderKindChange={(kind) =>
+            setTradeModal((prev) => (prev ? { ...prev, orderKind: kind } : prev))
+          }
+          onLimitPriceChange={(p) =>
+            setTradeModal((prev) => (prev ? { ...prev, limitPriceRub: p } : prev))
+          }
           onQuantityChange={(next) =>
             setTradeModal((prev) => (prev ? { ...prev, quantity: next } : prev))
           }
           onClose={() => setTradeModal(null)}
           onSubmit={() => {
-            lm.dispatchCommand({
-              type: 'trading/submit-market-order',
-              side: tradeModal.side,
-              symbol,
-              quantity: tradeModal.quantity,
-              source: 'modal',
-            });
+            if (tradeModal.orderKind === 'limit') {
+              lm.dispatchCommand({
+                type: 'trading/submit-limit-order',
+                side: tradeModal.side,
+                symbol,
+                quantity: tradeModal.quantity,
+                limitPriceRub: tradeModal.limitPriceRub,
+                source: 'modal',
+              });
+            } else {
+              lm.dispatchCommand({
+                type: 'trading/submit-market-order',
+                side: tradeModal.side,
+                symbol,
+                quantity: tradeModal.quantity,
+                source: 'modal',
+              });
+            }
+            setTradeModal(null);
           }}
         />
       ) : null}
     </div>
+  );
+}
+
+function OrderBookDepth({
+  bids,
+  asks,
+}: {
+  bids: readonly OrderBookLevel[];
+  asks: readonly OrderBookLevel[];
+}) {
+  const maxQty = Math.max(1, ...bids.map((l) => l.qty), ...asks.map((l) => l.qty));
+  return (
+    <div className="grid grid-cols-2 gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 p-3 text-xs">
+      <OrderBookSide levels={bids} side="bid" maxQty={maxQty} />
+      <OrderBookSide levels={asks} side="ask" maxQty={maxQty} />
+    </div>
+  );
+}
+
+function OrderBookSide({
+  levels,
+  side,
+  maxQty,
+}: {
+  levels: readonly OrderBookLevel[];
+  side: 'bid' | 'ask';
+  maxQty: number;
+}) {
+  const label = side === 'bid' ? 'Покупка' : 'Продажа';
+  const color = side === 'bid' ? 'text-emerald-500/90' : 'text-red-400/90';
+  return (
+    <div>
+      <p className={`mb-2 font-medium ${color}`}>{label}</p>
+      <ul className="space-y-1.5">
+        {levels.map((row, i) => (
+          <li key={i} className="relative font-mono">
+            <DepthBar side={side} qty={row.qty} maxQty={maxQty} />
+            <span className="relative flex justify-between px-1 text-zinc-300">
+              <span>{formatOrderBookPrice(row.priceRub)}</span>
+              <span className="text-zinc-500">{row.qty}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function DepthBar({
+  side,
+  qty,
+  maxQty,
+}: {
+  side: 'bid' | 'ask';
+  qty: number;
+  maxQty: number;
+}) {
+  const w = `${(qty / maxQty) * 100}%`;
+  return (
+    <div
+      className={
+        side === 'bid'
+          ? 'absolute inset-y-0 right-0 rounded bg-emerald-900/30'
+          : 'absolute inset-y-0 left-0 rounded bg-red-900/30'
+      }
+      style={{ width: w }}
+    />
+  );
+}
+
+function AboutTab(props: {
+  assetKind: AssetKind;
+  displayName: string;
+  isin: string;
+  lotSize: number;
+  groupRaw: string | null;
+  isBond: boolean;
+  faceValueRub: number | null;
+  maturityEpochMs: number | null;
+}) {
+  const {
+    assetKind,
+    displayName,
+    isin,
+    lotSize,
+    groupRaw,
+    isBond,
+    faceValueRub,
+    maturityEpochMs,
+  } = props;
+  return (
+    <section className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-sm text-zinc-300">
+      <dl className="space-y-2">
+        <AboutRow label="Тип" value={assetKindLabel(assetKind)} />
+        <AboutRow label="Название" value={displayName} />
+        <AboutRow label="ISIN" value={isin} mono />
+        {groupRaw ? <AboutRow label="Группа MOEX" value={groupRaw} /> : null}
+        <AboutRow label="Лот" value={`${lotSize} шт`} mono />
+        {isBond && faceValueRub != null ? (
+          <AboutRow label="Номинал" value={`${formatRub(faceValueRub)} ₽`} mono />
+        ) : null}
+        {isBond && maturityEpochMs != null ? (
+          <AboutRow label="Погашение" value={formatDateMsk(maturityEpochMs)} />
+        ) : null}
+      </dl>
+    </section>
+  );
+}
+
+function AboutRow({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="flex justify-between gap-4">
+      <dt className="text-zinc-500">{label}</dt>
+      <dd className={`text-right ${mono ? 'font-mono' : ''}`}>{value}</dd>
+    </div>
+  );
+}
+
+function PayoutsTab({
+  rows,
+  assetKind,
+}: {
+  rows: ReturnType<typeof selectInstrumentPayoutHistory>;
+  assetKind: AssetKind | undefined;
+}) {
+  if (rows.length === 0) {
+    return (
+      <section className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-sm text-zinc-500">
+        {assetKind === 'bond' ? 'Купоны не загружены.' : 'Дивиденды не загружены.'}
+      </section>
+    );
+  }
+  const isBond = assetKind === 'bond';
+  return (
+    <section className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/50">
+      <table className="w-full text-left text-xs">
+        <thead className="border-b border-zinc-800 bg-zinc-900/80 text-zinc-500">
+          <tr>
+            <th className="px-3 py-2">Дата</th>
+            <th className="px-3 py-2 text-right">
+              {isBond ? 'Купон ₽/обл' : 'Дивиденд ₽/акц'}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className="border-b border-zinc-800/60 text-zinc-300">
+              <td className="px-3 py-2 font-mono">{formatDateMsk(row.dateEpochMs)}</td>
+              <td className="px-3 py-2 text-right font-mono">{formatRub(row.amountRub)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+function StructureTab({ compositeIndex }: { compositeIndex: CompositeIndexState }) {
+  return (
+    <section className="space-y-3">
+      <p className="text-xs text-zinc-500">
+        Ребаланс:{' '}
+        <span className="font-mono text-zinc-300">
+          {formatDateMsk(compositeIndex.lastRebalanceEpochMs)}
+        </span>
+        {' → '}
+        <span className="font-mono text-zinc-300">
+          {formatDateMsk(compositeIndex.nextRebalanceEpochMs)}
+        </span>
+      </p>
+      <p className="text-xs text-zinc-500">
+        Уровень:{' '}
+        <span className="font-mono text-zinc-200">{formatRub(compositeIndex.level)}</span>
+      </p>
+      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/50">
+        <table className="w-full text-left text-xs">
+          <thead className="border-b border-zinc-800 bg-zinc-900/80 text-zinc-500">
+            <tr>
+              <th className="px-2 py-2">Тикер</th>
+              <th className="px-2 py-2 text-right">Вес %</th>
+              <th className="hidden px-2 py-2 text-right sm:table-cell">Cap</th>
+            </tr>
+          </thead>
+          <tbody>
+            {compositeIndex.constituents.map((c) => (
+              <tr key={c.symbol} className="border-b border-zinc-800/60 text-zinc-300">
+                <td className="px-2 py-1.5 font-mono">
+                  {c.symbol}
+                  {c.usesPriceOnlyWeight ? (
+                    <span className="ml-1 text-[10px] text-amber-600" title="нет ISSUESIZE">
+                      *
+                    </span>
+                  ) : null}
+                </td>
+                <td className="px-2 py-1.5 text-right font-mono">{c.weightPct.toFixed(2)}</td>
+                <td className="hidden px-2 py-1.5 text-right font-mono sm:table-cell">
+                  {formatRub(c.capRubAtRebalance)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="px-3 py-2 text-[10px] text-zinc-600">* вес по цене (нет ISSUESIZE)</p>
+      </div>
+    </section>
   );
 }
 
@@ -366,7 +681,12 @@ function TradeModal({
   cashRub,
   averagePriceRub,
   maxQty,
+  lotSize,
   quantity,
+  orderKind,
+  limitPriceRub,
+  onOrderKindChange,
+  onLimitPriceChange,
   onQuantityChange,
   onClose,
   onSubmit,
@@ -378,20 +698,30 @@ function TradeModal({
   cashRub: number;
   averagePriceRub: number | undefined;
   maxQty: number;
+  lotSize: number;
   quantity: number;
+  orderKind: OrderKind;
+  limitPriceRub: number;
+  onOrderKindChange: (k: OrderKind) => void;
+  onLimitPriceChange: (p: number) => void;
   onQuantityChange: (next: number) => void;
   onClose: () => void;
   onSubmit: () => void;
 }) {
-  const safePrice = Number.isFinite(priceRub) ? (priceRub as number) : 0;
-  const safeQty = Math.max(1, Math.min(quantity, Math.max(1, maxQty)));
-  const amountRub = safePrice * safeQty;
+  const refPrice =
+    orderKind === 'limit' && limitPriceRub > 0
+      ? limitPriceRub
+      : Number.isFinite(priceRub)
+        ? (priceRub as number)
+        : 0;
+  const safeQty = Math.max(lotSize, Math.min(quantity, Math.max(lotSize, maxQty)));
+  const amountRub = refPrice * safeQty;
   const balanceAfterBuy = cashRub - amountRub;
   const pnlRub =
     side === 'sell' && averagePriceRub != null
-      ? (safePrice - averagePriceRub) * safeQty
+      ? (refPrice - averagePriceRub) * safeQty
       : null;
-  const canSubmit = maxQty > 0 && safeQty <= maxQty && safePrice > 0;
+  const canSubmit = maxQty >= lotSize && safeQty <= maxQty && refPrice > 0;
   const title = side === 'buy' ? 'Купить' : 'Продать';
 
   return (
@@ -400,32 +730,57 @@ function TradeModal({
         <h3 className="text-lg font-semibold">
           {title} {symbol} - {displayName}
         </h3>
-        <p className="mt-2 text-sm text-zinc-400">
-          Текущая цена: <span className="font-mono text-zinc-200">{formatRub(safePrice)} ₽</span>
-        </p>
-        <div className="mt-4 space-y-2">
-          <label className="block text-sm text-zinc-300">
-            Количество
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => onOrderKindChange('market')}
+            className={`flex-1 rounded-md px-2 py-1.5 text-xs ${
+              orderKind === 'market' ? 'bg-sky-700 text-white' : 'bg-zinc-800 text-zinc-400'
+            }`}
+          >
+            По рынку
+          </button>
+          <button
+            type="button"
+            onClick={() => onOrderKindChange('limit')}
+            className={`flex-1 rounded-md px-2 py-1.5 text-xs ${
+              orderKind === 'limit' ? 'bg-sky-700 text-white' : 'bg-zinc-800 text-zinc-400'
+            }`}
+          >
+            Лимитная
+          </button>
+        </div>
+        {orderKind === 'limit' ? (
+          <label className="mt-3 block text-sm text-zinc-300">
+            Лимит-цена, ₽
             <input
               type="number"
-              min={1}
-              max={Math.max(1, maxQty)}
+              min={0.01}
+              step={0.01}
+              value={limitPriceRub}
+              onChange={(e) => onLimitPriceChange(Number(e.target.value))}
+              className="mt-1 w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm"
+            />
+          </label>
+        ) : (
+          <p className="mt-2 text-sm text-zinc-400">
+            Ориентир: <span className="font-mono text-zinc-200">{formatRub(refPrice)} ₽</span>
+          </p>
+        )}
+        <div className="mt-4 space-y-2">
+          <label className="block text-sm text-zinc-300">
+            Количество (лот {lotSize})
+            <input
+              type="number"
+              min={lotSize}
+              max={Math.max(lotSize, maxQty)}
+              step={lotSize}
               value={safeQty}
               onChange={(e) => onQuantityChange(Number(e.target.value))}
               className="mt-1 w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-sky-600"
             />
           </label>
-          <input
-            type="range"
-            min={1}
-            max={Math.max(1, maxQty)}
-            value={safeQty}
-            onChange={(e) => onQuantityChange(Number(e.target.value))}
-            className="w-full accent-sky-500"
-          />
-          <p className="text-xs text-zinc-500">
-            Диапазон: 1 - {maxQty} шт
-          </p>
+          <p className="text-xs text-zinc-500">До {maxQty} шт · по ликвидности стакана</p>
         </div>
         <div className="mt-4 space-y-1 text-sm text-zinc-300">
           <p>
@@ -468,7 +823,7 @@ function TradeModal({
                 : 'bg-red-600 hover:bg-red-500 disabled:bg-zinc-700'
             }`}
           >
-            {title}
+            Отправить заявку
           </button>
         </div>
       </div>
@@ -479,11 +834,9 @@ function TradeModal({
 function PositionStatsBlock({
   assetKind,
   position,
-  payoutNote,
 }: {
   assetKind: AssetKind | undefined;
   position: PortfolioPosition | undefined;
-  payoutNote: string | null;
 }) {
   const qty = position ? positionTotalQuantity(position) : 0;
   const avg = position ? positionAvgPriceRub(position) : undefined;
@@ -529,9 +882,6 @@ function PositionStatsBlock({
               >
                 {pnlRub === null ? '—' : `${pnlRub >= 0 ? '+' : ''}${formatRub(pnlRub)} ₽`}
               </span>
-              {payoutNote ? (
-                <span className="mt-2 block text-xs text-zinc-500">{payoutNote}</span>
-              ) : null}
             </>
           )}
         </li>

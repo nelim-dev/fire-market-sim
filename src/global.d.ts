@@ -1,4 +1,5 @@
 import type {
+  MarketDaySlicesIpcPayload,
   MarketPrefetchDayIpcPayload,
   MarketPrefetchIpcPayload,
   MarketPrefetchIpcResult,
@@ -16,6 +17,7 @@ declare global {
       prefetchDay(
         payload: MarketPrefetchDayIpcPayload
       ): Promise<MarketPrefetchIpcResult>;
+      getDaySlices(payload: MarketDaySlicesIpcPayload): Promise<MarketSlicesIpcResult>;
     };
   }
 }

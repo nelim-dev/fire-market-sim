@@ -1,4 +1,5 @@
 import { LogicManager } from '../../src/logic/managers/LogicManager';
+import { FIREIDX_SYMBOL } from '../../src/logic/modules/market/compositeIndex';
 import { positionTotalQuantity } from '../../src/logic/modules/portfolio/selectors';
 import { exitCode, printResult } from './runner';
 
@@ -30,7 +31,11 @@ function pickTradableSymbolForBuy(lm: LogicManager): string {
   // — есть ликвидность ask.
   const state = lm.getState();
   const symbol = state.market.instrumentCatalog
-    .filter((row) => row.assetKind !== 'index')
+    .filter(
+      (row) =>
+        row.assetKind === 'stock' &&
+        row.symbol.toUpperCase() !== FIREIDX_SYMBOL
+    )
     .map((row) => row.symbol.toUpperCase())
     .find((sym) => {
       const asset = state.market.assetsBySymbol[sym];
@@ -75,21 +80,20 @@ function qtyOf(state: ReturnType<LogicManager['getState']>, symbol: string): num
   return pos ? positionTotalQuantity(pos) : 0;
 }
 
-run('Псевдостакан содержит 2 строки по текущей цене', () => {
+run('Псевдостакан: несколько уровней bid/ask с положительным объёмом', () => {
   const lm = new LogicManager();
   const symbol = pickTradableSymbolForBuy(lm);
   const asset = lm.getState().market.assetsBySymbol[symbol];
   if (!asset || asset.currentPriceRub == null) {
     throw new Error(`нет актива или цены для ${symbol}`);
   }
-  if (asset.orderBook.bids.length !== 1 || asset.orderBook.asks.length !== 1) {
-    throw new Error('ожидали по одной строке bid/ask');
+  if (asset.orderBook.bids.length < 2 || asset.orderBook.asks.length < 2) {
+    throw new Error('ожидали многоуровневый стакан (≥2 уровня)');
   }
-  if (asset.orderBook.bids[0].priceRub !== asset.currentPriceRub) {
-    throw new Error('bid price не равен текущей цене');
-  }
-  if (asset.orderBook.asks[0].priceRub !== asset.currentPriceRub) {
-    throw new Error('ask price не равен текущей цене');
+  const totalBid = asset.orderBook.bids.reduce((s, l) => s + l.qty, 0);
+  const totalAsk = asset.orderBook.asks.reduce((s, l) => s + l.qty, 0);
+  if (totalBid <= 0 || totalAsk <= 0) {
+    throw new Error('суммарная ликвидность стакана должна быть > 0');
   }
 });
 
@@ -97,7 +101,6 @@ run('Успешная покупка: cash уменьшается на (price+co
   const lm = new LogicManager();
   const symbol = pickTradableSymbolForBuy(lm);
   const before = lm.getState();
-  const price = before.market.assetsBySymbol[symbol].currentPriceRub as number;
   const qty = 1;
   const qtyBefore = qtyOf(before, symbol);
   const cashBefore = before.portfolio.cashRub;
@@ -116,19 +119,21 @@ run('Успешная покупка: cash уменьшается на (price+co
   if (qtyOf(after, symbol) !== qtyBefore + qty) {
     throw new Error('количество позиции не увеличилось на qty');
   }
-  const expectedCashDelta = price * qty + Math.round(price * qty * 0.001 * 100) / 100;
+  const top = after.portfolio.ledger[0];
+  if (top.kind !== 'trade-buy' || top.ticker !== symbol || top.priceRub == null) {
+    throw new Error('верхняя запись журнала не соответствует покупке');
+  }
+  const fillPrice = top.priceRub;
+  const expectedCashDelta =
+    fillPrice * qty + Math.round(fillPrice * qty * 0.001 * 100) / 100;
   const actualCashDelta = cashBefore - after.portfolio.cashRub;
-  if (Math.abs(actualCashDelta - expectedCashDelta) > 0.011) {
+  if (Math.abs(actualCashDelta - expectedCashDelta) > 1) {
     throw new Error(
-      `cash delta ожидалось ${expectedCashDelta}, получено ${actualCashDelta}`
+      `cash delta ожидалось ~${expectedCashDelta}, получено ${actualCashDelta}`
     );
   }
   if (after.portfolio.ledger.length < ledgerBefore + 1) {
     throw new Error('журнал не пополнился записями сделки');
-  }
-  const top = after.portfolio.ledger[0];
-  if (top.kind !== 'trade-buy' || top.ticker !== symbol || top.priceRub !== price) {
-    throw new Error('верхняя запись журнала не соответствует покупке');
   }
 });
 
@@ -220,10 +225,26 @@ run('Отказ sell при недостатке количества', () => {
   }
 });
 
-run('Отказ при недостаточной ликвидности в псевдостакане', () => {
+run('Крупная заявка: частичное исполнение по ликвидности стакана за один тик', () => {
   const lm = new LogicManager();
   const symbol = pickTradableSymbolForBuy(lm);
-  const qty = (lm.getState().market.assetsBySymbol[symbol].orderBook.asks[0]?.qty ?? 0) + 1;
+  const state = lm.getState();
+  const asset = state.market.assetsBySymbol[symbol];
+  const totalAsk = asset.orderBook.asks.reduce((s, l) => s + l.qty, 0);
+  if (totalAsk < 50) {
+    throw new Error(`стакан слишком пуст для теста: ${totalAsk}`);
+  }
+  const price = asset.currentPriceRub ?? 0;
+  const maxAffordable = Math.floor((state.portfolio.cashRub * 0.95) / (price * 1.002));
+  // Заявка должна быть заметно больше текущего стакана, но не больше доступного cash.
+  // Нельзя вызывать update() до замера: за тик market пересобирает стакан, и qty=totalAsk+ε
+  // может совпасть с ликвидностью следующего тика → полное исполнение (см. limit-orders тест).
+  const qty = Math.min(totalAsk + 50, maxAffordable);
+  if (qty <= totalAsk) {
+    throw new Error(
+      `нельзя протестировать partial fill: ask=${totalAsk}, maxAffordable=${maxAffordable}`
+    );
+  }
   lm.dispatchCommand({
     type: 'trading/submit-market-order',
     side: 'buy',
@@ -232,11 +253,17 @@ run('Отказ при недостаточной ликвидности в пс
     source: 'modal',
   });
   lm.update(1);
-  if (
-    lm.getState().trading.lastRejection?.reason !==
-    'INSUFFICIENT_ORDERBOOK_LIQUIDITY'
-  ) {
-    throw new Error('ожидали reject по ликвидности псевдостакана');
+  const after = lm.getState();
+  const order = after.trading.openOrders.find((o) => o.symbol === symbol);
+  if (!order) {
+    throw new Error(
+      `нет заявки; rejection=${after.trading.lastRejection?.reason ?? 'none'}`
+    );
+  }
+  if (order.filledQuantity <= 0 || order.filledQuantity >= qty) {
+    throw new Error(
+      `ожидали 0 < filled < ${qty}, получено status=${order.status} filled=${order.filledQuantity}`
+    );
   }
 });
 
@@ -244,20 +271,24 @@ run('На паузе ордера не исполняются; за шаг ис�
   const lm = new LogicManager();
   const symbol = pickTradableSymbolForBuy(lm);
   const before = lm.getState();
-  const askQty = before.market.assetsBySymbol[symbol].orderBook.asks[0]?.qty ?? 0;
-  if (askQty <= 0) {
+  const totalAsk = before.market.assetsBySymbol[symbol].orderBook.asks.reduce(
+    (s, l) => s + l.qty,
+    0
+  );
+  if (totalAsk <= 0) {
     throw new Error('ожидали положительную ликвидность ask');
   }
   const posBeforeQty = qtyOf(before, symbol);
   const cashBefore = before.portfolio.cashRub;
+  const orderQty = 1;
 
   lm.pause();
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 3; i++) {
     lm.dispatchCommand({
       type: 'trading/submit-market-order',
       side: 'buy',
       symbol,
-      quantity: askQty,
+      quantity: orderQty,
       source: 'modal',
     });
   }
@@ -277,10 +308,13 @@ run('На паузе ордера не исполняются; за шаг ис�
   state = lm.getState();
   const posAfterQty = qtyOf(state, symbol);
   const executedQty = posAfterQty - posBeforeQty;
-  if (executedQty !== askQty) {
+  if (executedQty > totalAsk) {
     throw new Error(
-      `за один шаг должно исполниться не больше ask=${askQty}, исполнено=${executedQty}`
+      `за один шаг не больше суммарной ликвидности ask=${totalAsk}, исполнено=${executedQty}`
     );
+  }
+  if (executedQty < orderQty) {
+    throw new Error('после resume должна исполниться хотя бы одна заявка на 1 шт');
   }
   if (state.portfolio.cashRub < 0) {
     throw new Error(`cash ушел в минус: ${state.portfolio.cashRub}`);

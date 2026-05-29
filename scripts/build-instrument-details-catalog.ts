@@ -18,10 +18,19 @@ interface InstrumentMeta {
   initialFaceValueRub: number | null;
   faceUnit: string | null;
   maturityEpochMs: number | null;
+  firstTradeEpochMs?: number | null;
   isin: string | null;
   /** Сырые человекочитаемые значения для отладки. */
   groupRaw: string | null;
 }
+
+type CatalogShape = {
+  items: Array<{
+    symbol: string;
+    assetKind: string;
+    sourceFilePath: string;
+  }>;
+};
 
 interface DividendEntry {
   /** Дата закрытия реестра (registryclosedate) — пока используется как «декларация дивиденда». */
@@ -55,6 +64,8 @@ interface RedemptionEntry {
 interface DetailsCatalog {
   generatedAt: string;
   lotSizeBySymbol: Record<string, number>;
+  /** MOEX ISSUESIZE — акции в обращении (шт.). */
+  sharesOutstandingBySymbol: Record<string, number>;
   instrumentMetaBySymbol: Record<string, InstrumentMeta>;
   dividendsBySymbol: Record<string, DividendEntry[]>;
   couponsBySymbol: Record<string, CouponEntry[]>;
@@ -86,6 +97,94 @@ function moscowDateToEpochMs(yyyyMmDd: string): number | null {
   } catch {
     return null;
   }
+}
+
+function barEpochMskMinute(mskYyyymmdd: string, hhmmss: string): number | null {
+  if (!/^\d{8}$/.test(mskYyyymmdd) || !/^\d{6}$/.test(hhmmss)) {
+    return null;
+  }
+  const y = mskYyyymmdd.slice(0, 4);
+  const m = mskYyyymmdd.slice(4, 6);
+  const d = mskYyyymmdd.slice(6, 8);
+  const hh = hhmmss.slice(0, 2);
+  const mi = hhmmss.slice(2, 4);
+  const ss = hhmmss.slice(4, 6);
+  try {
+    const ms = toDate(`${y}-${m}-${d}T${hh}:${mi}:${ss}`, {
+      timeZone: 'Europe/Moscow',
+    }).getTime();
+    return Number.isFinite(ms) ? ms : null;
+  } catch {
+    return null;
+  }
+}
+
+function readFirstTradeEpochFromCandleFile(
+  projectRoot: string,
+  relativePath: string
+): number | null {
+  const filePath = join(projectRoot, relativePath);
+  if (!existsSync(filePath)) {
+    return null;
+  }
+  const text = readFileSync(filePath, 'utf-8');
+  for (const line of text.split(/\r?\n/)) {
+    if (!line || line.startsWith('<') || line.startsWith('#')) {
+      continue;
+    }
+    const parts = line.split(',');
+    if (parts.length < 5) {
+      continue;
+    }
+    const date = parts[2]?.trim() ?? '';
+    const time = parts[3]?.trim() ?? '';
+    const ms = barEpochMskMinute(date, time);
+    if (ms != null) {
+      return ms;
+    }
+  }
+  return null;
+}
+
+function applyFirstTradeEpochsFromCatalog(
+  projectRoot: string,
+  instrumentMetaBySymbol: Record<string, InstrumentMeta>
+): number {
+  const catalogPath = join(
+    projectRoot,
+    'src',
+    'data',
+    'generated',
+    'marketInstrumentCatalog.json'
+  );
+  if (!existsSync(catalogPath)) {
+    return 0;
+  }
+  const catalog = JSON.parse(readFileSync(catalogPath, 'utf-8')) as CatalogShape;
+  let count = 0;
+  for (const item of catalog.items ?? []) {
+    const sym = item.symbol.toUpperCase();
+    const first = readFirstTradeEpochFromCandleFile(projectRoot, item.sourceFilePath);
+    if (first == null) {
+      continue;
+    }
+    count += 1;
+    const prev = instrumentMetaBySymbol[sym];
+    if (prev) {
+      instrumentMetaBySymbol[sym] = { ...prev, firstTradeEpochMs: first };
+    } else {
+      instrumentMetaBySymbol[sym] = {
+        isBond: item.assetKind === 'bond',
+        initialFaceValueRub: null,
+        faceUnit: null,
+        maturityEpochMs: null,
+        firstTradeEpochMs: first,
+        isin: null,
+        groupRaw: null,
+      };
+    }
+  }
+  return count;
 }
 
 /**
@@ -259,6 +358,7 @@ async function main(): Promise<void> {
   const instrumentFiles = readdirSync(metaDir).filter((f) => f.endsWith('.instrument.txt'));
 
   const lotSizeBySymbol: Record<string, number> = {};
+  const sharesOutstandingBySymbol: Record<string, number> = {};
   const instrumentMetaBySymbol: Record<string, InstrumentMeta> = {};
   const dividendsBySymbol: Record<string, DividendEntry[]> = {};
   const couponsBySymbol: Record<string, CouponEntry[]> = {};
@@ -276,6 +376,12 @@ async function main(): Promise<void> {
     let lot = Number(map.get('LOTSIZE') ?? '');
     if (!Number.isFinite(lot) || lot <= 0) lot = 1;
     lotSizeBySymbol[symbol] = Math.floor(lot);
+
+    const issueSizeRaw = map.get('ISSUESIZE');
+    const issueSize = issueSizeRaw ? Number(issueSizeRaw) : NaN;
+    if (Number.isFinite(issueSize) && issueSize > 0) {
+      sharesOutstandingBySymbol[symbol] = Math.floor(issueSize);
+    }
 
     const isBond = detectIsBond(map);
     const initialFaceRaw = map.get('INITIALFACEVALUE') ?? map.get('FACEVALUE');
@@ -314,9 +420,15 @@ async function main(): Promise<void> {
     }
   }
 
+  const firstTradeCount = applyFirstTradeEpochsFromCatalog(
+    projectRoot,
+    instrumentMetaBySymbol
+  );
+
   const catalog: DetailsCatalog = {
     generatedAt: new Date().toISOString(),
     lotSizeBySymbol,
+    sharesOutstandingBySymbol,
     instrumentMetaBySymbol,
     dividendsBySymbol,
     couponsBySymbol,
@@ -331,10 +443,14 @@ async function main(): Promise<void> {
 
   console.log('[gen:instrument-details] готово:');
   console.log(`  инструментов c lotSize:      ${Object.keys(lotSizeBySymbol).length}`);
+  console.log(
+    `  c sharesOutstanding:         ${Object.keys(sharesOutstandingBySymbol).length}`
+  );
   console.log(`  c дивидендами:               ${Object.keys(dividendsBySymbol).length}`);
   console.log(`  c купонами:                  ${Object.keys(couponsBySymbol).length}`);
   console.log(`  c амортизациями:             ${Object.keys(amortizationsBySymbol).length}`);
   console.log(`  c погашением:                ${Object.keys(redemptionBySymbol).length}`);
+  console.log(`  c firstTradeEpochMs:         ${firstTradeCount}`);
   console.log(`  → ${outPath}`);
 }
 
