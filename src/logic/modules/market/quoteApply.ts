@@ -1,7 +1,7 @@
 import type { TradingCalendar } from '@/logic/time/TradingCalendar';
 import { applyMacroSnapshotForEpoch } from './macroResolve';
 import type { MarketAssetState, MarketModuleState } from './state';
-import { CHART_TIMEFRAME_IDS } from './chartTimeframes';
+import { CHART_TIMEFRAME_IDS, CHART_DAY_1M_BAR_COUNT } from './chartTimeframes';
 import {
   buildChartLineByTimeframeFromBundle,
   precomputeChartSlotsForEpoch,
@@ -11,6 +11,7 @@ import {
   computePeriodReturnPct,
   computePriceAndDailyChange,
   lastBarIndexAtOrBefore,
+  sliceTailAtOrBeforeEpoch,
 } from './priceSeries';
 import type { MarketPriceBar } from './priceSeries';
 import { faceValueAtTime, nkdPerBondRubAt } from './instrumentDetails';
@@ -82,7 +83,34 @@ export type ApplyMarketQuotesOptions = {
   excludeSymbols?: readonly string[];
   onlySymbols?: readonly string[];
   skipOrderBookIfBuiltThisEpoch?: boolean;
+  /**
+   * Символы с полной сборкой chartLineByTimeframe (6 TF + стакан).
+   * undefined — legacy: все символы каталога (для тестов).
+   * [] — только цена/overview, без линий графика.
+   */
+  fullChartLineSymbols?: readonly string[];
 };
+
+function symbolInFullChartSet(sym: string, options?: ApplyMarketQuotesOptions): boolean {
+  const list = options?.fullChartLineSymbols;
+  if (list === undefined) {
+    return true;
+  }
+  return list.some((s) => s.toUpperCase() === sym);
+}
+
+/** % за день для overview без сборки 6 TF (хвост минуток до epoch). */
+function computeOverview1dPeriodPct(
+  minute: readonly MarketPriceBar[],
+  simulationEpochMs: number
+): number | null {
+  const tail = sliceTailAtOrBeforeEpoch(
+    minute,
+    simulationEpochMs,
+    CHART_DAY_1M_BAR_COUNT
+  );
+  return computePeriodReturnPct(tail);
+}
 
 function applyQuotesForOneAsset(
   market: MarketModuleState,
@@ -123,36 +151,51 @@ function applyQuotesForOneAsset(
     effectivePriceRub =
       minutePricePct ?? dailyPricePct ?? asset.currentPriceRub ?? 100;
   }
-  const rawLines = buildChartLineByTimeframeFromBundle(
-    sym,
-    market.chartSeries,
-    simulationEpochMs,
-    calendar,
-    preSlots
-  );
-  const lines: typeof rawLines = asset.isBond
-    ? {
-        '1d': maybeNormalizeBondBars(asset, rawLines['1d'], market.details),
-        '1w': maybeNormalizeBondBars(asset, rawLines['1w'], market.details),
-        '1m': maybeNormalizeBondBars(asset, rawLines['1m'], market.details),
-        '6m': maybeNormalizeBondBars(asset, rawLines['6m'], market.details),
-        '1y': maybeNormalizeBondBars(asset, rawLines['1y'], market.details),
-        all: maybeNormalizeBondBars(asset, rawLines['all'], market.details),
-      }
-    : rawLines;
+
+  const buildFullCharts = symbolInFullChartSet(sym, options);
+  let lines = asset.chartLineByTimeframe;
+  let nextPeriod = asset.periodChangePctByTimeframe;
+  let chartChanged = false;
   let periodChanged = false;
-  const nextPeriod = { ...asset.periodChangePctByTimeframe };
-  for (const id of CHART_TIMEFRAME_IDS) {
-    const nextValue = computePeriodReturnPct(lines[id]);
-    if (nextValue !== asset.periodChangePctByTimeframe[id]) {
-      periodChanged = true;
+
+  if (buildFullCharts) {
+    const rawLines = buildChartLineByTimeframeFromBundle(
+      sym,
+      market.chartSeries,
+      simulationEpochMs,
+      calendar,
+      preSlots
+    );
+    lines = asset.isBond
+      ? {
+          '1d': maybeNormalizeBondBars(asset, rawLines['1d'], market.details),
+          '1w': maybeNormalizeBondBars(asset, rawLines['1w'], market.details),
+          '1m': maybeNormalizeBondBars(asset, rawLines['1m'], market.details),
+          '6m': maybeNormalizeBondBars(asset, rawLines['6m'], market.details),
+          '1y': maybeNormalizeBondBars(asset, rawLines['1y'], market.details),
+          all: maybeNormalizeBondBars(asset, rawLines['all'], market.details),
+        }
+      : rawLines;
+    nextPeriod = { ...asset.periodChangePctByTimeframe };
+    for (const id of CHART_TIMEFRAME_IDS) {
+      const nextValue = computePeriodReturnPct(lines[id]);
+      if (nextValue !== asset.periodChangePctByTimeframe[id]) {
+        periodChanged = true;
+      }
+      nextPeriod[id] = nextValue;
     }
-    nextPeriod[id] = nextValue;
+    chartChanged = CHART_TIMEFRAME_IDS.some(
+      (id) => asset.chartLineByTimeframe[id] !== lines[id]
+    );
+  } else {
+    const pct1d = computeOverview1dPeriodPct(minute, simulationEpochMs);
+    if (pct1d !== asset.periodChangePctByTimeframe['1d']) {
+      periodChanged = true;
+      nextPeriod = { ...asset.periodChangePctByTimeframe, '1d': pct1d };
+    }
   }
-  const chartChanged = CHART_TIMEFRAME_IDS.some(
-    (id) => asset.chartLineByTimeframe[id] !== lines[id]
-  );
-  const skipOrderBook = asset.assetKind === 'index';
+
+  const skipOrderBook = asset.assetKind === 'index' || !buildFullCharts;
   const pin = asset.testOrderBookPin;
   const priceMoved =
     Math.abs((effectivePriceRub ?? 0) - (asset.currentPriceRub ?? 0)) > 0.0001;
@@ -186,7 +229,7 @@ function applyQuotesForOneAsset(
     orderBookSignature(asset.orderBook) !== orderBookSignature(nextOrderBook);
   let nextFaceValueRub = asset.faceValueRub;
   let nextNkd = asset.nkdPerBondRub;
-  if (asset.isBond) {
+  if (asset.isBond && buildFullCharts) {
     const faceFromDetails = faceValueAtTime(sym, simulationEpochMs, market.details);
     if (faceFromDetails !== null) {
       nextFaceValueRub = faceFromDetails;
@@ -195,7 +238,7 @@ function applyQuotesForOneAsset(
     if (coupons.length > 0) {
       nextNkd = nkdPerBondRubAt(sym, simulationEpochMs, market.details);
     }
-  } else {
+  } else if (!asset.isBond) {
     nextNkd = 0;
   }
   if (
@@ -229,10 +272,16 @@ export function applyMarketQuotesForSimulationEpoch(
   calendar: TradingCalendar | null = null,
   options?: ApplyMarketQuotesOptions
 ): void {
-  // Option A: предвычислить слоты торгового времени один раз на весь тик.
-  // Для 50 инструментов экономит 49/50 вызовов buildBackwardIntradaySlots/buildBackwardDailySlots.
+  const needsPreSlots =
+    options?.fullChartLineSymbols === undefined ||
+    options.fullChartLineSymbols.some((s) => {
+      const sym = s.toUpperCase();
+      return market.instrumentCatalog.some(
+        (item) => item.symbol.toUpperCase() === sym
+      );
+    });
   const preSlots =
-    calendar && calendar.dayCount > 0
+    needsPreSlots && calendar && calendar.dayCount > 0
       ? precomputeChartSlotsForEpoch(calendar, simulationEpochMs)
       : null;
 
@@ -271,11 +320,15 @@ export function refreshQuotesForSymbol(
   if (!item) {
     return false;
   }
+  const fullSymbols = options?.fullChartLineSymbols ?? [sym];
   return applyQuotesForOneAsset(
     market,
     item,
     simulationEpochMs,
     calendar,
-    options
+    { ...options, fullChartLineSymbols: fullSymbols },
+    calendar && calendar.dayCount > 0
+      ? precomputeChartSlotsForEpoch(calendar, simulationEpochMs)
+      : null
   );
 }

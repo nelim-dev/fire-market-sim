@@ -84,16 +84,20 @@ run('catalog-exclusion: KS не в generated каталоге при скане'
 
 run('hydrate-symbols: индексы BR/RTSI/EU/USD000UTSTOM должны подгружаться', () => {
   const lm = new LogicManager();
-  const symbols = new Set(
-    pickHydrateSymbolsFromCatalog(lm.getState().market.instrumentCatalog)
-  );
+  const catalog = lm.getState().market.instrumentCatalog;
+  const symbols = new Set(pickHydrateSymbolsFromCatalog(catalog));
   for (const required of ['BR', 'RTSI', 'EU', 'USD000UTSTOM']) {
     if (!symbols.has(required)) {
       throw new Error(`ожидали ${required} в hydrate symbols`);
     }
   }
-  if (symbols.has('FIREIDX')) {
-    throw new Error('FIREIDX не должен идти в hydrate symbols');
+  const fireidxRow = catalog.find((item) => item.symbol.toUpperCase() === 'FIREIDX');
+  const fireidxPrebaked = Boolean(fireidxRow?.sourceFilePath?.trim());
+  if (fireidxPrebaked && !symbols.has('FIREIDX')) {
+    throw new Error('FIREIDX с fonds/FIREIDX.txt должен идти в hydrate symbols');
+  }
+  if (!fireidxPrebaked && symbols.has('FIREIDX')) {
+    throw new Error('FIREIDX без файла не должен идти в hydrate symbols');
   }
 });
 

@@ -281,10 +281,11 @@ function compositeStateFromConstituents(
   };
 }
 
-export function updateCompositeIndex(
+/** Обновление cap-weight уровня с явными ценами (assets или minute forward-fill). */
+export function updateCompositeIndexFromPrices(
   index: CompositeIndexState,
   catalog: readonly MarketInstrumentCatalogItem[],
-  assetsBySymbol: Record<string, MarketAssetState>,
+  pricesBySymbol: Readonly<Record<string, number>>,
   details: InstrumentDetailsCatalog,
   simulationEpochMs: number,
   calendar: TradingCalendar | null
@@ -298,7 +299,11 @@ export function updateCompositeIndex(
     bootstrap || shouldQuarterlyRebalance(index, simulationEpochMs) || compositionChanged;
 
   if (rebalance) {
-    const constituents = buildConstituents(activeStocks, assetsBySymbol, details);
+    const constituents = buildConstituentsFromPrices(
+      activeStocks,
+      pricesBySymbol,
+      details
+    );
     if (constituents.length === 0) {
       return index;
     }
@@ -313,7 +318,7 @@ export function updateCompositeIndex(
 
   const prices: Record<string, number> = {};
   for (const symbol of Object.keys(next.weightsBySymbol)) {
-    const price = assetsBySymbol[symbol]?.currentPriceRub;
+    const price = pricesBySymbol[symbol];
     if (price != null && Number.isFinite(price) && price > 0) {
       prices[symbol] = price;
     }
@@ -330,6 +335,31 @@ export function updateCompositeIndex(
   );
 
   return { ...next, level };
+}
+
+export function updateCompositeIndex(
+  index: CompositeIndexState,
+  catalog: readonly MarketInstrumentCatalogItem[],
+  assetsBySymbol: Record<string, MarketAssetState>,
+  details: InstrumentDetailsCatalog,
+  simulationEpochMs: number,
+  calendar: TradingCalendar | null
+): CompositeIndexState {
+  const prices: Record<string, number> = {};
+  for (const symbol of stockSymbolsFromCatalog(catalog)) {
+    const price = assetsBySymbol[symbol]?.currentPriceRub;
+    if (price != null && Number.isFinite(price) && price > 0) {
+      prices[symbol] = price;
+    }
+  }
+  return updateCompositeIndexFromPrices(
+    index,
+    catalog,
+    prices,
+    details,
+    simulationEpochMs,
+    calendar
+  );
 }
 
 export function syncFireidxAsset(

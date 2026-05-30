@@ -107,3 +107,26 @@ export function computePriceAndDailyChange(
   const dailyChangePct = ((cur - prev) / prev) * 100;
   return { currentPriceRub: cur, dailyChangePct };
 }
+
+/**
+ * Прореживание для отображения (storage dailyClose не меняется).
+ * Сохраняет первую и последнюю точку диапазона.
+ */
+export function downsampleBarsForChartDisplay(
+  bars: readonly MarketPriceBar[],
+  maxPoints: number
+): readonly MarketPriceBar[] {
+  if (maxPoints <= 0 || bars.length <= maxPoints) {
+    return bars;
+  }
+  if (maxPoints === 1) {
+    return [bars[bars.length - 1]!];
+  }
+  const out: MarketPriceBar[] = [];
+  const lastIdx = bars.length - 1;
+  for (let i = 0; i < maxPoints; i += 1) {
+    const idx = Math.round((i * lastIdx) / (maxPoints - 1));
+    out.push(bars[idx]!);
+  }
+  return out;
+}

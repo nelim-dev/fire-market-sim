@@ -194,6 +194,12 @@ async function main(): Promise<void> {
   }
 
   for (const item of items) {
+    if (!item.sourceFilePath?.trim()) {
+      console.warn(
+        `[build:market-db] пропуск ${item.symbol.toUpperCase()}: пустой sourceFilePath`
+      );
+      continue;
+    }
     const abs = normalize(join(projectRoot, ...item.sourceFilePath.split('/')));
     const sym = item.symbol.toUpperCase();
     db.prepare(`DELETE FROM minute_bars WHERE symbol = ?`).run(sym);

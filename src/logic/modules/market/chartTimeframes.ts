@@ -38,3 +38,5 @@ export const CHART_WEEK_5M_BAR_COUNT = 530;
 export const CHART_MONTH_30M_BAR_COUNT = 380;
 export const CHART_6M_1H_BAR_COUNT = 1125;
 export const CHART_YEAR_DAILY_BAR_COUNT = 250;
+/** Макс. точек линии «всё время» для UI (полный dailyClose в storage не режем). */
+export const CHART_ALL_DISPLAY_MAX = 400;

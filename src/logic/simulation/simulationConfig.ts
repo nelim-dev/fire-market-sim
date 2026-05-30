@@ -44,3 +44,10 @@ export const DEBUG_SIMULATION_START_EPOCH_MS: number | null = Date.UTC(
   0,
   1
 );
+
+/**
+ * Временно отключает расчёт FIREIDX (full rebuild, batch, sync asset, chart refresh).
+ * Для A/B perf: `true` → перезапуск dev-сервера → сравнить `[market-perf-probe]`.
+ * Верните `false`, когда проверка закончена.
+ */
+export const DEBUG_DISABLE_FIREIDX = false;

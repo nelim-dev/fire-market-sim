@@ -190,7 +190,7 @@
       "symbol": "FIREIDX",
       "displayName": "FIRE Market Index",
       "isin": "FIREIDX-SYNTH",
-      "sourceFilePath": ""
+      "sourceFilePath": "fonds/FIREIDX.txt"
     },
     {
       "assetKind": "fund",

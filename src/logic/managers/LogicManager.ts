@@ -202,8 +202,9 @@ export class LogicManager {
       this.state
     );
     const changedUi = this.uiStateModule.ensureDefaultSelectedSymbol(this.state);
-    if (changedEducation || changedUi) {
-      // notifySubscribers вызовется снаружи при необходимости
+    const sel = this.state.uiState.selectedSymbol;
+    if (sel && (changedUi || changedEducation)) {
+      this.marketModule.rebuildChartLinesForSymbol(this.state, sel);
     }
   }
 

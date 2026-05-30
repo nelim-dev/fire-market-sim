@@ -18,6 +18,12 @@ export type MarketConsumeOrderbookLiquidityCommand = {
   slices: ReadonlyArray<{ priceRub: number; qty: number }>;
 };
 
+/** Полная пересборка chartLineByTimeframe при смене выбранного инструмента. */
+export type MarketRebuildChartLinesCommand = {
+  type: 'market/rebuild-chart-lines';
+  symbol: string;
+};
+
 export type TradingSubmitMarketOrderCommand = {
   type: 'trading/submit-market-order';
   side: 'buy' | 'sell';
@@ -119,6 +125,7 @@ export type LogicCommand =
   | RuntimeCommand
   | MarketSyncPricesCommand
   | MarketConsumeOrderbookLiquidityCommand
+  | MarketRebuildChartLinesCommand
   | TradingSubmitMarketOrderCommand
   | TradingSubmitLimitOrderCommand
   | TradingCancelOrderCommand

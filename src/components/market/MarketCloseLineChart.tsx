@@ -5,6 +5,13 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { getISOWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { ChartTimeframeId } from '@/logic/modules/market/chartTimeframes';
+import {
+  CHART_6M_1H_BAR_COUNT,
+  CHART_DAY_1M_BAR_COUNT,
+  CHART_MONTH_30M_BAR_COUNT,
+  CHART_WEEK_5M_BAR_COUNT,
+  CHART_YEAR_DAILY_BAR_COUNT,
+} from '@/logic/modules/market/chartTimeframes';
 import type { MarketPriceBar } from '@/logic/modules/market/priceSeries';
 
 type Props = {
@@ -18,6 +25,16 @@ const M_LEFT = 54;
 const M_RIGHT = 10;
 const M_TOP = 10;
 const M_BOTTOM = 42;
+
+/** Фиксированная ширина окна графика (число торговых слотов), как в chartWindows. */
+const CHART_WINDOW_SLOT_COUNT: Record<ChartTimeframeId, number | null> = {
+  '1d': CHART_DAY_1M_BAR_COUNT,
+  '1w': CHART_WEEK_5M_BAR_COUNT,
+  '1m': CHART_MONTH_30M_BAR_COUNT,
+  '6m': CHART_6M_1H_BAR_COUNT,
+  '1y': CHART_YEAR_DAILY_BAR_COUNT,
+  all: null,
+};
 
 function formatXTickLabel(t: number, tf: ChartTimeframeId): string {
   const tz = 'Europe/Moscow';
@@ -101,10 +118,14 @@ function MarketCloseLineChartImpl({ points, timeframe }: Props) {
   const innerW = W - M_LEFT - M_RIGHT;
   const innerH = H - M_TOP - M_BOTTOM;
   const n = points.length;
-  const lastI = Math.max(1, n - 1);
+  const windowSlots = CHART_WINDOW_SLOT_COUNT[timeframe] ?? n;
+  const xDenom = Math.max(1, windowSlots - 1);
+  // Неполное окно (до carry-init или после потери хвоста) — прижимаем к правому краю,
+  // чтобы новые точки не пересчитывали масштаб всей линии.
+  const xOffset = Math.max(0, windowSlots - n);
 
   const xAtIndex = (i: number) =>
-    M_LEFT + (i / lastI) * innerW;
+    M_LEFT + ((xOffset + i) / xDenom) * innerW;
 
   const [pMin, pMax] = useMemo(() => {
     const closes = points.map((p) => p.c);
@@ -131,7 +152,7 @@ function MarketCloseLineChartImpl({ points, timeframe }: Props) {
             `${i === 0 ? 'M' : 'L'} ${xAtIndex(i).toFixed(2)} ${yAt(p.c).toFixed(2)}`
         )
         .join(' '),
-    [points, pMin, pMax]
+    [points, pMin, pMax, timeframe]
   );
 
   const xTicks = useMemo(() => buildIndexTicks(points, timeframe, 7), [points, timeframe]);

@@ -278,6 +278,34 @@ run('benchmark: applyQuotes 50 инструментов + calendar (реалис
   }
 });
 
+run('benchmark: lazy applyQuotes — 1 selected + 49 price-only', () => {
+  const market = buildHeavyMarket50();
+  const epoch = T0 + 800 * 86_400_000 + 599 * MINUTE_MS;
+  const calendar = makeSyntheticCalendar(epoch, 600);
+  const selected = 'STK00';
+
+  applyMarketQuotesForSimulationEpoch(market, epoch, calendar, {
+    excludeSymbols: [FIREIDX_SYMBOL],
+    fullChartLineSymbols: [selected],
+  });
+
+  const ticks = 20;
+  let total = 0;
+  for (let i = 0; i < ticks; i++) {
+    total += benchMs(() => {
+      applyMarketQuotesForSimulationEpoch(market, epoch + i * MINUTE_MS, calendar, {
+        excludeSymbols: [FIREIDX_SYMBOL],
+        fullChartLineSymbols: [selected],
+      });
+    });
+  }
+  const avg = total / ticks;
+  console.log(`  [PERF] lazy 50 stocks (1 chart) avg/tick: ${avg.toFixed(2)} ms  (${ticks} ticks)`);
+  if (avg > 3) {
+    throw new Error(`lazy applyQuotes слишком медленный: ${avg.toFixed(2)} ms/tick`);
+  }
+});
+
 // ══════════════════════════════════════════════════════════════════════════════
 // ВАРИАНТ E: FIREIDX full rebuild при каждой гидрации vs. incremental
 // ══════════════════════════════════════════════════════════════════════════════

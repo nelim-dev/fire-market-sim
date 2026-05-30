@@ -31,7 +31,7 @@ export class UiStateModuleService implements LogicModule<GameState> {
       case 'uiState/set-left-panel-mode':
         return this.setLeftPanelMode(state, command.mode);
       case 'uiState/select-instrument':
-        return this.selectInstrument(state, command.symbol);
+        return this.selectInstrument(state, command.symbol, _context);
       case 'uiState/set-market-overview-filters':
         return this.setMarketOverviewFilters(state, command.patch);
       default:
@@ -67,7 +67,11 @@ export class UiStateModuleService implements LogicModule<GameState> {
     return true;
   }
 
-  private selectInstrument(state: GameState, symbol: string): boolean {
+  private selectInstrument(
+    state: GameState,
+    symbol: string,
+    context: ModuleContext
+  ): boolean {
     const next = normalizeUiSymbol(symbol);
     if (!next) {
       return false;
@@ -77,6 +81,7 @@ export class UiStateModuleService implements LogicModule<GameState> {
     }
     state.uiState.selectedSymbol = next;
     state.uiState.ready = true;
+    context.dispatchCommand({ type: 'market/rebuild-chart-lines', symbol: next });
     return true;
   }
 

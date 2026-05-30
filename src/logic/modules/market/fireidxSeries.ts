@@ -3,8 +3,16 @@ import { trimSortedBarsToMaxCount } from './chartSeriesRetention';
 import { CHART_SERIES_STORE_MAX_BARS } from './chartSeriesRetention';
 import type { MarketInstrumentCatalogItem } from './contracts';
 import type { MarketChartSeriesBundle } from './chartWindows';
-import { aggregateMinuteRowsToBundles } from './minuteBarAggregation';
-import { INTRADAY_FIVE_MIN_MS, INTRADAY_THIRTY_MIN_MS } from './minuteBarAggregation';
+import {
+  aggregateMinuteRowsToBundles,
+  INTRADAY_FIVE_MIN_MS,
+  INTRADAY_THIRTY_MIN_MS,
+  mergeMinuteBucketIntoAggregatedBars,
+  mskYyyymmddFromEpochMs,
+  sessionEndEpochForDate,
+} from './minuteBarAggregation';
+
+const HOUR_MS = 3_600_000;
 import { getISOWeek, getISOWeekYear } from 'date-fns';
 import {
   activeStockSymbolsAtEpoch,
@@ -15,10 +23,16 @@ import {
   FIREIDX_SYMBOL,
   nextRebalanceEpochAfter,
   stockSymbolsFromCatalog,
+  updateCompositeIndexFromPrices,
   type CompositeIndexState,
 } from './compositeIndex';
 import type { InstrumentDetailsCatalog } from './instrumentDetails';
 import type { MarketPriceBar } from './priceSeries';
+import type { FireidxRuntimeCache } from './state';
+
+export const FIREIDX_MINUTE_MS = 60_000;
+/** Сколько минут обрабатываем за один вызов hot-path (один проход, без 60× overhead). */
+export const FIREIDX_BATCH_MAX_MINUTES = 60;
 
 function buildSessionEndByDate(
   calendar: TradingCalendar | null
@@ -33,20 +47,45 @@ function buildSessionEndByDate(
   return map;
 }
 
+function isoWeekKey(epochMs: number): string {
+  const dt = new Date(epochMs);
+  return `${getISOWeekYear(dt)}-W${String(getISOWeek(dt)).padStart(2, '0')}`;
+}
+
 function buildWeeklyFromDaily(dailies: readonly MarketPriceBar[]): MarketPriceBar[] {
   if (dailies.length === 0) {
     return [];
   }
   const byWeek = new Map<string, MarketPriceBar>();
   for (const b of dailies) {
-    const dt = new Date(b.t);
-    const key = `${getISOWeekYear(dt)}-W${String(getISOWeek(dt)).padStart(2, '0')}`;
+    const key = isoWeekKey(b.t);
     const prev = byWeek.get(key);
     if (!prev || b.t >= prev.t) {
       byWeek.set(key, { ...b });
     }
   }
   return [...byWeek.values()].sort((a, b) => a.t - b.t);
+}
+
+/** O(weeks) upsert одной дневной свечи в weekly — без полного rebuild из daily. */
+function upsertWeeklyBarFromDaily(
+  weekly: readonly MarketPriceBar[],
+  dailyBar: MarketPriceBar
+): MarketPriceBar[] {
+  const key = isoWeekKey(dailyBar.t);
+  const idx = weekly.findIndex((b) => isoWeekKey(b.t) === key);
+  if (idx >= 0) {
+    const prev = weekly[idx]!;
+    if (dailyBar.t < prev.t) {
+      return weekly;
+    }
+    const next = [...weekly];
+    next[idx] = { ...dailyBar };
+    return next;
+  }
+  const next = [...weekly, { ...dailyBar }];
+  next.sort((a, b) => a.t - b.t);
+  return next;
 }
 
 function collectUnionTimestamps(
@@ -95,16 +134,31 @@ type ReplayState = {
   prevLevel: number;
 };
 
+function symbolsKey(symbols: readonly string[]): string {
+  return [...symbols].sort().join('|');
+}
+
 function applyRebalance(
   state: ReplayState,
-  symbols: readonly string[],
+  activeSymbols: readonly string[],
   prices: Record<string, number>,
   details: InstrumentDetailsCatalog,
   t: number,
   calendar: TradingCalendar | null
 ): boolean {
   const bootstrap = state.indexState === null;
-  const constituents = buildConstituentsFromPrices(symbols, prices, details);
+  const activePrices: Record<string, number> = {};
+  for (const sym of activeSymbols) {
+    const price = prices[sym];
+    if (price != null && Number.isFinite(price) && price > 0) {
+      activePrices[sym] = price;
+    }
+  }
+  const constituents = buildConstituentsFromPrices(
+    activeSymbols,
+    activePrices,
+    details
+  );
   if (constituents.length === 0) {
     return false;
   }
@@ -131,6 +185,7 @@ function applyRebalance(
 }
 
 function replayCapWeightedBars(input: {
+  catalog: readonly MarketInstrumentCatalogItem[];
   symbols: readonly string[];
   barsBySymbol: Record<string, readonly MarketPriceBar[]>;
   details: InstrumentDetailsCatalog;
@@ -176,13 +231,32 @@ function replayCapWeightedBars(input: {
       continue;
     }
 
+    const activeAtT = activeStockSymbolsAtEpoch(
+      input.catalog,
+      input.details,
+      t
+    );
+    const compositionChanged =
+      replay.indexState !== null &&
+      symbolsKey(replay.indexState.constituents.map((c) => c.symbol)) !==
+        symbolsKey(activeAtT);
     const needsRebalance =
       replay.indexState === null ||
       (replay.indexState.nextRebalanceEpochMs > 0 &&
-        t >= replay.indexState.nextRebalanceEpochMs);
+        t >= replay.indexState.nextRebalanceEpochMs) ||
+      compositionChanged;
 
     if (needsRebalance) {
-      if (!applyRebalance(replay, input.symbols, prices, input.details, t, input.calendar)) {
+      if (
+        !applyRebalance(
+          replay,
+          activeAtT,
+          prices,
+          input.details,
+          t,
+          input.calendar
+        )
+      ) {
         continue;
       }
     }
@@ -223,25 +297,49 @@ function hasExactBarAt(
   bars: readonly MarketPriceBar[],
   epochMs: number
 ): boolean {
-  return bars.some((b) => b.t === epochMs);
-}
-
-function upsertSortedBar(
-  bars: readonly MarketPriceBar[],
-  bar: MarketPriceBar
-): MarketPriceBar[] {
-  const next = [...bars];
-  const idx = next.findIndex((b) => b.t === bar.t);
-  if (idx >= 0) {
-    next[idx] = bar;
-  } else {
-    next.push(bar);
-    next.sort((a, b) => a.t - b.t);
+  if (bars.length === 0) {
+    return false;
   }
-  return next;
+  const last = bars[bars.length - 1]!;
+  if (last.t === epochMs) {
+    return true;
+  }
+  if (last.t < epochMs) {
+    return false;
+  }
+  let lo = 0;
+  let hi = bars.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const t = bars[mid]!.t;
+    if (t === epochMs) {
+      return true;
+    }
+    if (t < epochMs) {
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return false;
 }
 
-/** Уровень индекса по ценам из указанного ряда (5m/30m/minute) на эпохе t. */
+function mergeBarsPreferOverlay(
+  base: readonly MarketPriceBar[],
+  overlay: readonly MarketPriceBar[]
+): MarketPriceBar[] {
+  const byT = new Map<number, MarketPriceBar>();
+  for (const bar of base) {
+    byT.set(bar.t, bar);
+  }
+  for (const bar of overlay) {
+    byT.set(bar.t, bar);
+  }
+  return [...byT.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([, bar]) => bar);
+}
+
 export function compositeLevelAtEpochFromBars(
   index: CompositeIndexState,
   symbols: readonly string[],
@@ -342,44 +440,37 @@ export function rebuildFireidxSeriesFromConstituents(input: {
     thirtyMinBySymbol[sym] = input.chartSeries.thirtyMinute[sym] ?? [];
   }
 
-  const dailyReplay = replayCapWeightedBars({
+  const replayInput = {
+    catalog: input.catalog,
     symbols,
-    barsBySymbol: dailyBySymbol,
     details: input.details,
     simulationEpochMs: input.simulationEpochMs,
     calendar: input.calendar,
+  };
+
+  const dailyReplay = replayCapWeightedBars({
+    ...replayInput,
+    barsBySymbol: dailyBySymbol,
   });
 
   const hourlyReplay = replayCapWeightedBars({
-    symbols,
+    ...replayInput,
     barsBySymbol: hourlyBySymbol,
-    details: input.details,
-    simulationEpochMs: input.simulationEpochMs,
-    calendar: input.calendar,
   });
 
   const minuteReplay = replayCapWeightedBars({
-    symbols,
+    ...replayInput,
     barsBySymbol: minuteBySymbol,
-    details: input.details,
-    simulationEpochMs: input.simulationEpochMs,
-    calendar: input.calendar,
   });
 
   const fiveMinuteReplay = replayCapWeightedBars({
-    symbols,
+    ...replayInput,
     barsBySymbol: fiveMinBySymbol,
-    details: input.details,
-    simulationEpochMs: input.simulationEpochMs,
-    calendar: input.calendar,
   });
 
   const thirtyMinuteReplay = replayCapWeightedBars({
-    symbols,
+    ...replayInput,
     barsBySymbol: thirtyMinBySymbol,
-    details: input.details,
-    simulationEpochMs: input.simulationEpochMs,
-    calendar: input.calendar,
   });
 
   const compositeIndex =
@@ -399,13 +490,290 @@ export function rebuildFireidxSeriesFromConstituents(input: {
   };
 }
 
+/** Дневной/часовой FIREIDX из дневных и часовых рядов акций (история для 6m/1y/all). */
+export function rebuildFireidxLongSeriesFromConstituents(input: {
+  catalog: readonly MarketInstrumentCatalogItem[];
+  chartSeries: MarketChartSeriesBundle;
+  details: InstrumentDetailsCatalog;
+  simulationEpochMs: number;
+  calendar: TradingCalendar | null;
+}): { dailyBars: MarketPriceBar[]; hourlyBars: MarketPriceBar[] } {
+  const symbols = stockSymbolsFromCatalog(input.catalog);
+  const dailyBySymbol: Record<string, readonly MarketPriceBar[]> = {};
+  const hourlyBySymbol: Record<string, readonly MarketPriceBar[]> = {};
+  for (const sym of symbols) {
+    dailyBySymbol[sym] = input.chartSeries.dailyClose[sym] ?? [];
+    hourlyBySymbol[sym] = input.chartSeries.oneHour[sym] ?? [];
+  }
+  const replayInput = {
+    catalog: input.catalog,
+    symbols,
+    details: input.details,
+    simulationEpochMs: input.simulationEpochMs,
+    calendar: input.calendar,
+  };
+  const dailyReplay = replayCapWeightedBars({
+    ...replayInput,
+    barsBySymbol: dailyBySymbol,
+  });
+  const hourlyReplay = replayCapWeightedBars({
+    ...replayInput,
+    barsBySymbol: hourlyBySymbol,
+  });
+  return {
+    dailyBars: dailyReplay.outputBars,
+    hourlyBars: hourlyReplay.outputBars,
+  };
+}
+
+export function needsFireidxLongSeriesBootstrap(
+  chartSeries: MarketChartSeriesBundle,
+  catalog: readonly MarketInstrumentCatalogItem[],
+  runtime: { longSeriesBootstrapped: boolean }
+): boolean {
+  if (runtime.longSeriesBootstrapped) {
+    return false;
+  }
+  const sym = FIREIDX_SYMBOL;
+  const fireDailyLen = chartSeries.dailyClose[sym]?.length ?? 0;
+  const fireHourlyLen = chartSeries.oneHour[sym]?.length ?? 0;
+  let maxStockDaily = 0;
+  let maxStockHourly = 0;
+  for (const row of catalog) {
+    if (row.assetKind !== 'stock') {
+      continue;
+    }
+    const s = row.symbol.toUpperCase();
+    maxStockDaily = Math.max(
+      maxStockDaily,
+      chartSeries.dailyClose[s]?.length ?? 0
+    );
+    maxStockHourly = Math.max(
+      maxStockHourly,
+      chartSeries.oneHour[s]?.length ?? 0
+    );
+  }
+  if (maxStockDaily === 0 && maxStockHourly === 0) {
+    return false;
+  }
+  if (maxStockDaily > 0 && fireDailyLen + 2 < maxStockDaily) {
+    return true;
+  }
+  if (maxStockHourly > 0 && fireHourlyLen + 2 < maxStockHourly) {
+    return true;
+  }
+  return false;
+}
+
+/** Записывает daily/weekly/1h FIREIDX, не трогая intraday-ряды. */
+export function applyFireidxLongSeriesToChartSeries(
+  chartSeries: MarketChartSeriesBundle,
+  dailyBars: readonly MarketPriceBar[],
+  hourlyBars: readonly MarketPriceBar[]
+): void {
+  const sym = FIREIDX_SYMBOL;
+  if (dailyBars.length > 0) {
+    chartSeries.dailyClose[sym] = [...dailyBars];
+    chartSeries.weekly[sym] = buildWeeklyFromDaily(dailyBars);
+  }
+  if (hourlyBars.length > 0) {
+    chartSeries.oneHour[sym] = trimSortedBarsToMaxCount(
+      hourlyBars,
+      CHART_SERIES_STORE_MAX_BARS.oneHour
+    );
+  }
+}
+
+function upsertSortedBarByTime(
+  bars: readonly MarketPriceBar[],
+  bar: MarketPriceBar
+): MarketPriceBar[] {
+  const next = [...bars];
+  const idx = next.findIndex((b) => b.t === bar.t);
+  if (idx >= 0) {
+    next[idx] = bar;
+  } else {
+    next.push(bar);
+    next.sort((a, b) => a.t - b.t);
+  }
+  return next;
+}
+
+/** Обновить дневную свечу FIREIDX для текущей сессии из накопленных минуток. */
+export function refreshFireidxDailyForSessionDate(
+  chartSeries: MarketChartSeriesBundle,
+  calendar: TradingCalendar | null,
+  sessionMskDateYyyymmdd: string
+): void {
+  if (!sessionMskDateYyyymmdd) {
+    return;
+  }
+  const sym = FIREIDX_SYMBOL;
+  const dayMinutes = (chartSeries.minute[sym] ?? []).filter(
+    (b) => mskYyyymmddFromEpochMs(b.t) === sessionMskDateYyyymmdd
+  );
+  if (dayMinutes.length === 0) {
+    return;
+  }
+  const sessionEndByDate = buildSessionEndByDate(calendar);
+  const tEnd = sessionEndEpochForDate(sessionEndByDate, sessionMskDateYyyymmdd);
+  let o = dayMinutes[0]!.o;
+  let h = dayMinutes[0]!.h;
+  let l = dayMinutes[0]!.l;
+  let c = dayMinutes[0]!.c;
+  let v = dayMinutes[0]!.v;
+  for (let i = 1; i < dayMinutes.length; i += 1) {
+    const b = dayMinutes[i]!;
+    h = Math.max(h, b.h);
+    l = Math.min(l, b.l);
+    c = b.c;
+    v += b.v;
+  }
+  const dailyBar: MarketPriceBar = { t: tEnd, o, h, l, c, v };
+  const prevDaily = chartSeries.dailyClose[sym] ?? [];
+  const prevAtEnd = prevDaily.find((b) => b.t === tEnd);
+  if (
+    prevAtEnd &&
+    prevAtEnd.o === o &&
+    prevAtEnd.h === h &&
+    prevAtEnd.l === l &&
+    prevAtEnd.c === c &&
+    prevAtEnd.v === v
+  ) {
+    return;
+  }
+  const nextDaily = upsertSortedBarByTime(prevDaily, dailyBar);
+  chartSeries.dailyClose[sym] = nextDaily;
+  chartSeries.weekly[sym] = upsertWeeklyBarFromDaily(
+    chartSeries.weekly[sym] ?? [],
+    dailyBar
+  );
+}
+
+export type AdvanceFireidxBatchResult = {
+  compositeIndex: CompositeIndexState;
+  minutesProcessed: number;
+};
+
+/** Сброс pointer catch-up (hydrate / тесты). */
+export function resetFireidxHotPathRuntime(runtime: FireidxRuntimeCache): void {
+  runtime.lastProcessedFireidxEpochMs = 0;
+}
+
+function resolveFireidxBatchStartEpoch(
+  chartSeries: MarketChartSeriesBundle,
+  runtime: FireidxRuntimeCache
+): number {
+  if (runtime.lastProcessedFireidxEpochMs > 0) {
+    return runtime.lastProcessedFireidxEpochMs;
+  }
+  const fireidxMinutes = chartSeries.minute[FIREIDX_SYMBOL] ?? [];
+  if (fireidxMinutes.length > 0) {
+    return fireidxMinutes[fireidxMinutes.length - 1]!.t;
+  }
+  return 0;
+}
+
+/**
+ * Hot-path batch: все пропущенные минуты до `simulationEpochMs` за один проход
+ * (до FIREIDX_BATCH_MAX_MINUTES), с общим pointer cache и одним refresh daily.
+ *
+ * Gate на каждую минуту — как у `advanceFireidxMinuteBar`: хотя бы одна акция
+ * имеет бар точно в epoch.
+ */
+export function advanceFireidxBatchUpToEpoch(input: {
+  chartSeries: MarketChartSeriesBundle;
+  catalog: readonly MarketInstrumentCatalogItem[];
+  compositeIndex: CompositeIndexState;
+  details: InstrumentDetailsCatalog;
+  simulationEpochMs: number;
+  calendar: TradingCalendar | null;
+  runtime: FireidxRuntimeCache;
+  sessionMskDateYyyymmdd: string | null;
+}): AdvanceFireidxBatchResult {
+  const {
+    chartSeries,
+    catalog,
+    details,
+    simulationEpochMs,
+    calendar,
+    runtime,
+    sessionMskDateYyyymmdd,
+  } = input;
+  let index = input.compositeIndex;
+
+  const symbols = stockSymbolsFromCatalog(catalog);
+  if (symbols.length === 0 || index.constituents.length === 0) {
+    return { compositeIndex: index, minutesProcessed: 0 };
+  }
+
+  const startExclusive = resolveFireidxBatchStartEpoch(chartSeries, runtime);
+  if (simulationEpochMs <= startExclusive) {
+    return { compositeIndex: index, minutesProcessed: 0 };
+  }
+
+  const minuteBySymbol: Record<string, readonly MarketPriceBar[]> = {};
+  for (const s of symbols) {
+    minuteBySymbol[s] = chartSeries.minute[s] ?? [];
+  }
+  const pointers: Record<string, number> = {};
+
+  let minutesProcessed = 0;
+  let epoch =
+    startExclusive > 0
+      ? startExclusive + FIREIDX_MINUTE_MS
+      : simulationEpochMs;
+
+  while (epoch <= simulationEpochMs) {
+    if (!anyStockHasExactMinuteAtEpoch(catalog, chartSeries, epoch)) {
+      epoch += FIREIDX_MINUTE_MS;
+      continue;
+    }
+
+    const prices = forwardFillPrices(symbols, minuteBySymbol, epoch, pointers);
+    index = updateCompositeIndexFromPrices(
+      index,
+      catalog,
+      prices,
+      details,
+      epoch,
+      calendar
+    );
+
+    advanceFireidxMinuteBar(
+      chartSeries,
+      catalog,
+      index,
+      epoch,
+      calendar
+    );
+    advanceFireidxIntradayFromConstituents(
+      chartSeries,
+      catalog,
+      index,
+      epoch
+    );
+
+    runtime.lastProcessedFireidxEpochMs = epoch;
+    minutesProcessed += 1;
+    epoch += FIREIDX_MINUTE_MS;
+  }
+
+  if (sessionMskDateYyyymmdd) {
+    refreshFireidxDailyForSessionDate(
+      chartSeries,
+      calendar,
+      sessionMskDateYyyymmdd
+    );
+  }
+
+  return { compositeIndex: index, minutesProcessed };
+}
+
 /**
  * Hot-path: +1 минутная свеча FIREIDX.
  *
  * Gate: хотя бы одна акция имеет реальный бар точно в simulationEpochMs.
- * Это предотвращает «забегание вперёд» — бар на текущую минуту не добавляется,
- * пока ни одна акция не принесла свежих данных. Forward-fill всё равно используется
- * для акций без нового бара в эту минуту (они считаются по последней известной цене).
  */
 export function advanceFireidxMinuteBar(
   chartSeries: MarketChartSeriesBundle,
@@ -466,9 +834,8 @@ export function advanceFireidxMinuteBar(
 }
 
 /**
- * 5m/30m FIREIDX — из тех же рядов акций, что и у SBER (cap-weight на bucket),
- * а не из агрегата минуток индекса.
- * Gate: тот же — хотя бы одна акция имеет минутный бар в simulationEpochMs.
+ * 5m/30m/1h FIREIDX — из минуток индекса (cap-weight на bucket).
+ * Gate: хотя бы одна акция имеет минутный бар в simulationEpochMs.
  */
 export function advanceFireidxIntradayFromConstituents(
   chartSeries: MarketChartSeriesBundle,
@@ -476,70 +843,49 @@ export function advanceFireidxIntradayFromConstituents(
   index: CompositeIndexState,
   simulationEpochMs: number
 ): void {
-  const symbols = stockSymbolsFromCatalog(catalog);
-  if (symbols.length === 0 || index.constituents.length === 0) {
+  if (index.constituents.length === 0) {
     return;
   }
   if (!anyStockHasExactMinuteAtEpoch(catalog, chartSeries, simulationEpochMs)) {
     return;
   }
   const sym = FIREIDX_SYMBOL;
+  const minute = chartSeries.minute[sym] ?? [];
+  const triggerMinute = minute.find((b) => b.t === simulationEpochMs);
+  if (!triggerMinute) {
+    return;
+  }
 
   const upsertBucket = (
-    seriesKey: 'fiveMinute' | 'thirtyMinute',
+    seriesKey: 'fiveMinute' | 'thirtyMinute' | 'oneHour',
     stepMs: number
   ): void => {
-    const bucketT = Math.floor(simulationEpochMs / stepMs) * stepMs;
-    const barsBySymbol: Record<string, readonly MarketPriceBar[]> = {};
-    for (const s of symbols) {
-      barsBySymbol[s] = chartSeries[seriesKey][s] ?? [];
-    }
-    const level = compositeLevelAtEpochFromBars(
-      index,
-      symbols,
-      barsBySymbol,
-      bucketT
-    );
-    if (level === null) {
-      return;
-    }
-    const prev = chartSeries[seriesKey][sym] ?? [];
-    const last = prev.length > 0 ? prev[prev.length - 1] : null;
-    const o = last?.t === bucketT ? last.o : (last?.c ?? level);
     chartSeries[seriesKey][sym] = trimSortedBarsToMaxCount(
-      upsertSortedBar(prev, {
-        t: bucketT,
-        o,
-        h: Math.max(o, level),
-        l: Math.min(o, level),
-        c: level,
-        v: 1,
-      }),
+      mergeMinuteBucketIntoAggregatedBars(
+        chartSeries[seriesKey][sym] ?? [],
+        minute,
+        stepMs,
+        triggerMinute
+      ),
       CHART_SERIES_STORE_MAX_BARS[seriesKey]
     );
   };
 
   upsertBucket('fiveMinute', INTRADAY_FIVE_MIN_MS);
   upsertBucket('thirtyMinute', INTRADAY_THIRTY_MIN_MS);
+  upsertBucket('oneHour', HOUR_MS);
 }
 
+/**
+ * Full rebuild — только bootstrap (пустая серия) или явный force.
+ * Во время симуляции FIREIDX наращивается инкрементально; пересборка истории
+ * на смене дня / после hydrate ломает уже посчитанные значения.
+ */
 export function shouldFullRebuildFireidx(input: {
   forceFull?: boolean;
-  stockBarsChanged?: boolean;
   fireidxMinuteEmpty: boolean;
-  currentMskDate: string | null;
-  lastDailyRebuildMskDate: string | null;
 }): boolean {
-  if (input.forceFull || input.stockBarsChanged || input.fireidxMinuteEmpty) {
-    return true;
-  }
-  if (
-    input.currentMskDate &&
-    input.lastDailyRebuildMskDate !== input.currentMskDate
-  ) {
-    return true;
-  }
-  return false;
+  return Boolean(input.forceFull || input.fireidxMinuteEmpty);
 }
 
 /** Записывает агрегаты FIREIDX: длинные ряды отдельно, intraday — из минуток. */
@@ -591,29 +937,29 @@ export function applyFireidxBundlesToChartSeries(
   );
   chartSeries.minute[sym] = trimmedMinute;
 
-  let fiveMinuteBars = rebuilt.fiveMinuteBars;
-  let thirtyMinuteBars = rebuilt.thirtyMinuteBars;
-  if (fiveMinuteBars.length === 0 && trimmedMinute.length > 0) {
-    fiveMinuteBars = aggregateMinuteRowsToBundles(
-      [...trimmedMinute],
-      sessionEndByDate
-    ).fiveMinute;
-  }
-  if (thirtyMinuteBars.length === 0 && trimmedMinute.length > 0) {
-    thirtyMinuteBars = aggregateMinuteRowsToBundles(
-      [...trimmedMinute],
-      sessionEndByDate
-    ).thirtyMinute;
-  }
-  if (fiveMinuteBars.length > 0) {
+  // 5m/30m всегда агрегируем из минуток FIREIDX — тот же путь, что и incremental hot-path.
+  // Отдельный replay по stock fiveMinute давал расхождение на границе торгового дня.
+  const intradayAggs = aggregateMinuteRowsToBundles(
+    [...trimmedMinute],
+    sessionEndByDate
+  );
+  const fiveMerged = mergeBarsPreferOverlay(
+    rebuilt.fiveMinuteBars,
+    intradayAggs.fiveMinute
+  );
+  const thirtyMerged = mergeBarsPreferOverlay(
+    rebuilt.thirtyMinuteBars,
+    intradayAggs.thirtyMinute
+  );
+  if (fiveMerged.length > 0) {
     chartSeries.fiveMinute[sym] = trimSortedBarsToMaxCount(
-      fiveMinuteBars,
+      fiveMerged,
       CHART_SERIES_STORE_MAX_BARS.fiveMinute
     );
   }
-  if (thirtyMinuteBars.length > 0) {
+  if (thirtyMerged.length > 0) {
     chartSeries.thirtyMinute[sym] = trimSortedBarsToMaxCount(
-      thirtyMinuteBars,
+      thirtyMerged,
       CHART_SERIES_STORE_MAX_BARS.thirtyMinute
     );
   }

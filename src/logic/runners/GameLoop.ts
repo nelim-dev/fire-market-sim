@@ -143,7 +143,7 @@ class GameLoop {
     // троттлинг rAF в Electron и т.д.) — иначе симуляция и UI «замирают» до внешнего события.
     if (accumulatedMs >= this.targetFrameTime) {
       const fixedDeltaTime = this.targetFrameTime / 1000;
-      const maxStepsPerFrame = 40;
+      const maxStepsPerFrame = 10;
 
       let steps = 0;
       while (accumulatedMs >= this.targetFrameTime && steps < maxStepsPerFrame) {

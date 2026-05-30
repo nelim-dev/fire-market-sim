@@ -7,6 +7,8 @@ import type {
 import type { TradingDayChangedPayload } from '@/logic/logicEvents';
 import type { GameState } from '@/logic/managers/LogicManager';
 import type { TradingCalendar } from '@/logic/time/TradingCalendar';
+import { DEBUG_DISABLE_FIREIDX } from '@/logic/simulation/simulationConfig';
+import { isFireidxPrebakedInCatalog } from './fireidxPrebaked';
 import type { MarketInstrumentCatalogItem } from './contracts';
 import { emptyChartSeriesBundle, type MarketChartSeriesBundle } from './chartWindows';
 import {
@@ -25,9 +27,11 @@ import {
   updateCompositeIndex,
 } from './compositeIndex';
 import {
-  advanceFireidxIntradayFromConstituents,
-  advanceFireidxMinuteBar,
+  advanceFireidxBatchUpToEpoch,
   applyFireidxBundlesToChartSeries,
+  applyFireidxLongSeriesToChartSeries,
+  needsFireidxLongSeriesBootstrap,
+  rebuildFireidxLongSeriesFromConstituents,
   rebuildFireidxSeriesFromConstituents,
   shouldFullRebuildFireidx,
 } from './fireidxSeries';
@@ -56,11 +60,12 @@ function readCatalogItems(): MarketInstrumentCatalogItem[] {
 export function pickHydrateSymbolsFromCatalog(
   catalog: readonly MarketInstrumentCatalogItem[]
 ): string[] {
+  const fireidxPrebaked = isFireidxPrebakedInCatalog(catalog);
   return catalog
     .filter((item) => {
       const symbol = item.symbol.toUpperCase();
       if (symbol === FIREIDX_SYMBOL) {
-        return false;
+        return fireidxPrebaked;
       }
       if (item.assetKind === 'index') {
         // BR/EU/RTSI/USD... нужны для динамики обзора и шапки.
@@ -77,6 +82,7 @@ export function pickHydrateSymbolsFromCatalog(
 }
 
 export class MarketModuleService implements LogicModule<GameState> {
+  private static fireidxDisableLogged = false;
   readonly id = 'market';
 
   /**
@@ -136,9 +142,15 @@ export class MarketModuleService implements LogicModule<GameState> {
   private perfProbe = {
     lastReportAtMs: 0,
     quotesApplyMs: 0,
+    catalogQuotesMs: 0,
+    fireidxChainMs: 0,
+    tickCount: 0,
+    selectedDailyLenMax: 0,
     fireidxFullMs: 0,
     fireidxIncrementalCount: 0,
     fireidxFullCount: 0,
+    fireidxBatchMinuteCount: 0,
+    fireidxPrebaked: false,
   };
 
   shouldHoldSimulationAtBoundary(state: GameState): boolean {
@@ -158,15 +170,45 @@ export class MarketModuleService implements LogicModule<GameState> {
       return;
     }
     console.debug('[market-perf-probe]', {
+      fireidxDisabled: DEBUG_DISABLE_FIREIDX && !this.perfProbe.fireidxPrebaked,
+      fireidxPrebaked: this.perfProbe.fireidxPrebaked,
       quotesApplyMs: Number(this.perfProbe.quotesApplyMs.toFixed(2)),
+      catalogQuotesMs: Number(this.perfProbe.catalogQuotesMs.toFixed(2)),
+      fireidxChainMs: Number(this.perfProbe.fireidxChainMs.toFixed(2)),
+      tickCount: this.perfProbe.tickCount,
+      avgMsPerTick:
+        this.perfProbe.tickCount > 0
+          ? Number(
+              (this.perfProbe.quotesApplyMs / this.perfProbe.tickCount).toFixed(2)
+            )
+          : 0,
+      avgCatalogMsPerTick:
+        this.perfProbe.tickCount > 0
+          ? Number(
+              (this.perfProbe.catalogQuotesMs / this.perfProbe.tickCount).toFixed(2)
+            )
+          : 0,
+      avgFireidxMsPerTick:
+        this.perfProbe.tickCount > 0
+          ? Number(
+              (this.perfProbe.fireidxChainMs / this.perfProbe.tickCount).toFixed(2)
+            )
+          : 0,
+      selectedDailyLenMax: this.perfProbe.selectedDailyLenMax,
       fireidxFullMs: Number(this.perfProbe.fireidxFullMs.toFixed(2)),
       fireidxIncrementalCount: this.perfProbe.fireidxIncrementalCount,
       fireidxFullCount: this.perfProbe.fireidxFullCount,
+      fireidxBatchMinuteCount: this.perfProbe.fireidxBatchMinuteCount,
     });
     this.perfProbe.quotesApplyMs = 0;
+    this.perfProbe.catalogQuotesMs = 0;
+    this.perfProbe.fireidxChainMs = 0;
+    this.perfProbe.tickCount = 0;
+    this.perfProbe.selectedDailyLenMax = 0;
     this.perfProbe.fireidxFullMs = 0;
     this.perfProbe.fireidxIncrementalCount = 0;
     this.perfProbe.fireidxFullCount = 0;
+    this.perfProbe.fireidxBatchMinuteCount = 0;
     this.perfProbe.lastReportAtMs = now;
   }
 
@@ -177,23 +219,48 @@ export class MarketModuleService implements LogicModule<GameState> {
       forceFullFireidx?: boolean;
       stockBarsChanged?: boolean;
       currentMskDate?: string | null;
+      chartDetailSymbol?: string | null;
     }
   ): void {
     const quotesStart = performance.now();
+    const chartDetail = options?.chartDetailSymbol?.toUpperCase() ?? null;
+    const fullChartLineSymbols = chartDetail ? [chartDetail] : [];
+    const fireidxPrebaked = isFireidxPrebakedInCatalog(state.instrumentCatalog);
+    const useRuntimeFireidx = !fireidxPrebaked && !DEBUG_DISABLE_FIREIDX;
+    this.perfProbe.fireidxPrebaked = fireidxPrebaked;
+    const catalogStart = performance.now();
     applyMarketQuotesForSimulationEpoch(
       state,
       simulationEpochMs,
       this.tradingCalendar,
-      { excludeSymbols: [FIREIDX_SYMBOL] }
+      {
+        excludeSymbols: useRuntimeFireidx ? [FIREIDX_SYMBOL] : [],
+        fullChartLineSymbols,
+      }
     );
+    this.perfProbe.catalogQuotesMs += performance.now() - catalogStart;
 
+    if (chartDetail) {
+      const dailyLen = state.chartSeries.dailyClose[chartDetail]?.length ?? 0;
+      this.perfProbe.selectedDailyLenMax = Math.max(
+        this.perfProbe.selectedDailyLenMax,
+        dailyLen
+      );
+    }
+
+    const fireidxChainStart = performance.now();
+    if (DEBUG_DISABLE_FIREIDX && !fireidxPrebaked) {
+      if (!MarketModuleService.fireidxDisableLogged) {
+        console.warn(
+          '[MarketModule] DEBUG_DISABLE_FIREIDX=true — расчёт FIREIDX отключён (simulationConfig.ts)'
+        );
+        MarketModuleService.fireidxDisableLogged = true;
+      }
+    } else if (useRuntimeFireidx) {
     const fireidxMinute = state.chartSeries.minute[FIREIDX_SYMBOL] ?? [];
     const needsFull = shouldFullRebuildFireidx({
       forceFull: options?.forceFullFireidx,
-      stockBarsChanged: options?.stockBarsChanged,
       fireidxMinuteEmpty: fireidxMinute.length === 0,
-      currentMskDate: options?.currentMskDate ?? null,
-      lastDailyRebuildMskDate: state.fireidxRuntime.lastDailyRebuildMskDate,
     });
 
     if (needsFull) {
@@ -211,9 +278,7 @@ export class MarketModuleService implements LogicModule<GameState> {
         this.tradingCalendar
       );
       state.fireidxRuntime.lastFullRebuildEpochMs = simulationEpochMs;
-      if (options?.currentMskDate) {
-        state.fireidxRuntime.lastDailyRebuildMskDate = options.currentMskDate;
-      }
+      state.fireidxRuntime.lastProcessedFireidxEpochMs = simulationEpochMs;
       const baseIndex =
         rebuilt.compositeIndex.constituents.length > 0
           ? rebuilt.compositeIndex
@@ -228,39 +293,65 @@ export class MarketModuleService implements LogicModule<GameState> {
       );
       this.perfProbe.fireidxFullMs += performance.now() - fireidxStart;
       this.perfProbe.fireidxFullCount += 1;
+      state.fireidxRuntime.longSeriesBootstrapped = true;
     } else {
+      if (
+        needsFireidxLongSeriesBootstrap(
+          state.chartSeries,
+          state.instrumentCatalog,
+          state.fireidxRuntime
+        )
+      ) {
+        const long = rebuildFireidxLongSeriesFromConstituents({
+          catalog: state.instrumentCatalog,
+          chartSeries: state.chartSeries,
+          details: state.details,
+          simulationEpochMs,
+          calendar: this.tradingCalendar,
+        });
+        applyFireidxLongSeriesToChartSeries(
+          state.chartSeries,
+          long.dailyBars,
+          long.hourlyBars
+        );
+        state.fireidxRuntime.longSeriesBootstrapped = true;
+      }
+      const batch = advanceFireidxBatchUpToEpoch({
+        chartSeries: state.chartSeries,
+        catalog: state.instrumentCatalog,
+        compositeIndex: state.compositeIndex,
+        details: state.details,
+        simulationEpochMs,
+        calendar: this.tradingCalendar,
+        runtime: state.fireidxRuntime,
+        sessionMskDateYyyymmdd: options?.currentMskDate ?? null,
+      });
       state.compositeIndex = updateCompositeIndex(
-        state.compositeIndex,
+        batch.compositeIndex,
         state.instrumentCatalog,
         state.assetsBySymbol,
         state.details,
         simulationEpochMs,
         this.tradingCalendar
       );
-      advanceFireidxMinuteBar(
-        state.chartSeries,
-        state.instrumentCatalog,
-        state.compositeIndex,
-        simulationEpochMs,
-        this.tradingCalendar
-      );
-      advanceFireidxIntradayFromConstituents(
-        state.chartSeries,
-        state.instrumentCatalog,
-        state.compositeIndex,
-        simulationEpochMs
-      );
+      this.perfProbe.fireidxBatchMinuteCount += batch.minutesProcessed;
       this.perfProbe.fireidxIncrementalCount += 1;
     }
 
     syncFireidxAsset(state.assetsBySymbol, state.compositeIndex);
-    refreshQuotesForSymbol(
-      state,
-      FIREIDX_SYMBOL,
-      simulationEpochMs,
-      this.tradingCalendar
-    );
+    if (chartDetail === FIREIDX_SYMBOL) {
+      refreshQuotesForSymbol(
+        state,
+        FIREIDX_SYMBOL,
+        simulationEpochMs,
+        this.tradingCalendar,
+        { fullChartLineSymbols: [FIREIDX_SYMBOL] }
+      );
+    }
+    }
 
+    this.perfProbe.fireidxChainMs += performance.now() - fireidxChainStart;
+    this.perfProbe.tickCount += 1;
     this.perfProbe.quotesApplyMs += performance.now() - quotesStart;
     this.reportPerfProbeIfNeeded();
   }
@@ -303,12 +394,15 @@ export class MarketModuleService implements LogicModule<GameState> {
     ) {
       return;
     }
-    // Не форсируем full rebuild FIREIDX при каждой гидрации:
-    // applyMarketQuotesForSimulationEpoch обновит assetsBySymbol из новых баров,
-    // затем incremental-путь (advanceFireidxMinuteBar) подхватит актуальные цены.
-    // Full rebuild произойдёт автоматически при смене торгового дня или пустой серии.
+    // Не форсируем full rebuild FIREIDX при гидрации: только incremental-путь.
+    // Full rebuild — один раз при bootstrap (пустая minute-серия FIREIDX).
+    if (hydrateMeta?.stockBarsChanged) {
+      gameState.market.fireidxRuntime.longSeriesBootstrapped = false;
+      gameState.market.fireidxRuntime.lastProcessedFireidxEpochMs = 0;
+    }
     this.applyQuotesAndCompositeIndex(gameState.market, simulationEpochMs, {
       currentMskDate: gameState.currentTradingSession?.mskDateYyyymmdd ?? null,
+      chartDetailSymbol: gameState.uiState.selectedSymbol,
     });
     this.lastQuotedSimulationEpochMs = simulationEpochMs;
   }
@@ -802,6 +896,7 @@ export class MarketModuleService implements LogicModule<GameState> {
     this.lastQuotedSimulationEpochMs = epoch;
     this.applyQuotesAndCompositeIndex(state.market, epoch, {
       currentMskDate: state.currentTradingSession?.mskDateYyyymmdd ?? null,
+      chartDetailSymbol: state.uiState.selectedSymbol,
     });
     // Сабсервис corporateActions: scan & emit (слой A) — после обновления котировок,
     // чтобы консьюмеры могли уже опираться на актуальные позиции/цены.
@@ -882,11 +977,26 @@ export class MarketModuleService implements LogicModule<GameState> {
     }
   }
 
+  /** Полная пересборка линий графика для выбранного символа (смена инструмента / bootstrap). */
+  rebuildChartLinesForSymbol(state: GameState, symbol: string): boolean {
+    const sym = symbol.toUpperCase();
+    return refreshQuotesForSymbol(
+      state.market,
+      sym,
+      state.simulationEpochMs,
+      this.tradingCalendar,
+      { fullChartLineSymbols: [sym] }
+    );
+  }
+
   handleCommand(
     state: GameState,
     command: LogicCommand,
     _context: ModuleContext
   ): boolean {
+    if (command.type === 'market/rebuild-chart-lines') {
+      return this.rebuildChartLinesForSymbol(state, command.symbol);
+    }
     if (command.type !== 'market/consume-orderbook-liquidity') {
       return false;
     }

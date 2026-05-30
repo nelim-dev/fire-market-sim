@@ -7,6 +7,7 @@ import type { ChartTimeframeId } from './chartTimeframes';
 import { FIREIDX_SYMBOL } from './compositeIndex';
 import {
   CHART_6M_1H_BAR_COUNT,
+  CHART_ALL_DISPLAY_MAX,
   CHART_DAY_1M_BAR_COUNT,
   CHART_MONTH_30M_BAR_COUNT,
   CHART_WEEK_5M_BAR_COUNT,
@@ -16,6 +17,7 @@ import {
   emptyChartLinesByTimeframe,
   lastBarIndexAtOrBefore,
   sliceTailAtOrBeforeEpoch,
+  downsampleBarsForChartDisplay,
   type MarketPriceBar,
 } from './priceSeries';
 
@@ -266,7 +268,10 @@ export function buildChartLineByTimeframeFromBundle(
       anchor('1y'),
       TF_BAR_COUNT['1y']
     );
-    out['all'] = sliceTailAtOrBeforeEpoch(daily, anchor('all'));
+    out['all'] = downsampleBarsForChartDisplay(
+      sliceTailAtOrBeforeEpoch(daily, anchor('all')),
+      CHART_ALL_DISPLAY_MAX
+    );
     return out;
   }
 
@@ -315,7 +320,10 @@ export function buildChartLineByTimeframeFromBundle(
     : buildBackwardDailySlots(calendar, anchor('1y'), TF_BAR_COUNT['1y']);
   out['1y'] = buildForwardFilledLine(daily, slots1y);
 
-  out['all'] = sliceTailAtOrBeforeEpoch(daily, anchor('all'));
+  out['all'] = downsampleBarsForChartDisplay(
+    sliceTailAtOrBeforeEpoch(daily, anchor('all')),
+    CHART_ALL_DISPLAY_MAX
+  );
 
   return out;
 }

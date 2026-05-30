@@ -118,12 +118,18 @@ export interface MarketModuleState {
 export type FireidxRuntimeCache = {
   lastFullRebuildEpochMs: number;
   lastDailyRebuildMskDate: string | null;
+  /** Дневной/часовой FIREIDX построен из полной истории акций (6m/1y/all). */
+  longSeriesBootstrapped: boolean;
+  /** Последняя минутка FIREIDX, обработанная hot-path (для batch catch-up). */
+  lastProcessedFireidxEpochMs: number;
 };
 
 export function createEmptyFireidxRuntimeCache(): FireidxRuntimeCache {
   return {
     lastFullRebuildEpochMs: 0,
     lastDailyRebuildMskDate: null,
+    longSeriesBootstrapped: false,
+    lastProcessedFireidxEpochMs: 0,
   };
 }
 
