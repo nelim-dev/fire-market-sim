@@ -6,10 +6,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { gameLoop } from '@/logic/runners/GameLoop';
 import type { AssetKind, OrderBookLevel } from '@/logic/modules/market/contracts';
 import type { ChartTimeframeId } from '@/logic/modules/market/chartTimeframes';
-import {
-  FIREIDX_SYMBOL,
-  type CompositeIndexState,
-} from '@/logic/modules/market/compositeIndex';
+import { FIREIDX_SYMBOL } from '@/logic/modules/market/compositeIndex';
 import {
   selectInstrumentPayoutHistory,
   selectMarketAsset,
@@ -24,7 +21,7 @@ import { MarketCloseLineChart } from '@/components/market/MarketCloseLineChart';
 
 export type { ChartTimeframeId };
 
-type PanelTab = 'chart' | 'about' | 'payouts' | 'structure';
+type PanelTab = 'chart' | 'about' | 'payouts';
 type OrderKind = 'market' | 'limit';
 
 const TIMEFRAMES: { id: ChartTimeframeId; label: string }[] = [
@@ -130,7 +127,6 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
   const cashRub = useGameState((s) => s.portfolio.cashRub);
   const cashReservedRub = useGameState((s) => s.portfolio.cashReservedRub);
   const tradingState = useGameState((s) => s.trading);
-  const compositeIndex = useGameState((s) => s.market.compositeIndex);
   const details = useGameState((s) => s.market.details);
   const [timeframe, setTimeframe] = useState<ChartTimeframeId>('1d');
   const [panelTab, setPanelTab] = useState<PanelTab>('chart');
@@ -207,7 +203,6 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
   const panelTabs: { id: PanelTab; label: string }[] = isFireIdx
     ? [
         { id: 'chart', label: 'График' },
-        { id: 'structure', label: 'Структура' },
         { id: 'about', label: 'О бумаге' },
       ]
     : [
@@ -343,10 +338,6 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
 
       {panelTab === 'payouts' ? (
         <PayoutsTab rows={payoutRows} assetKind={asset?.assetKind} />
-      ) : null}
-
-      {panelTab === 'structure' && isFireIdx ? (
-        <StructureTab compositeIndex={compositeIndex} />
       ) : null}
 
       {showOrderBook ? (
@@ -618,57 +609,6 @@ function PayoutsTab({
           ))}
         </tbody>
       </table>
-    </section>
-  );
-}
-
-function StructureTab({ compositeIndex }: { compositeIndex: CompositeIndexState }) {
-  return (
-    <section className="space-y-3">
-      <p className="text-xs text-zinc-500">
-        Ребаланс:{' '}
-        <span className="font-mono text-zinc-300">
-          {formatDateMsk(compositeIndex.lastRebalanceEpochMs)}
-        </span>
-        {' → '}
-        <span className="font-mono text-zinc-300">
-          {formatDateMsk(compositeIndex.nextRebalanceEpochMs)}
-        </span>
-      </p>
-      <p className="text-xs text-zinc-500">
-        Уровень:{' '}
-        <span className="font-mono text-zinc-200">{formatRub(compositeIndex.level)}</span>
-      </p>
-      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/50">
-        <table className="w-full text-left text-xs">
-          <thead className="border-b border-zinc-800 bg-zinc-900/80 text-zinc-500">
-            <tr>
-              <th className="px-2 py-2">Тикер</th>
-              <th className="px-2 py-2 text-right">Вес %</th>
-              <th className="hidden px-2 py-2 text-right sm:table-cell">Cap</th>
-            </tr>
-          </thead>
-          <tbody>
-            {compositeIndex.constituents.map((c) => (
-              <tr key={c.symbol} className="border-b border-zinc-800/60 text-zinc-300">
-                <td className="px-2 py-1.5 font-mono">
-                  {c.symbol}
-                  {c.usesPriceOnlyWeight ? (
-                    <span className="ml-1 text-[10px] text-amber-600" title="нет ISSUESIZE">
-                      *
-                    </span>
-                  ) : null}
-                </td>
-                <td className="px-2 py-1.5 text-right font-mono">{c.weightPct.toFixed(2)}</td>
-                <td className="hidden px-2 py-1.5 text-right font-mono sm:table-cell">
-                  {formatRub(c.capRubAtRebalance)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="px-3 py-2 text-[10px] text-zinc-600">* вес по цене (нет ISSUESIZE)</p>
-      </div>
     </section>
   );
 }

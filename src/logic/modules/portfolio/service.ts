@@ -417,6 +417,18 @@ export class PortfolioModuleService
       nkdPaidAtBuyPerUnit,
     };
   }
+
+  exportRuntimeState(_state: PortfolioRoot): unknown {
+    return { lotSequence: this.lotSequence };
+  }
+
+  importRuntimeState(_state: PortfolioRoot, runtime: unknown): void {
+    const r = runtime as { lotSequence?: number };
+    this.lotSequence =
+      typeof r.lotSequence === 'number' && Number.isFinite(r.lotSequence)
+        ? r.lotSequence
+        : 0;
+  }
 }
 
 /**

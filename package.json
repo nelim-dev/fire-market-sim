@@ -10,7 +10,7 @@
     "test:m4": "tsx tests/console/m4-trading-and-ui-contract.test.ts && tsx tests/console/m4-extended.test.ts && tsx tests/console/pseudo-orderbook.test.ts && tsx tests/console/limit-orders-partial-fill.test.ts && tsx tests/console/composite-index.test.ts && tsx tests/console/market-perf-benchmark.test.ts && tsx tests/console/market-session-degradation.test.ts",
     "test:m5": "tsx tests/console/m5-market-overview-ui.test.ts",
     "test:m6": "tsx tests/console/stub-milestone.ts M6",
-    "test:m7": "tsx tests/console/stub-milestone.ts M7",
+    "test:m7": "tsx tests/console/m7-persistence-and-menu.test.ts",
     "test:m8": "tsx tests/console/stub-milestone.ts M8",
     "test:m9": "tsx tests/console/stub-milestone.ts M9",
     "test:m10": "tsx tests/console/stub-milestone.ts M10",

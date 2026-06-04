@@ -3,6 +3,8 @@ import type { RuntimeCommand } from '@/logic/runtimeCommands';
 import type { TradeExecutionPayload } from '@/logic/logicEvents';
 import type { LedgerEntry } from '@/logic/domain/portfolio';
 import type { EducationCommand } from '@/logic/modules/education/commands';
+import type { PersistenceCommand } from '@/logic/modules/persistence/commands';
+import type { SettingsCommand } from '@/logic/modules/settings/commands';
 import type { UiStateCommand } from '@/logic/modules/uiState/commands';
 
 export type MarketSyncPricesCommand = {
@@ -138,6 +140,8 @@ export type LogicCommand =
   | PortfolioRecordNavSnapshotCommand
   | PortfolioAdjustReservationCommand
   | EducationCommand
+  | PersistenceCommand
+  | SettingsCommand
   | UiStateCommand;
 
 /**
@@ -184,4 +188,7 @@ export interface LogicModule<TState> {
    * Здесь модуль может подписаться на cross-module события через `context.subscribe`.
    */
   attach?(context: ModuleAttachContext): void;
+  /** Приватный runtime модуля для snapshot (не входит в GameState). */
+  exportRuntimeState?(state: TState): unknown;
+  importRuntimeState?(state: TState, runtime: unknown): void;
 }

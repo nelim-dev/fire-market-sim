@@ -25,6 +25,22 @@ import type { EducationModuleState } from '@/logic/modules/education/state';
 import { EducationModuleService } from '@/logic/modules/education/service';
 import type { UiStateModuleState } from '@/logic/modules/uiState/state';
 import { UiStateModuleService } from '@/logic/modules/uiState/service';
+import type { SettingsModuleState } from '@/logic/modules/settings/state';
+import { SettingsModuleService } from '@/logic/modules/settings/service';
+import type { PersistenceModuleState } from '@/logic/modules/persistence/state';
+import { createInitialPersistenceState } from '@/logic/modules/persistence/state';
+import { PersistenceModuleService } from '@/logic/modules/persistence/service';
+import type { PersistenceHost } from '@/logic/modules/persistence/host';
+import {
+  CURRENT_SNAPSHOT_SCHEMA,
+  validateSnapshot,
+  type PersistedGameSnapshot,
+  type SaveSlotMeta,
+} from '@/logic/modules/persistence/snapshot';
+import {
+  createDefaultPersistenceStorage,
+  type PersistenceStorageAdapter,
+} from '@/logic/modules/persistence/storage';
 import type {
   LogicCommand,
   LogicModule,
@@ -65,6 +81,12 @@ export interface GameState extends TimeModuleState {
 
   /** UI-навигация: режим левой панели, выбранный инструмент, фильтры обзора рынка. */
   uiState: UiStateModuleState;
+
+  /** Save/load UI state (не сериализуется в файлы сохранений). */
+  persistence: PersistenceModuleState;
+
+  /** Звук, музыка, громкость, режим окна. */
+  settings: SettingsModuleState;
 }
 
 /**
@@ -112,6 +134,9 @@ export class LogicManager {
   private readonly tradingModule: TradingModuleService;
   private readonly educationModule: EducationModuleService;
   private readonly uiStateModule: UiStateModuleService;
+  private readonly persistenceModule: PersistenceModuleService;
+  private readonly settingsModule: SettingsModuleService;
+  private readonly persistenceStorage: PersistenceStorageAdapter;
   private readonly modules: Array<LogicModule<GameState>>;
   private readonly commandAwareModules: Array<LogicModule<GameState>>;
   private readonly moduleContext: ModuleContext;
@@ -138,6 +163,12 @@ export class LogicManager {
     this.tradingModule = new TradingModuleService();
     this.educationModule = new EducationModuleService();
     this.uiStateModule = new UiStateModuleService();
+    this.persistenceStorage = createDefaultPersistenceStorage();
+    this.persistenceModule = new PersistenceModuleService(
+      this.createPersistenceHost(),
+      this.persistenceStorage
+    );
+    this.settingsModule = new SettingsModuleService();
     this.modules = [
       this.timeModule,
       this.marketModule,
@@ -145,6 +176,8 @@ export class LogicManager {
       this.portfolioModule,
       this.educationModule,
       this.uiStateModule,
+      this.persistenceModule,
+      this.settingsModule,
     ];
     this.commandAwareModules = this.modules.filter((m) =>
       Boolean(m.handleCommand)
@@ -191,6 +224,8 @@ export class LogicManager {
       trading: this.tradingModule.createInitialState(),
       education: this.educationModule.createInitialState(),
       uiState: this.uiStateModule.createInitialState(),
+      persistence: this.persistenceModule.createInitialState(),
+      settings: this.settingsModule.createInitialState(),
     };
   }
 
@@ -322,16 +357,20 @@ export class LogicManager {
    * 
    * Каждый wrapper передаёт текущий срез подписчику; лишние обновления отсекает React
    */
-  private notifySubscribers(): void {
+  private notifySubscribers(force = false): void {
     // Троттлинг по реальному времени: не чаще ~60fps.
     // Предотвращает лишние React-диффы при высоких скоростях симуляции (100x/1000x),
     // когда update() вызывается гораздо чаще, чем браузер успевает рисовать.
-    const now = performance.now();
-    if (now - this.lastNotifyWallMs < LogicManager.NOTIFY_MIN_INTERVAL_WALL_MS) {
-      return;
+    // Команды UI (пауза, выбор инструмента) обходят троттлинг — иначе при isPaused
+    // подписчики не получают срез и интерфейс «залипает» до второго клика.
+    if (!force) {
+      const now = performance.now();
+      if (now - this.lastNotifyWallMs < LogicManager.NOTIFY_MIN_INTERVAL_WALL_MS) {
+        return;
+      }
     }
-    this.lastNotifyWallMs = now;
-    this.stateSubscribers.forEach(wrapper => wrapper(this.state));
+    this.lastNotifyWallMs = performance.now();
+    this.stateSubscribers.forEach((wrapper) => wrapper(this.state));
   }
 
   /**
@@ -379,7 +418,8 @@ export class LogicManager {
     } finally {
       this.commandDepth -= 1;
       if (this.commandDepth === 0) {
-        this.notifySubscribers();
+        this.eventBus.processQueue();
+        this.notifySubscribers(true);
       }
     }
   }
@@ -437,8 +477,104 @@ export class LogicManager {
     // Сбрасываем состояние на начальное
     this.state = this.createInitialState();
     this.bootstrapMarketUiState();
+    this.lastHydrateScheduleEpochMs = null;
 
-    // Очищаем очередь событий
+    this.reattachModules();
+
+    this.notifySubscribers();
+    void this.hydrateMarketFromDatabase();
+  }
+
+  exportSnapshot(displayName: string, slotId: string): PersistedGameSnapshot {
+    const moduleRuntime: Record<string, unknown> = {};
+    for (const module of this.modules) {
+      if (module.id === 'persistence') {
+        continue;
+      }
+      if (module.exportRuntimeState) {
+        moduleRuntime[module.id] = module.exportRuntimeState(this.state);
+      }
+    }
+
+    const { persistence: _persistence, ...gameStateWithoutPersistence } = this.state;
+    return {
+      schemaVersion: CURRENT_SNAPSHOT_SCHEMA,
+      slotId,
+      displayName,
+      savedAtEpochMs: Date.now(),
+      gameState: structuredClone(gameStateWithoutPersistence) as Omit<
+        GameState,
+        'persistence'
+      > as GameState,
+      moduleRuntime,
+    };
+  }
+
+  restoreSnapshot(snapshot: PersistedGameSnapshot): void {
+    validateSnapshot(snapshot);
+    this.state = structuredClone(snapshot.gameState) as GameState;
+    this.state.persistence = createInitialPersistenceState();
+
+    for (const module of this.modules) {
+      if (module.id === 'persistence') {
+        continue;
+      }
+      const runtime = snapshot.moduleRuntime[module.id];
+      if (runtime !== undefined && module.importRuntimeState) {
+        module.importRuntimeState(this.state, runtime);
+      }
+    }
+
+    this.sessionTimeline.seekToFirstDayAtOrAfter(this.state.simulationEpochMs);
+    this.marketModule.clearRuntimeCaches();
+    this.lastHydrateScheduleEpochMs = null;
+
+    this.reattachModules();
+    this.bootstrapMarketUiState();
+
+    const selected = this.state.uiState.selectedSymbol;
+    if (selected) {
+      this.marketModule.rebuildChartLinesForSymbol(this.state, selected);
+    }
+
+    void this.hydrateMarketFromDatabase();
+    this.notifySubscribers();
+  }
+
+  async listSnapshotMetas(): Promise<SaveSlotMeta[]> {
+    return this.persistenceStorage.listSaves();
+  }
+
+  async writeSnapshot(snapshot: PersistedGameSnapshot): Promise<void> {
+    await this.persistenceStorage.writeSave(snapshot);
+  }
+
+  async readSnapshot(slotId: string): Promise<PersistedGameSnapshot> {
+    return validateSnapshot(await this.persistenceStorage.readSave(slotId));
+  }
+
+  /** Для тестов: подмена storage adapter. */
+  setPersistenceStorageForTests(storage: PersistenceStorageAdapter): void {
+    this.persistenceModule.setStorage(storage);
+  }
+
+  private createPersistenceHost(): PersistenceHost {
+    return {
+      exportSnapshot: (displayName, slotId) =>
+        this.exportSnapshot(displayName, slotId),
+      restoreSnapshot: (snapshot) => this.restoreSnapshot(snapshot),
+      listSnapshotMetas: () => this.listSnapshotMetas(),
+      writeSnapshot: (snapshot) => this.writeSnapshot(snapshot),
+      readSnapshot: (slotId) => this.readSnapshot(slotId),
+      patchPersistenceState: (patch) => {
+        this.state.persistence = { ...this.state.persistence, ...patch };
+      },
+      notifyPersistenceSubscribers: () => this.notifySubscribers(),
+      processEventQueue: () => this.eventBus.processQueue(),
+    };
+  }
+
+  private reattachModules(): void {
     this.eventBus.clear();
     this.eventBus.on(TRADING_DAY_CHANGED, (payload) =>
       this.broadcastTradingDayChanged(payload)
@@ -453,9 +589,6 @@ export class LogicManager {
     for (const module of this.modules) {
       module.attach?.(attachContext);
     }
-
-    this.notifySubscribers();
-    void this.hydrateMarketFromDatabase();
   }
 
   private broadcastTradingDayChanged(payload: TradingDayChangedPayload): void {

@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useGameMenu } from '@/components/game/GameMenu';
 import { useGameState } from '@/hooks/useGameState';
 import { gameLoop } from '@/logic/runners/GameLoop';
 import {
@@ -52,6 +53,7 @@ function formatMacroPrice(value: number | null, digits: number): string {
 }
 
 export function AppHeader() {
+  const { openMenu } = useGameMenu();
   const simulationEpochMs = useGameState(selectSimulationEpochMs);
   const isPaused = useGameState(selectIsPaused);
   const timeScale = useGameState(selectTimeScale);
@@ -100,7 +102,13 @@ export function AppHeader() {
             <NavLink href="/">Портфель</NavLink>
             <NavLink href="/learn">Обучение</NavLink>
             <NavLink href="/achievements">Достижения</NavLink>
-            <NavLink href="/settings">Меню</NavLink>
+            <button
+              type="button"
+              onClick={openMenu}
+              className="whitespace-nowrap text-xs font-medium text-zinc-500 transition hover:text-white sm:text-sm"
+            >
+              Меню
+            </button>
           </nav>
 
           <div className="flex shrink-0 flex-col items-center gap-1 border-l border-zinc-800 pl-2 sm:gap-1.5 sm:pl-3 md:pl-4">

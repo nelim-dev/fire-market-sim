@@ -361,7 +361,19 @@ export class MarketModuleService implements LogicModule<GameState> {
     const state = createMarketModuleState(items, emptyChartSeriesBundle());
     this.applyQuotesAndCompositeIndex(state, simulationEpochMs);
     this.lastQuotedSimulationEpochMs = simulationEpochMs;
+    this.clearRuntimeCaches();
+    // Сбрасываем сабсервис corporateActions. Все события до текущей эпохи
+    // считаем «уже произошедшими» (без эмиссии): начинаем сканировать с simulationEpochMs.
+    this.corporateActions.processedPaymentIds.clear();
+    this.lastScannedEpochMs = simulationEpochMs;
+    return state;
+  }
+
+  /** Сброс day-buffer и hydrate flags; не трогает corporateActions dedup. */
+  clearRuntimeCaches(): void {
     this.lastHydratedEpochMs = null;
+    this.marketHydrateInFlight = false;
+    this.pendingHydrateEpochMs = null;
     this.prefetchedDays.clear();
     this.rendererPreloadedDays.clear();
     this.dayLoadState = 'idle';
@@ -375,11 +387,6 @@ export class MarketModuleService implements LogicModule<GameState> {
     this.dayBufferProbe.minuteFallbacks = 0;
     this.dayBufferProbe.lastReportAtMs = 0;
     this.waitingDayForBoundary = null;
-    // Сбрасываем сабсервис corporateActions. Все события до текущей эпохи
-    // считаем «уже произошедшими» (без эмиссии): начинаем сканировать с simulationEpochMs.
-    this.corporateActions.processedPaymentIds.clear();
-    this.lastScannedEpochMs = simulationEpochMs;
-    return state;
   }
 
   /** После загрузки рядов из SQLite (Electron) пересчитать котировки. */
@@ -1015,5 +1022,33 @@ export class MarketModuleService implements LogicModule<GameState> {
       orderBook: nextBook,
     };
     return true;
+  }
+
+  exportRuntimeState(_state: GameState): unknown {
+    return {
+      processedPaymentIds: [...this.corporateActions.processedPaymentIds],
+      lastScannedEpochMs: this.lastScannedEpochMs,
+    };
+  }
+
+  importRuntimeState(_state: GameState, runtime: unknown): void {
+    const r = runtime as {
+      processedPaymentIds?: string[];
+      lastScannedEpochMs?: number | null;
+    };
+    this.corporateActions.processedPaymentIds.clear();
+    if (Array.isArray(r.processedPaymentIds)) {
+      for (const id of r.processedPaymentIds) {
+        if (typeof id === 'string') {
+          this.corporateActions.processedPaymentIds.add(id);
+        }
+      }
+    }
+    this.lastScannedEpochMs =
+      r.lastScannedEpochMs === null ||
+      (typeof r.lastScannedEpochMs === 'number' &&
+        Number.isFinite(r.lastScannedEpochMs))
+        ? r.lastScannedEpochMs
+        : null;
   }
 }

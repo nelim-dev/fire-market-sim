@@ -726,4 +726,35 @@ export class TradingModuleService implements LogicModule<GameState> {
     }
     return true;
   }
+
+  exportRuntimeState(_state: GameState): unknown {
+    return {
+      tradeSequence: this.tradeSequence,
+      orderSequence: this.orderSequence,
+      lastProcessedEpochMs: this.lastProcessedEpochMs,
+    };
+  }
+
+  importRuntimeState(state: GameState, runtime: unknown): void {
+    const r = runtime as {
+      tradeSequence?: number;
+      orderSequence?: number;
+      lastProcessedEpochMs?: number | null;
+    };
+    this.tradeSequence =
+      typeof r.tradeSequence === 'number' && Number.isFinite(r.tradeSequence)
+        ? r.tradeSequence
+        : 0;
+    this.orderSequence =
+      typeof r.orderSequence === 'number' && Number.isFinite(r.orderSequence)
+        ? r.orderSequence
+        : 0;
+    this.lastProcessedEpochMs =
+      r.lastProcessedEpochMs === null ||
+      (typeof r.lastProcessedEpochMs === 'number' &&
+        Number.isFinite(r.lastProcessedEpochMs))
+        ? r.lastProcessedEpochMs
+        : null;
+    this.lastAttachedState = state;
+  }
 }

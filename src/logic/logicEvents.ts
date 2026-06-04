@@ -181,6 +181,26 @@ export type NkdSettledPayload = {
   simulationEpochMs: number;
 };
 
+export {
+  PERSISTENCE_SAVE_COMPLETED,
+  PERSISTENCE_LOAD_COMPLETED,
+  PERSISTENCE_ERROR,
+  type PersistenceSaveCompletedPayload,
+  type PersistenceLoadCompletedPayload,
+  type PersistenceErrorPayload,
+} from '@/logic/modules/persistence/events';
+
+import type {
+  PersistenceErrorPayload,
+  PersistenceLoadCompletedPayload,
+  PersistenceSaveCompletedPayload,
+} from '@/logic/modules/persistence/events';
+import {
+  PERSISTENCE_ERROR,
+  PERSISTENCE_LOAD_COMPLETED,
+  PERSISTENCE_SAVE_COMPLETED,
+} from '@/logic/modules/persistence/events';
+
 export interface LogicEventMap {
   [TRADING_DAY_CHANGED]: TradingDayChangedPayload;
   [TRADE_EXECUTED]: TradeExecutionPayload;
@@ -198,4 +218,7 @@ export interface LogicEventMap {
   [COMMISSION_CHARGED]: CommissionChargedPayload;
   [CAPITAL_GAIN_TAX_WITHHELD]: CapitalGainTaxWithheldPayload;
   [NKD_SETTLED]: NkdSettledPayload;
+  [PERSISTENCE_SAVE_COMPLETED]: PersistenceSaveCompletedPayload;
+  [PERSISTENCE_LOAD_COMPLETED]: PersistenceLoadCompletedPayload;
+  [PERSISTENCE_ERROR]: PersistenceErrorPayload;
 }

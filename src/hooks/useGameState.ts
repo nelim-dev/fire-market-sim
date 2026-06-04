@@ -50,6 +50,14 @@ export function useGameState<T>(
 
   const getSnapshot = useCallback(() => versionRef.current, []);
 
+  // Селектор часто замыкает props (symbol). Без notify из game loop (пауза) valueRef устаревает.
+  const state = lmRef.current.getState() as GameState;
+  const latest = selectorRef.current(state);
+  if (!equalityRef.current(valueRef.current, latest)) {
+    valueRef.current = latest;
+    versionRef.current += 1;
+  }
+
   useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   return valueRef.current;
 }

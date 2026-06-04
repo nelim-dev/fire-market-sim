@@ -132,5 +132,23 @@ export class TimeModuleService implements LogicModule<TimeModuleState> {
         return false;
     }
   }
+
+  exportRuntimeState(_state: TimeModuleState): unknown {
+    return { pendingSimMs: this.pendingSimMs };
+  }
+
+  importRuntimeState(state: TimeModuleState, runtime: unknown): void {
+    const r = runtime as { pendingSimMs?: number };
+    this.pendingSimMs =
+      typeof r.pendingSimMs === 'number' && Number.isFinite(r.pendingSimMs)
+        ? r.pendingSimMs
+        : 0;
+    const seek = this.sessionTimeline.seekToFirstDayAtOrAfter(state.simulationEpochMs);
+    state.currentTradingDayIndex = seek.dayIndex;
+    state.currentTradingSession = toSessionSnapshot(
+      this.sessionTimeline.getCurrentDay()
+    );
+    state.nextTradingSession = toSessionSnapshot(this.sessionTimeline.getNextDay());
+  }
 }
 

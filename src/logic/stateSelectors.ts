@@ -19,6 +19,17 @@ import {
   selectUiSelectedSymbol,
 } from '@/logic/modules/uiState/selectors';
 import {
+  selectPersistenceBusy,
+  selectPersistenceLastError,
+  selectSaveSlots,
+} from '@/logic/modules/persistence/selectors';
+import {
+  selectMasterVolume,
+  selectMusicEnabled,
+  selectSoundEnabled,
+  selectWindowDisplayMode,
+} from '@/logic/modules/settings/selectors';
+import {
   selectSimulationStepPreset,
   selectTimeIsPaused,
   selectTimeScalePreset,
@@ -68,5 +79,12 @@ export {
   selectUiSelectedSymbol,
   selectUiMarketOverviewFilters,
   selectMarketOverviewRows,
+  selectSaveSlots,
+  selectPersistenceBusy,
+  selectPersistenceLastError,
+  selectSoundEnabled,
+  selectMusicEnabled,
+  selectMasterVolume,
+  selectWindowDisplayMode,
 };
 
