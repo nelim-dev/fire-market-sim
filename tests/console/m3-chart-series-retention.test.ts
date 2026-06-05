@@ -13,7 +13,10 @@ import {
   buildChartLineByTimeframeFromBundle,
   type MarketChartSeriesBundle,
 } from '../../src/logic/modules/market/chartWindows';
-import { CHART_DAY_1M_BAR_COUNT } from '../../src/logic/modules/market/chartTimeframes';
+import {
+  CHART_DAY_1M_BAR_COUNT,
+  CHART_WEEK_5M_BAR_COUNT,
+} from '../../src/logic/modules/market/chartTimeframes';
 import { applyMarketQuotesForSimulationEpoch } from '../../src/logic/modules/market/quoteApply';
 import { sliceTailAtOrBeforeEpoch } from '../../src/logic/modules/market/priceSeries';
 import type { MarketInstrumentCatalogItem } from '../../src/logic/modules/market/contracts';
@@ -196,6 +199,62 @@ run('trimChartSeriesBundle: parity 1d с TradingCalendar', () => {
   );
   if (barsJson(before['1d']) !== barsJson(after['1d'])) {
     throw new Error('1d с календарём должен совпадать до/после trim');
+  }
+});
+
+run('trimChartSeriesBundle: parity 1w (5m) с календарём на 6 сессий', () => {
+  const DAY = 86_400_000;
+  const sessionStart0 = Date.UTC(2024, 5, 3, 7, 0);
+  const records: TradingDayRecord[] = Array.from({ length: 6 }, (_, i) => ({
+    mskDateYyyymmdd: `2024060${3 + i}`,
+    sessionStartEpochMs: sessionStart0 + i * DAY,
+    sessionEndEpochMs: sessionStart0 + i * DAY + SESSION_LEN_MS,
+    tickersWithData: ['DEMO'],
+  }));
+  const calendar = TradingCalendar.fromRecords(records);
+  const lastSession = calendar.getDay(5)!;
+  const epochMs = lastSession.sessionEndEpochMs - 5 * 60_000;
+  const fiveMinStep = 5 * 60_000;
+  const barCount =
+    CHART_WEEK_5M_BAR_COUNT + Math.ceil(CHART_DAY_1M_BAR_COUNT / 5) + 80;
+  const fiveSeries = Array.from({ length: barCount }, (_, i) => {
+    const t = epochMs - (barCount - 1 - i) * fiveMinStep;
+    const c = 100;
+    return { t, o: c, h: c, l: c, c, v: 10 };
+  });
+  const bundle: MarketChartSeriesBundle = {
+    minute: { DEMO: [] },
+    dailyClose: { DEMO: [] },
+    fiveMinute: { DEMO: fiveSeries },
+    thirtyMinute: { DEMO: [] },
+    oneHour: { DEMO: [] },
+    weekly: { DEMO: [] },
+  };
+  const before = buildChartLineByTimeframeFromBundle(
+    'DEMO',
+    bundle,
+    epochMs,
+    calendar
+  );
+  const trimmed = trimChartSeriesBundleForStorage(bundle);
+  const after = buildChartLineByTimeframeFromBundle(
+    'DEMO',
+    trimmed,
+    epochMs,
+    calendar
+  );
+  if (before['1w'].length !== CHART_WEEK_5M_BAR_COUNT) {
+    throw new Error(
+      `1w до trim: ожидали ${CHART_WEEK_5M_BAR_COUNT} точек, получили ${before['1w'].length}`
+    );
+  }
+  if (after['1w'].length !== before['1w'].length) {
+    throw new Error(
+      `1w после trim: длина ${after['1w'].length}, до trim ${before['1w'].length}`
+    );
+  }
+  if (barsJson(before['1w']) !== barsJson(after['1w'])) {
+    throw new Error('1w линия должна совпадать до/после trim storage');
   }
 });
 

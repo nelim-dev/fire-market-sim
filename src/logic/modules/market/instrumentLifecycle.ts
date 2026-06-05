@@ -1,6 +1,21 @@
+import type { AssetKind } from './contracts';
 import { FIREIDX_SYMBOL } from './compositeIndex';
 import { lastBarIndexAtOrBefore } from './priceSeries';
 import type { MarketModuleState } from './state';
+
+/**
+ * Торгуемые бумаги: акции, облигации, фонды.
+ * Не торгуем: биржевые индексы (BR, RTSI, …) и синтетический FIREIDX (benchmark, не ETF).
+ */
+export function isTradableMarketInstrument(
+  symbol: string,
+  assetKind: AssetKind
+): boolean {
+  if (symbol.toUpperCase() === FIREIDX_SYMBOL) {
+    return false;
+  }
+  return assetKind !== 'index';
+}
 
 /**
  * Первая минутная котировка: из каталога метаданных или первый бар после гидратации.

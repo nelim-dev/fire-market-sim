@@ -51,7 +51,7 @@ function position(args: {
 }
 
 /**
- * Демо-портфель: три реальных актива (SBER/SU26227RMFS7/SBMM) + кэш.
+ * Демо-портфель: три реальных актива (SBER/SU26227RMFS7/DN-R) + кэш.
  * Цены и avg — это исторические ориентиры на момент старта симуляции;
  * `lastPriceRub` будет перезаписан `applyMarketQuotesForSimulationEpoch` после
  * первой пары шагов рынка.
@@ -78,10 +78,10 @@ export function buildDemoPortfolio(): PortfolioState {
       avgPriceRub: 900,
     }),
     position({
-      id: 'pos-sbmm',
+      id: 'pos-dn-r',
       kind: 'fund',
-      ticker: 'SBMM',
-      displayName: 'SBMM (фонд денежного рынка)',
+      ticker: 'DN-R',
+      displayName: 'Денежный рынок',
       quantity: 10,
       lastPriceRub: 14,
       avgPriceRub: 13,

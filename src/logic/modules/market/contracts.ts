@@ -32,6 +32,8 @@ export interface MarketInstrumentCatalogItem {
   displayName: string;
   isin: string;
   sourceFilePath: string;
+  /** Текст вкладки «О бумаге»; задаётся в `instrumentCopyOverrides.ts`. */
+  description?: string;
 }
 
 /**

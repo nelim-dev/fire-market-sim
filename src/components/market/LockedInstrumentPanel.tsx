@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useGameState } from '@/hooks/useGameState';
 import { gameLoop } from '@/logic/runners/GameLoop';
 import {
+  selectInstrumentPublicCode,
   selectMarketAsset,
   selectMarketInstrumentCatalog,
 } from '@/logic/modules/market/selectors';
@@ -16,6 +17,7 @@ export function LockedInstrumentPanel({ symbol }: { symbol: string }) {
     (row) => row.symbol.toUpperCase() === symbol.toUpperCase()
   );
   const displayName = asset?.displayName ?? catalogRow?.displayName ?? symbol;
+  const publicCode = useGameState((s) => selectInstrumentPublicCode(symbol)(s));
   const lm = gameLoop.getLogicManager();
 
   const goBack = () => {
@@ -38,7 +40,7 @@ export function LockedInstrumentPanel({ symbol }: { symbol: string }) {
           🔒
         </p>
         <h2 className="mt-2 text-xl font-semibold tracking-tight">
-          {symbol} — {displayName}
+          {publicCode} — {displayName}
         </h2>
       </div>
       <p className="text-sm leading-relaxed text-zinc-400">

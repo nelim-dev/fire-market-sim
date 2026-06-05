@@ -80,6 +80,36 @@ function qtyOf(state: ReturnType<LogicManager['getState']>, symbol: string): num
   return pos ? positionTotalQuantity(pos) : 0;
 }
 
+run('FIREIDX: покупка отклоняется (NON_TRADABLE_INSTRUMENT)', () => {
+  const lm = new LogicManager();
+  const before = lm.getState();
+  const qtyBefore = qtyOf(before, FIREIDX_SYMBOL);
+  const ledgerBefore = before.portfolio.ledger.length;
+
+  lm.dispatchCommand({
+    type: 'trading/submit-market-order',
+    side: 'buy',
+    symbol: FIREIDX_SYMBOL,
+    quantity: 1,
+    source: 'modal',
+  });
+  lm.update(1);
+
+  const after = lm.getState();
+  if (qtyOf(after, FIREIDX_SYMBOL) !== qtyBefore) {
+    throw new Error('позиция FIREIDX не должна появиться');
+  }
+  if (after.portfolio.ledger.length !== ledgerBefore) {
+    throw new Error('журнал не должен меняться при отказе FIREIDX');
+  }
+  const rejection = after.trading.lastRejection;
+  if (!rejection || rejection.reason !== 'NON_TRADABLE_INSTRUMENT') {
+    throw new Error(
+      `ожидали NON_TRADABLE_INSTRUMENT, получили ${rejection?.reason ?? 'нет rejection'}`
+    );
+  }
+});
+
 run('Псевдостакан: несколько уровней bid/ask с положительным объёмом', () => {
   const lm = new LogicManager();
   const symbol = pickTradableSymbolForBuy(lm);

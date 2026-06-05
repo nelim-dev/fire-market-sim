@@ -1,5 +1,10 @@
+import { useGameState } from '@/hooks/useGameState';
 import { gameLoop } from '@/logic/runners/GameLoop';
 import type { PortfolioPosition, PortfolioState } from '@/logic/domain/portfolio';
+import {
+  selectInstrumentPublicCode,
+  selectMarketAsset,
+} from '@/logic/modules/market/selectors';
 import {
   positionMarketValueRub,
   positionPnlPct,
@@ -28,9 +33,10 @@ export function PositionRow({
   const shareTotal = positionShareOfTotalNavPct(p, portfolio);
   const pnlPositive = pnl >= 0;
 
-  const line1Col1 = p.displayName;
-  const line2Col1 =
-    p.kind === 'bond' && p.secondaryId ? p.secondaryId : p.ticker;
+  const assetMeta = useGameState((s) => selectMarketAsset(p.ticker)(s));
+  const publicCode = useGameState((s) => selectInstrumentPublicCode(p.ticker)(s));
+  const line1Col1 = assetMeta?.displayName ?? p.displayName;
+  const line2Col1 = publicCode;
   const isSelected =
     selectedSymbol != null &&
     p.ticker.toUpperCase() === selectedSymbol.toUpperCase();

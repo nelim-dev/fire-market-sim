@@ -173,19 +173,30 @@ run('buildForwardFilledLine: пустые слоты заполняются по
   }
 });
 
-run('buildForwardFilledLine: до первого реального бара слоты пропускаются', () => {
+run('buildForwardFilledLine: без pre-window carry — ведущие слоты forward-fill из первого бара окна', () => {
   const slots = [100, 200, 300, 400];
   const bars = [{ t: 250, o: 7, h: 7, l: 7, c: 7, v: 1 }];
   const out = buildForwardFilledLine(bars, slots);
-  // Слоты 100/200 — до первого бара → пропуск. Слот 300 — реальный бар. Слот 400 — carry.
-  if (out.length !== 2) {
-    throw new Error(`до первого бара слоты должны быть пропущены; ожидали 2, получили ${out.length}`);
+  if (out.length !== 4) {
+    throw new Error(`ожидали 4 точки (полное окно), получили ${out.length}`);
   }
-  if (out[0].c !== 7 || out[0].t !== 250) {
-    throw new Error('первый слот (300) должен забрать реальный бар t=250 c=7');
+  if (out[0].c !== 7 || out[0].t !== 100 || out[0].v !== 0) {
+    throw new Error('слот 100: forward-fill c=7 до первого реального бара');
   }
-  if (out[1].c !== 7 || out[1].t !== 400 || out[1].v !== 0) {
-    throw new Error('второй слот должен быть carry t=400 c=7 v=0');
+  if (out[2].c !== 7 || out[2].t !== 250) {
+    throw new Error('слот 300: реальный бар t=250');
+  }
+  if (out[3].c !== 7 || out[3].t !== 400) {
+    throw new Error('слот 400: carry-forward c=7');
+  }
+});
+
+run('buildForwardFilledLine: до листинга слоты пропускаются (нет ни carry, ни бара в окне)', () => {
+  const slots = [100, 200, 300];
+  const bars = [{ t: 500, o: 7, h: 7, l: 7, c: 7, v: 1 }];
+  const out = buildForwardFilledLine(bars, slots);
+  if (out.length !== 0) {
+    throw new Error(`все слоты до первого бара — пусто, получили ${out.length}`);
   }
 });
 

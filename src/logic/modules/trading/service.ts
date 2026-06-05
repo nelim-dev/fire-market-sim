@@ -23,7 +23,10 @@ import type {
   TradingSubmitMarketOrderCommand,
 } from '@/logic/modules/contracts';
 import type { GameState } from '@/logic/managers/LogicManager';
-import { isInstrumentActiveOnMarket } from '@/logic/modules/market/instrumentLifecycle';
+import {
+  isInstrumentActiveOnMarket,
+  isTradableMarketInstrument,
+} from '@/logic/modules/market/instrumentLifecycle';
 import { positionTotalQuantity } from '@/logic/modules/portfolio/selectors';
 import { calcCapitalGainFifo } from './tax/capitalGainHandler';
 import { NDFL_RATE } from './tax/taxCalculator';
@@ -355,7 +358,7 @@ export class TradingModuleService implements LogicModule<GameState> {
         reason: 'ASSET_NOT_FOUND',
       });
     }
-    if (asset.assetKind === 'index') {
+    if (!isTradableMarketInstrument(symbol, asset.assetKind)) {
       return this.reject(state, context, {
         simulationEpochMs: state.simulationEpochMs,
         symbol,

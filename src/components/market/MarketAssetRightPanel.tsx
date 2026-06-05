@@ -9,6 +9,8 @@ import type { ChartTimeframeId } from '@/logic/modules/market/chartTimeframes';
 import { FIREIDX_SYMBOL } from '@/logic/modules/market/compositeIndex';
 import {
   selectInstrumentPayoutHistory,
+  selectInstrumentPublicCode,
+  selectIsTradableMarketInstrument,
   selectMarketAsset,
   selectMarketInstrumentCatalog,
 } from '@/logic/modules/market/selectors';
@@ -182,10 +184,11 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
 
   const displayName = asset?.displayName ?? symbol;
   const isin = asset?.isin ?? '—';
+  const publicCode = useGameState((s) => selectInstrumentPublicCode(symbol)(s));
   const priceRub = asset?.currentPriceRub;
   const changePct = asset?.periodChangePctByTimeframe[timeframe];
   const orderBook = asset?.orderBook;
-  const isTradable = asset ? asset.assetKind !== 'index' : false;
+  const isTradable = useGameState(selectIsTradableMarketInstrument(symbol));
   const lotSize = details.lotSizeBySymbol[symUpper] ?? 1;
   const availableCash = Math.max(0, cashRub - cashReservedRub);
   const maxBuyQty =
@@ -247,7 +250,7 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
           {displayName}
         </h2>
         <p className="mt-0.5 font-mono text-xs text-zinc-500">
-          {symbol} · ISIN {isin}
+          {publicCode} · ISIN {isin}
         </p>
       </div>
 
@@ -320,6 +323,12 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
             />
           </div>
         </div>
+        {showOrderBook ? (
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-zinc-300">Биржевой стакан</h3>
+            <OrderBookDepth bids={orderBook!.bids} asks={orderBook!.asks} />
+          </div>
+        ) : null}
       </section>
       ) : null}
 
@@ -327,6 +336,7 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
         <AboutTab
           assetKind={asset.assetKind}
           displayName={asset.displayName}
+          description={asset.description}
           isin={isin}
           lotSize={lotSize}
           groupRaw={meta?.groupRaw ?? null}
@@ -338,13 +348,6 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
 
       {panelTab === 'payouts' ? (
         <PayoutsTab rows={payoutRows} assetKind={asset?.assetKind} />
-      ) : null}
-
-      {showOrderBook ? (
-      <section className="space-y-2">
-        <h3 className="text-sm font-semibold text-zinc-300">Биржевой стакан</h3>
-        <OrderBookDepth bids={orderBook!.bids} asks={orderBook!.asks} />
-      </section>
       ) : null}
 
       <section className="space-y-2">
@@ -404,6 +407,7 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
       {tradeModal && asset && isTradable ? (
         <TradeModal
           side={tradeModal.side}
+          publicCode={publicCode}
           symbol={symbol}
           displayName={displayName}
           priceRub={priceRub ?? null}
@@ -521,6 +525,7 @@ function DepthBar({
 function AboutTab(props: {
   assetKind: AssetKind;
   displayName: string;
+  description?: string;
   isin: string;
   lotSize: number;
   groupRaw: string | null;
@@ -531,6 +536,7 @@ function AboutTab(props: {
   const {
     assetKind,
     displayName,
+    description,
     isin,
     lotSize,
     groupRaw,
@@ -538,8 +544,11 @@ function AboutTab(props: {
     faceValueRub,
     maturityEpochMs,
   } = props;
+  const intro =
+    description?.trim() || assetDescription(assetKind, displayName);
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-sm text-zinc-300">
+      <p className="mb-4 leading-relaxed text-zinc-300">{intro}</p>
       <dl className="space-y-2">
         <AboutRow label="Тип" value={assetKindLabel(assetKind)} />
         <AboutRow label="Название" value={displayName} />
@@ -615,6 +624,7 @@ function PayoutsTab({
 
 function TradeModal({
   side,
+  publicCode,
   symbol,
   displayName,
   priceRub,
@@ -632,6 +642,7 @@ function TradeModal({
   onSubmit,
 }: {
   side: 'buy' | 'sell';
+  publicCode: string;
   symbol: string;
   displayName: string;
   priceRub: number | null;
@@ -668,7 +679,7 @@ function TradeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-900 p-5 text-zinc-100 shadow-2xl">
         <h3 className="text-lg font-semibold">
-          {title} {symbol} - {displayName}
+          {title} {publicCode} - {displayName}
         </h3>
         <div className="mt-4 flex gap-2">
           <button

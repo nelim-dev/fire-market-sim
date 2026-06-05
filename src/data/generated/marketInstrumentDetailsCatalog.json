@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-29T10:23:03.378Z",
+  "generatedAt": "2026-06-05T16:24:41.464Z",
   "lotSizeBySymbol": {
     "AFLT": 1,
     "CHMF": 1,
@@ -686,6 +686,24 @@
       "isin": "RU000A107T19",
       "groupRaw": "stock_shares",
       "firstTradeEpochMs": 1721804340000
+    },
+    "DN-R": {
+      "isBond": false,
+      "initialFaceValueRub": null,
+      "faceUnit": null,
+      "maturityEpochMs": null,
+      "firstTradeEpochMs": 1231659000000,
+      "isin": null,
+      "groupRaw": null
+    },
+    "FIREIDX": {
+      "isBond": false,
+      "initialFaceValueRub": null,
+      "faceUnit": null,
+      "maturityEpochMs": null,
+      "firstTradeEpochMs": 1231659000000,
+      "isin": null,
+      "groupRaw": null
     },
     "BR": {
       "isBond": false,
@@ -7287,5 +7305,8 @@
       "maturityEpochMs": 1784754000000,
       "faceValueRub": 1000
     }
+  },
+  "staticOrderBookLotsBySymbol": {
+    "DN-R": 1000000
   }
 }

@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
+import { useGameState } from '@/hooks/useGameState';
 import type { LedgerEntry, LedgerEntryKind } from '@/logic/domain/portfolio';
+import {
+  resolveInstrumentPublicCode,
+  selectMarketAssetsBySymbol,
+} from '@/logic/modules/market/selectors';
 import { formatRub, formatRubSigned } from './formatRub';
 
 type SortColumn = 'date' | 'ticker' | 'kind' | 'amount';
@@ -59,12 +64,15 @@ function formatDate(epochMs: number): string {
   return formatInTimeZone(epochMs, 'Europe/Moscow', 'dd.MM.yyyy HH:mm');
 }
 
-function toCsv(entries: readonly LedgerEntry[]): string {
+function toCsv(
+  entries: readonly LedgerEntry[],
+  resolvePublicCode: (symbol: string) => string
+): string {
   const header = 'Дата,Тикер,Тип,Сумма (₽),Количество,Цена (₽),Налоговая база (₽)';
   const rows = entries.map((entry) =>
     [
       formatDate(entry.simulationEpochMs),
-      entry.ticker,
+      entry.ticker ? resolvePublicCode(entry.ticker) : '',
       KIND_LABELS[entry.kind] ?? entry.kind,
       entry.amountRub.toFixed(2),
       entry.quantity ?? '',
@@ -80,7 +88,8 @@ function toCsv(entries: readonly LedgerEntry[]): string {
 function sortedEntries(
   entries: readonly LedgerEntry[],
   sortBy: SortColumn,
-  direction: SortDirection
+  direction: SortDirection,
+  resolvePublicCode: (symbol: string) => string
 ): LedgerEntry[] {
   const sign = direction === 'asc' ? 1 : -1;
   return [...entries].sort((a, b) => {
@@ -88,7 +97,12 @@ function sortedEntries(
       case 'date':
         return sign * (a.simulationEpochMs - b.simulationEpochMs);
       case 'ticker':
-        return sign * a.ticker.localeCompare(b.ticker);
+        return (
+          sign *
+          resolvePublicCode(a.ticker ?? '').localeCompare(
+            resolvePublicCode(b.ticker ?? '')
+          )
+        );
       case 'kind':
         return sign * a.kind.localeCompare(b.kind);
       case 'amount':
@@ -109,6 +123,11 @@ export function TradeHistoryTab({
   const [activeGroupIds, setActiveGroupIds] = useState<Set<string>>(
     () => new Set(FILTER_GROUPS.map((g) => g.id))
   );
+  const assetsBySymbol = useGameState(selectMarketAssetsBySymbol);
+  const resolvePublicCode = useMemo(
+    () => (symbol: string) => resolveInstrumentPublicCode(assetsBySymbol, symbol),
+    [assetsBySymbol]
+  );
 
   const allowedKinds = useMemo<Set<LedgerEntryKind>>(() => {
     const result = new Set<LedgerEntryKind>();
@@ -126,8 +145,8 @@ export function TradeHistoryTab({
   );
 
   const sorted = useMemo(
-    () => sortedEntries(filtered, sortBy, sortDirection),
-    [filtered, sortBy, sortDirection]
+    () => sortedEntries(filtered, sortBy, sortDirection, resolvePublicCode),
+    [filtered, sortBy, sortDirection, resolvePublicCode]
   );
   const visible = sorted.slice(0, visibleCount);
 
@@ -150,7 +169,7 @@ export function TradeHistoryTab({
   };
 
   const exportCsv = () => {
-    const blob = new Blob([toCsv(sorted)], {
+    const blob = new Blob([toCsv(sorted, resolvePublicCode)], {
       type: 'text/csv;charset=utf-8;',
     });
     const url = URL.createObjectURL(blob);
@@ -234,7 +253,9 @@ export function TradeHistoryTab({
                 <div className="min-w-0 truncate font-medium text-zinc-200">
                   {KIND_LABELS[entry.kind] ?? entry.kind}
                   {entry.ticker ? (
-                    <span className="ml-2 font-mono text-zinc-500">{entry.ticker}</span>
+                    <span className="ml-2 font-mono text-zinc-500">
+                      {resolvePublicCode(entry.ticker)}
+                    </span>
                   ) : null}
                 </div>
                 <div

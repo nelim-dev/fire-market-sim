@@ -186,6 +186,14 @@
     },
     {
       "assetKind": "fund",
+      "ticker": "DN-R",
+      "symbol": "DN-R",
+      "displayName": "DN-R",
+      "isin": "TBD-DN-R",
+      "sourceFilePath": "fonds/DN-R.txt"
+    },
+    {
+      "assetKind": "fund",
       "ticker": "FIREIDX",
       "symbol": "FIREIDX",
       "displayName": "FIRE Market Index",

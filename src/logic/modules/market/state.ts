@@ -19,6 +19,7 @@ import {
   FIREIDX_SYMBOL,
   type CompositeIndexState,
 } from './compositeIndex';
+import { applyInstrumentCopyToCatalog } from './instrumentCopy';
 
 export type { OrderBookSnapshot } from './contracts';
 export type { MarketMacroSnapshot } from './macro';
@@ -31,6 +32,8 @@ export interface MarketAssetState {
   assetKind: AssetKind;
   displayName: string;
   isin: string;
+  /** Описание для вкладки «О бумаге» (из `instrumentCopyOverrides.ts`). */
+  description?: string;
   /** Путь к файлу данных относительно корня репозитория (как в сгенерированном JSON). */
   sourceFilePath: string;
   currentPriceRub: number | null;
@@ -53,8 +56,8 @@ export interface MarketAssetState {
   maturityEpochMs: number | null;
   /** Текущий НКД за облигацию, ₽. 0 для не-бондов и до подключения сабсервиса corporateActions. */
   nkdPerBondRub: number;
-  /** Только для console-тестов: фиксированный глубокий стакан (quoteApply не строит pseudo). */
-  testOrderBookPin?: { priceRub: number; qty: number };
+  /** Фиксированный стакан: bid/ask по текущей цене, qty не уменьшается после сделок. */
+  staticOrderBookPin?: { qty: number };
 }
 
 export function createEmptyOrderBook(): OrderBookSnapshot {
@@ -71,11 +74,13 @@ export function buildAssetsBySymbol(
     const meta = details?.instrumentMetaBySymbol[key];
     const lotSize = details?.lotSizeBySymbol[key] ?? 1;
     const isBond = meta?.isBond ?? item.assetKind === 'bond';
+    const staticQty = details?.staticOrderBookLotsBySymbol?.[key];
     out[key] = {
       symbol: item.symbol,
       assetKind: item.assetKind,
       displayName: item.displayName,
       isin: item.isin,
+      description: item.description,
       sourceFilePath: item.sourceFilePath,
       currentPriceRub: null,
       dailyChangePct: null,
@@ -88,6 +93,9 @@ export function buildAssetsBySymbol(
       faceValueRub: meta?.initialFaceValueRub ?? null,
       maturityEpochMs: meta?.maturityEpochMs ?? null,
       nkdPerBondRub: 0,
+      ...(staticQty != null && staticQty > 0
+        ? { staticOrderBookPin: { qty: staticQty } }
+        : {}),
     };
   }
   return out;
@@ -157,7 +165,7 @@ export function createMarketModuleState(
   items: readonly MarketInstrumentCatalogItem[],
   chartSeriesInput: Partial<MarketChartSeriesBundle> = {}
 ): MarketModuleState {
-  const withIndex = [...items];
+  const withIndex = applyInstrumentCopyToCatalog([...items]);
   if (!withIndex.some((i) => i.symbol.toUpperCase() === FIREIDX_SYMBOL)) {
     withIndex.push({
       assetKind: 'fund',

@@ -71,7 +71,13 @@ interface DetailsCatalog {
   couponsBySymbol: Record<string, CouponEntry[]>;
   amortizationsBySymbol: Record<string, AmortizationEntry[]>;
   redemptionBySymbol: Record<string, RedemptionEntry>;
+  staticOrderBookLotsBySymbol: Record<string, number>;
 }
+
+/** Синтетические инструменты без MOEX meta. */
+const SYNTHETIC_STATIC_ORDER_BOOK_LOTS: Record<string, number> = {
+  'DN-R': 1_000_000,
+};
 
 function parseInstrumentFile(text: string): Map<string, string> {
   const lines = text.split(/\r?\n/);
@@ -434,6 +440,7 @@ async function main(): Promise<void> {
     couponsBySymbol,
     amortizationsBySymbol,
     redemptionBySymbol,
+    staticOrderBookLotsBySymbol: { ...SYNTHETIC_STATIC_ORDER_BOOK_LOTS },
   };
 
   const outDir = join(projectRoot, 'src', 'data', 'generated');

@@ -4,7 +4,10 @@ import {
   catalogSectionsInDisplayOrder,
   groupInstrumentsByAssetKind,
 } from './catalogSort';
-import { isInstrumentActiveOnMarket } from './instrumentLifecycle';
+import {
+  isInstrumentActiveOnMarket,
+  isTradableMarketInstrument,
+} from './instrumentLifecycle';
 import type { MarketMacroSnapshot } from './macro';
 import type { MarketAssetState, MarketModuleState } from './state';
 
@@ -14,7 +17,19 @@ export const selectMarketModule = (state: GameState): MarketModuleState =>
 export const selectMarketReady = (state: GameState): boolean =>
   state.market.ready;
 
-/** Листинг / погашение: виден в обзоре рынка и доступен для торговли (кроме index). */
+/** Можно выставить заявку (не index и не FIREIDX). */
+export const selectIsTradableMarketInstrument =
+  (symbol: string) =>
+  (state: GameState): boolean => {
+    const sym = symbol.toUpperCase();
+    const asset = state.market.assetsBySymbol[sym];
+    if (!asset) {
+      return false;
+    }
+    return isTradableMarketInstrument(sym, asset.assetKind);
+  };
+
+/** Листинг / погашение: виден в обзоре рынка (FIREIDX всегда виден). */
 export const selectIsInstrumentActiveOnMarket =
   (symbol: string) =>
   (state: GameState): boolean =>
@@ -40,6 +55,24 @@ export const selectMarketAsset =
   (symbol: string) =>
   (state: GameState): MarketAssetState | undefined =>
     state.market.assetsBySymbol[symbol.toUpperCase()];
+
+/** Публичный код инструмента для UI (fictional ISIN из overrides). */
+export function resolveInstrumentPublicCode(
+  assetsBySymbol: Readonly<Record<string, MarketAssetState>>,
+  symbol: string
+): string {
+  const sym = symbol.toUpperCase();
+  const isin = assetsBySymbol[sym]?.isin;
+  if (isin && !isin.startsWith('TBD-')) {
+    return isin;
+  }
+  return sym;
+}
+
+export const selectInstrumentPublicCode =
+  (symbol: string) =>
+  (state: GameState): string =>
+    resolveInstrumentPublicCode(state.market.assetsBySymbol, symbol);
 
 export const selectMarketMacroSnapshot = (
   state: GameState

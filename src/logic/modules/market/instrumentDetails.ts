@@ -53,6 +53,8 @@ export interface InstrumentDetailsCatalog {
   couponsBySymbol: Record<string, CouponDetail[]>;
   amortizationsBySymbol: Record<string, AmortizationDetail[]>;
   redemptionBySymbol: Record<string, RedemptionDetail>;
+  /** Символы с бесконечной ликвидностью: фиксированный qty bid/ask по текущей цене. */
+  staticOrderBookLotsBySymbol?: Record<string, number>;
 }
 
 const EMPTY_CATALOG: InstrumentDetailsCatalog = {
@@ -82,6 +84,7 @@ export function loadInstrumentDetailsCatalog(): InstrumentDetailsCatalog {
     couponsBySymbol: raw.couponsBySymbol ?? {},
     amortizationsBySymbol: raw.amortizationsBySymbol ?? {},
     redemptionBySymbol: raw.redemptionBySymbol ?? {},
+    staticOrderBookLotsBySymbol: raw.staticOrderBookLotsBySymbol ?? {},
   };
   return cachedCatalog;
 }

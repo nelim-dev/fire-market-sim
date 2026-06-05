@@ -1012,6 +1012,9 @@ export class MarketModuleService implements LogicModule<GameState> {
     if (!asset) {
       return false;
     }
+    if (asset.staticOrderBookPin) {
+      return true;
+    }
     const nextBook = applyOrderBookConsumption(
       asset.orderBook,
       command.takerSide,

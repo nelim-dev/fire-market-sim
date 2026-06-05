@@ -114,7 +114,7 @@ function makeLm(opts: {
       bids: [{ priceRub: opts.pricePerUnitRub, qty: 1_000_000 }],
       asks: [{ priceRub: opts.pricePerUnitRub, qty: 1_000_000 }],
     },
-    testOrderBookPin: { priceRub: opts.pricePerUnitRub, qty: 1_000_000 },
+    staticOrderBookPin: { qty: 1_000_000 },
     orderBookBuiltAtEpochMs: 0,
     lotSize: opts.lotSize ?? 1,
     isBond: opts.isBond ?? false,

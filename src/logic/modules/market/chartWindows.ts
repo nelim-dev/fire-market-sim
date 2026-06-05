@@ -107,8 +107,8 @@ export function emptyChartSeriesBundle(): MarketChartSeriesBundle {
  *  - Если до этого момента вообще не было ни одного известного close — слот пропускаем
  *    (инструмент ещё не торговался).
  *
- * Carry-init: берём `lastBarIndexAtOrBefore(bars, slots[0] - 1)`, чтобы первый слот
- * мог быть «занят» баром ровно с `t == slots[0]`.
+ * Carry-init: `lastBarIndexAtOrBefore(bars, slots[0] - 1)`; если бар обрезан trim’ом
+ * хранилища — берём первый бар в окне `t >= slots[0]` (forward-fill ведущих слотов).
  */
 export function buildForwardFilledLine(
   bars: readonly MarketPriceBar[],
@@ -120,6 +120,16 @@ export function buildForwardFilledLine(
   let lastClose: number | null =
     carryIdx >= 0 ? bars[carryIdx].c : null;
   let cursor = carryIdx < 0 ? 0 : carryIdx;
+  const lastSlot = slots[slots.length - 1]!;
+  if (lastClose === null) {
+    const idxInRange = bars.findIndex(
+      (b) => b.t >= firstSlot && b.t <= lastSlot
+    );
+    if (idxInRange >= 0) {
+      lastClose = bars[idxInRange].c;
+      cursor = idxInRange;
+    }
+  }
   const out: MarketPriceBar[] = [];
   let prevSlot = firstSlot - 1;
   for (const t of slots) {

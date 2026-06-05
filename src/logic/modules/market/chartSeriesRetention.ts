@@ -10,13 +10,21 @@ import type { MarketPriceBar } from './priceSeries';
 /** Запас под carry-init в `buildForwardFilledLine` (бар до первого слота окна). */
 const CARRY_BUFFER_BARS = 50;
 
+/** Сколько баров одного TF помещается в одну сессию (~530 мин). */
+const SESSION_BARS_5M = Math.ceil(CHART_DAY_1M_BAR_COUNT / 5);
+const SESSION_BARS_30M = Math.ceil(CHART_DAY_1M_BAR_COUNT / 30);
+const SESSION_BARS_1H = Math.ceil(CHART_DAY_1M_BAR_COUNT / 60);
+
 export const CHART_SERIES_STORE_MAX_BARS = {
   // Day-buffer режим держит current+next день в RAM. Чтобы не терять начало
   // текущего дня при фоне preload следующего, храним минимум два дневных окна.
   minute: CHART_DAY_1M_BAR_COUNT * 2 + CARRY_BUFFER_BARS,
-  fiveMinute: CHART_WEEK_5M_BAR_COUNT + CARRY_BUFFER_BARS,
-  thirtyMinute: CHART_MONTH_30M_BAR_COUNT + CARRY_BUFFER_BARS,
-  oneHour: CHART_6M_1H_BAR_COUNT + CARRY_BUFFER_BARS,
+  // Окно 1w = 530 слотов 5m + carry с прошлой сессии (до ~106 баров).
+  fiveMinute:
+    CHART_WEEK_5M_BAR_COUNT + SESSION_BARS_5M + CARRY_BUFFER_BARS,
+  thirtyMinute:
+    CHART_MONTH_30M_BAR_COUNT + SESSION_BARS_30M + CARRY_BUFFER_BARS,
+  oneHour: CHART_6M_1H_BAR_COUNT + SESSION_BARS_1H + CARRY_BUFFER_BARS,
 } as const;
 
 /** Оставить последние `maxCount` баров отсортированного ряда. */

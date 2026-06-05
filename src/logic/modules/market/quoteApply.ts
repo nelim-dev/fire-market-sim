@@ -16,6 +16,7 @@ import {
 import type { MarketPriceBar } from './priceSeries';
 import { faceValueAtTime, nkdPerBondRubAt } from './instrumentDetails';
 import { FIREIDX_SYMBOL } from './compositeIndex';
+import { isTradableMarketInstrument } from './instrumentLifecycle';
 import {
   buildPseudoOrderBook,
   orderBookSignature,
@@ -195,8 +196,9 @@ function applyQuotesForOneAsset(
     }
   }
 
-  const skipOrderBook = asset.assetKind === 'index' || !buildFullCharts;
-  const pin = asset.testOrderBookPin;
+  const skipOrderBook =
+    !isTradableMarketInstrument(sym, asset.assetKind) || !buildFullCharts;
+  const pin = asset.staticOrderBookPin;
   const priceMoved =
     Math.abs((effectivePriceRub ?? 0) - (asset.currentPriceRub ?? 0)) > 0.0001;
   const skipBookRebuild =
@@ -209,8 +211,8 @@ function applyQuotesForOneAsset(
       ? asset.orderBook
       : pin
         ? {
-            bids: [{ priceRub: pin.priceRub, qty: pin.qty }],
-            asks: [{ priceRub: pin.priceRub, qty: pin.qty }],
+            bids: [{ priceRub: effectivePriceRub, qty: pin.qty }],
+            asks: [{ priceRub: effectivePriceRub, qty: pin.qty }],
           }
         : (() => {
             const minuteBars = market.chartSeries.minute[sym] ?? [];

@@ -96,7 +96,7 @@ run('buildDemoPortfolio: по одной позиции stock/bond/fund; инд�
     throw new Error('облигаций должно быть 1 (SU26227RMFS7)');
   }
   if (positionsByKind(p, 'fund').length !== 1) {
-    throw new Error('фондов должно быть 1 (SBMM)');
+    throw new Error('фондов должно быть 1 (DN-R)');
   }
 });
 

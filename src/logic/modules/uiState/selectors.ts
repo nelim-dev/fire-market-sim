@@ -41,6 +41,7 @@ function matchesSearch(
   return (
     item.ticker.toLowerCase().includes(q) ||
     item.symbol.toLowerCase().includes(q) ||
+    item.isin.toLowerCase().includes(q) ||
     item.displayName.toLowerCase().includes(q)
   );
 }
@@ -60,7 +61,7 @@ function toOverviewRow(
   const asset = state.market.assetsBySymbol[symbol];
   return {
     symbol,
-    ticker: item.ticker,
+    ticker: item.isin.startsWith('TBD-') ? item.ticker : item.isin,
     displayName: item.displayName,
     assetKind: item.assetKind,
     currentPriceRub: asset?.currentPriceRub ?? null,

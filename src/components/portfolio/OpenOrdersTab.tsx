@@ -1,8 +1,9 @@
 'use client';
 
 import { formatInTimeZone } from 'date-fns-tz';
-import { gameLoop } from '@/logic/runners/GameLoop';
 import { useGameState } from '@/hooks/useGameState';
+import { gameLoop } from '@/logic/runners/GameLoop';
+import { selectInstrumentPublicCode } from '@/logic/modules/market/selectors';
 import { selectOpenOrders } from '@/logic/modules/trading/selectors';
 
 function formatRub(n: number): string {
@@ -13,6 +14,9 @@ function formatRub(n: number): string {
 
 export function OpenOrdersTab() {
   const orders = useGameState(selectOpenOrders);
+  const resolvePublicCode = useGameState(
+    (s) => (symbol: string) => selectInstrumentPublicCode(symbol)(s)
+  );
   const lm = gameLoop.getLogicManager();
 
   if (orders.length === 0) {
@@ -44,7 +48,7 @@ export function OpenOrdersTab() {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="font-semibold text-zinc-100">
-                  {order.symbol}{' '}
+                  {resolvePublicCode(order.symbol)}{' '}
                   <span className="text-zinc-500">
                     {sideLabel} · {kindLabel}
                   </span>
