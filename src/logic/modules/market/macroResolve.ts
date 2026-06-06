@@ -4,6 +4,7 @@ import {
   resolveKeyRatePct,
   type KeyRateSchedule,
 } from './keyRateSchedule';
+import { resolveRolling12mInflationPct } from './inflationSchedule';
 import type { MarketMacroSnapshot } from './macro';
 import { MACRO_BRENT_SYMBOL, MACRO_USD_RUB_SYMBOL } from './macroSymbols';
 import { lastBarIndexAtOrBefore } from './priceSeries';
@@ -30,6 +31,7 @@ export function resolveMacroSnapshot(
     brentUsd: closeAtOrBefore(brentBars, epochMs),
     usdRub: closeAtOrBefore(usdBars, epochMs),
     keyRatePct: resolveKeyRatePct(epochMs, schedule),
+    inflation12mPct: resolveRolling12mInflationPct(epochMs),
   };
 }
 
@@ -43,5 +45,6 @@ export function applyMacroSnapshotForEpoch(
   macroSnapshot.brentUsd = next.brentUsd;
   macroSnapshot.usdRub = next.usdRub;
   macroSnapshot.keyRatePct = next.keyRatePct;
+  macroSnapshot.inflation12mPct = next.inflation12mPct;
   return macroSnapshot;
 }

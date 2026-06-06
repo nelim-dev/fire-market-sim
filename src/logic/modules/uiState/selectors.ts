@@ -2,7 +2,7 @@ import type { GameState } from '@/logic/managers/LogicManager';
 import type { MarketInstrumentCatalogItem } from '@/logic/modules/market/contracts';
 import { selectIsInstrumentActiveOnMarket } from '@/logic/modules/market/selectors';
 import { selectEducationIsSymbolUnlocked } from '@/logic/modules/education/selectors';
-import type { LeftPanelMode, MarketOverviewAssetKindFilter } from './state';
+import type { LeftPanelMode, MarketOverviewAssetKindFilter, PortfolioMainTab } from './state';
 
 export interface MarketOverviewInstrumentRow {
   symbol: string;
@@ -23,6 +23,9 @@ export const selectUiStateModule = (state: GameState) => state.uiState;
 
 export const selectUiLeftPanelMode = (state: GameState): LeftPanelMode =>
   state.uiState.leftPanelMode;
+
+export const selectUiPortfolioMainTab = (state: GameState): PortfolioMainTab =>
+  state.uiState.portfolioMainTab;
 
 export const selectUiSelectedSymbol = (state: GameState): string | null =>
   state.uiState.selectedSymbol;

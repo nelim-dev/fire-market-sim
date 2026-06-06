@@ -1,4 +1,8 @@
 import { LogicManager } from '../../src/logic/managers/LogicManager';
+import {
+  createLogicManagerWithTradableMarket,
+  pickTradableSymbolForBuy,
+} from './tradingTestHarness';
 import { exitCode, printResult } from './runner';
 
 const M = 'ORD';
@@ -17,20 +21,11 @@ function run(description: string, fn: () => void): void {
 }
 
 function pickBuySymbol(lm: LogicManager): string {
-  const state = lm.getState();
-  const sym = state.market.instrumentCatalog
-    .filter((r) => r.assetKind === 'stock')
-    .map((r) => r.symbol.toUpperCase())
-    .find((s) => {
-      const a = state.market.assetsBySymbol[s];
-      return a && (a.currentPriceRub ?? 0) > 0;
-    });
-  if (!sym) throw new Error('нет акции для теста');
-  return sym;
+  return pickTradableSymbolForBuy(lm);
 }
 
 run('market buy: частичное исполнение и остаток в openOrders', () => {
-  const lm = new LogicManager();
+  const lm = createLogicManagerWithTradableMarket();
   const symbol = pickBuySymbol(lm);
   const state = lm.getState();
   const asset = state.market.assetsBySymbol[symbol];
@@ -60,7 +55,7 @@ run('market buy: частичное исполнение и остаток в op
 });
 
 run('limit buy: отмена освобождает резерв', () => {
-  const lm = new LogicManager();
+  const lm = createLogicManagerWithTradableMarket();
   const symbol = pickBuySymbol(lm);
   const price = lm.getState().market.assetsBySymbol[symbol].currentPriceRub as number;
   const cashBefore = lm.getState().portfolio.cashRub;

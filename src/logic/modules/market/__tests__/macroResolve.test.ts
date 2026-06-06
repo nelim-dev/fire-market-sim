@@ -59,5 +59,15 @@ describe('resolveMacroSnapshot', () => {
     assert.equal(snap.brentUsd, 62.25);
     assert.equal(snap.usdRub, 72.1);
     assert.equal(snap.keyRatePct, 5.5);
+    assert.ok(
+      snap.inflation12mPct === null || Number.isFinite(snap.inflation12mPct)
+    );
+  });
+
+  it('includes inflation12mPct from schedule', () => {
+    const t = mskEpoch(2025, 12, 15);
+    const snap = resolveMacroSnapshot(t, emptyChartSeriesBundle());
+    assert.ok(snap.inflation12mPct !== null);
+    assert.ok(snap.inflation12mPct! > 0);
   });
 });

@@ -1,7 +1,11 @@
 import type { LogicEventMap } from '@/logic/logicEvents';
 import type { RuntimeCommand } from '@/logic/runtimeCommands';
 import type { TradeExecutionPayload } from '@/logic/logicEvents';
-import type { LedgerEntry } from '@/logic/domain/portfolio';
+import type {
+  LedgerEntry,
+  PortfolioCompositionSnapshot,
+  VsFireidxSnapshot,
+} from '@/logic/domain/portfolio';
 import type { EducationCommand } from '@/logic/modules/education/commands';
 import type { PersistenceCommand } from '@/logic/modules/persistence/commands';
 import type { SettingsCommand } from '@/logic/modules/settings/commands';
@@ -115,6 +119,18 @@ export type PortfolioRecordNavSnapshotCommand = {
   navRub: number;
 };
 
+/** Дневные snapshot'ы NAV, состава и якоря FIRE INDEX (1× на торговый день). */
+export type PortfolioRecordDailyStatsSnapshotsCommand = {
+  type: 'portfolio/record-daily-stats-snapshots';
+  simulationEpochMs: number;
+  navRub: number;
+  compositionSnapshot: PortfolioCompositionSnapshot;
+  vsFireidxSnapshot: VsFireidxSnapshot | null;
+};
+
+/** @deprecated используйте portfolio/record-daily-stats-snapshots */
+export type PortfolioRecordNavSnapshotLegacy = PortfolioRecordNavSnapshotCommand;
+
 /** Резервирование cash/qty под открытые заявки (TradingModule). */
 export type PortfolioAdjustReservationCommand = {
   type: 'portfolio/adjust-reservation';
@@ -138,6 +154,7 @@ export type LogicCommand =
   | PortfolioClosePositionCommand
   | PortfolioClearLotNkdAtBuyCommand
   | PortfolioRecordNavSnapshotCommand
+  | PortfolioRecordDailyStatsSnapshotsCommand
   | PortfolioAdjustReservationCommand
   | EducationCommand
   | PersistenceCommand

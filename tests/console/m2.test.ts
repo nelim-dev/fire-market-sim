@@ -316,10 +316,14 @@ function makeUpcomingFixtures(now: number) {
   };
   const portfolio: PortfolioState = {
     cashRub: 0,
+    cashReservedRub: 0,
+    reservedQtyBySymbol: {},
     positions: [stockPos, bondPos],
     upcomingPayments: [],
     ledger: [],
     navHistory: [],
+    compositionSnapshot: null,
+    vsFireidxSnapshot: null,
   };
   const dividends: DividendDetail[] = [
     { recordCloseDateEpochMs: now - 1 * DAY, perShareRub: 12, currency: 'RUB' }, // в прошлом
@@ -423,10 +427,14 @@ run(
     const { details, catalog } = makeUpcomingFixtures(now);
     const empty: PortfolioState = {
       cashRub: 0,
+      cashReservedRub: 0,
+      reservedQtyBySymbol: {},
       positions: [],
       upcomingPayments: [],
       ledger: [],
       navHistory: [],
+      compositionSnapshot: null,
+      vsFireidxSnapshot: null,
     };
     const out = selectUpcomingPayments(empty, details, catalog, now);
     if (out.length !== 0) {

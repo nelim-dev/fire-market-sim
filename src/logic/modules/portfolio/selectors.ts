@@ -94,7 +94,7 @@ export function computePortfolioNavRub(state: PortfolioState): number {
  * NB: `navHistory` отсортирован по возрастанию `simulationEpochMs` (см. service.ts),
  * поэтому `navHistory[0]` — самый старый.
  */
-function findBaselineNavRub(
+export function findBaselineNavRub(
   state: PortfolioState,
   thresholdEpochMs: number
 ): number | null {

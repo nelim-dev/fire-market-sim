@@ -23,6 +23,7 @@ import {
   MARKET_COUPON_DECLARED,
   MARKET_DIVIDEND_DECLARED,
 } from '../../src/logic/logicEvents';
+import { applyMarketQuotesForSimulationEpoch } from '../../src/logic/modules/market/quoteApply';
 import { exitCode, printResult } from './runner';
 
 const M = 'M4-ext';
@@ -190,8 +191,17 @@ function makeLm(opts: {
     upcomingPayments: [],
     ledger: [],
     navHistory: [],
+    compositionSnapshot: null,
+    vsFireidxSnapshot: null,
   };
   state.timeScale = 1000;
+  state.uiState = {
+    ...state.uiState,
+    selectedSymbol: symbol,
+  };
+  applyMarketQuotesForSimulationEpoch(state.market, state.simulationEpochMs, null, {
+    fullChartLineSymbols: [symbol],
+  });
   return { lm, state, symbol };
 }
 

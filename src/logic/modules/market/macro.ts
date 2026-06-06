@@ -9,12 +9,15 @@ export interface MarketMacroSnapshot {
   usdRub: number | null;
   /** Ключевая ставка ЦБ РФ, % годовых; null до первой даты в indexes/KS.txt */
   keyRatePct: number | null;
+  /** Rolling 12m инфляция (MoM-цепочка), % */
+  inflation12mPct: number | null;
 }
 
 export const EMPTY_MARKET_MACRO_SNAPSHOT: Readonly<MarketMacroSnapshot> = {
   brentUsd: null,
   usdRub: null,
   keyRatePct: null,
+  inflation12mPct: null,
 };
 
 /** @deprecated используйте EMPTY_MARKET_MACRO_SNAPSHOT */

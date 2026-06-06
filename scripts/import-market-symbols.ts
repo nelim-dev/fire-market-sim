@@ -2,8 +2,9 @@
  * Точечный импорт одного или нескольких символов в `data/market.sqlite`
  * без перечитывания всех .txt файлов.
  *
- *   npm run import:market-symbols -- --symbols DN-R
+ *   npm run import:market-symbols -- "--symbols=DN-R"
  *   npm run import:market-symbols -- --symbols DN-R,SBMM
+ *   $env:MARKET_IMPORT_SYMBOLS='DN-R'; npm run import:market-symbols   # PowerShell
  *
  * Перед импортом: `npm run gen:market-catalog` (символ должен быть в каталоге).
  */
@@ -40,6 +41,9 @@ function readArg(name: string): string | undefined {
 async function main(): Promise<void> {
   let symbols = parseSymbolsArg(readArg('--symbols'));
   if (symbols.length === 0) {
+    symbols = parseSymbolsArg(process.env.MARKET_IMPORT_SYMBOLS);
+  }
+  if (symbols.length === 0) {
     const bare = process.argv.slice(2).find((a) => !a.startsWith('-'));
     if (bare) {
       symbols = parseSymbolsArg(bare);
@@ -47,7 +51,7 @@ async function main(): Promise<void> {
   }
   if (symbols.length === 0) {
     throw new Error(
-      'Укажите символы: npm run import:market-symbols -- --symbols=DN-R'
+      'Укажите символы: npm run import:market-symbols -- "--symbols=DN-R" (PowerShell) или npx tsx scripts/import-market-symbols.ts --symbols=DN-R'
     );
   }
 

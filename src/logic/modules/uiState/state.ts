@@ -2,6 +2,8 @@ import type { AssetKind } from '@/logic/modules/market/contracts';
 
 export type LeftPanelMode = 'portfolio' | 'market-overview';
 
+export type PortfolioMainTab = 'composition' | 'history' | 'orders' | 'stats';
+
 export type MarketOverviewAssetKindFilter = AssetKind | 'all';
 
 export interface MarketOverviewFiltersState {
@@ -13,6 +15,7 @@ export interface MarketOverviewFiltersState {
 
 export interface UiStateModuleState {
   leftPanelMode: LeftPanelMode;
+  portfolioMainTab: PortfolioMainTab;
   selectedSymbol: string | null;
   marketOverview: MarketOverviewFiltersState;
   ready: boolean;

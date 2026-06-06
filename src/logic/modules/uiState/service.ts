@@ -12,6 +12,7 @@ export class UiStateModuleService implements LogicModule<GameState> {
   createInitialState(): UiStateModuleState {
     return {
       leftPanelMode: 'portfolio',
+      portfolioMainTab: 'composition',
       selectedSymbol: null,
       marketOverview: { ...DEFAULT_MARKET_OVERVIEW_FILTERS },
       ready: false,
@@ -32,6 +33,8 @@ export class UiStateModuleService implements LogicModule<GameState> {
         return this.setLeftPanelMode(state, command.mode);
       case 'uiState/select-instrument':
         return this.selectInstrument(state, command.symbol, _context);
+      case 'uiState/set-portfolio-main-tab':
+        return this.setPortfolioMainTab(state, command.tab);
       case 'uiState/set-market-overview-filters':
         return this.setMarketOverviewFilters(state, command.patch);
       default:
@@ -82,6 +85,18 @@ export class UiStateModuleService implements LogicModule<GameState> {
     state.uiState.selectedSymbol = next;
     state.uiState.ready = true;
     context.dispatchCommand({ type: 'market/rebuild-chart-lines', symbol: next });
+    return true;
+  }
+
+  private setPortfolioMainTab(
+    state: GameState,
+    tab: UiStateModuleState['portfolioMainTab']
+  ): boolean {
+    if (state.uiState.portfolioMainTab === tab) {
+      return false;
+    }
+    state.uiState.portfolioMainTab = tab;
+    state.uiState.ready = true;
     return true;
   }
 

@@ -105,6 +105,31 @@ export interface NavSnapshot {
   readonly navRub: number;
 }
 
+export type CompositionSlice = {
+  readonly id: string;
+  /** Тикер или «Кэш». */
+  readonly ticker: string;
+  /** Отображаемое название актива. */
+  readonly label: string;
+  readonly valueRub: number;
+  readonly pct: number;
+};
+
+export type PortfolioCompositionSnapshot = {
+  readonly simulationEpochMs: number;
+  readonly slices: readonly CompositionSlice[];
+};
+
+export type VsFireidxSnapshotMode = 'earliest-available' | 'rolling-1y';
+
+export type VsFireidxSnapshot = {
+  readonly recordedAtEpochMs: number;
+  readonly baselineEpochMs: number;
+  readonly navBaselineRub: number;
+  readonly indexBaselineLevel: number;
+  readonly mode: VsFireidxSnapshotMode;
+};
+
 export interface PortfolioState {
   cashRub: number;
   /** Зарезервировано под открытые buy-заявки. */
@@ -127,4 +152,8 @@ export interface PortfolioState {
    * Используются для расчёта изменения стоимости портфеля за период (1н/1м/1г).
    */
   navHistory: NavSnapshot[];
+  /** Кэш состава портфеля для диаграммы (обновляется раз в торговый день). */
+  compositionSnapshot: PortfolioCompositionSnapshot | null;
+  /** Якорь сравнения с FIRE INDEX (обновляется раз в торговый день). */
+  vsFireidxSnapshot: VsFireidxSnapshot | null;
 }

@@ -2,15 +2,33 @@
 
 import { useGameState } from '@/hooks/useGameState';
 import { selectEducationIsSymbolUnlocked } from '@/logic/modules/education/selectors';
-import { selectUiSelectedSymbol } from '@/logic/modules/uiState/selectors';
+import {
+  selectUiLeftPanelMode,
+  selectUiPortfolioMainTab,
+  selectUiSelectedSymbol,
+} from '@/logic/modules/uiState/selectors';
+import { PortfolioCompositionRightPanel } from '@/components/portfolio/PortfolioCompositionRightPanel';
 import { LockedInstrumentPanel } from './LockedInstrumentPanel';
 import { MarketAssetRightPanel } from './MarketAssetRightPanel';
 
 export function TradingRightPanel() {
+  const leftPanelMode = useGameState(selectUiLeftPanelMode);
+  const portfolioMainTab = useGameState(selectUiPortfolioMainTab);
   const symbol = useGameState(selectUiSelectedSymbol);
   const isUnlocked = useGameState((s) =>
     symbol ? selectEducationIsSymbolUnlocked(symbol)(s) : true
   );
+
+  if (
+    leftPanelMode === 'portfolio' &&
+    portfolioMainTab === 'stats'
+  ) {
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+        <PortfolioCompositionRightPanel />
+      </div>
+    );
+  }
 
   if (!symbol) {
     return (

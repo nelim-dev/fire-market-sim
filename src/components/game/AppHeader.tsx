@@ -94,6 +94,13 @@ export function AppHeader() {
                 📈 {macro.keyRatePct.toFixed(1)}%
               </span>
             ) : null}
+            {macro.inflation12mPct !== null ? (
+              <span
+                title="Инфляция за последние 12 месяцев (MoM, % годовых экв.)"
+              >
+                📉 {macro.inflation12mPct.toFixed(1)}%
+              </span>
+            ) : null}
           </div>
         </div>
 

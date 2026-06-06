@@ -2,13 +2,19 @@ import { buildDemoPortfolio } from '@/data/portfolio/buildDemoPortfolio';
 import type {
   LedgerEntry,
   NavSnapshot,
+  PortfolioCompositionSnapshot,
   PortfolioPosition,
   PositionLot,
+  VsFireidxSnapshot,
 } from '@/logic/domain/portfolio';
+import { FIREIDX_SYMBOL } from '@/logic/modules/market/compositeIndex';
+import { resolveFireidxComparisonBaseline } from '@/logic/modules/market/fireidxComparison';
+import type { MarketModuleState } from '@/logic/modules/market/state';
 import type {
   LogicCommand,
   LogicModule,
   ModuleContext,
+  PortfolioRecordDailyStatsSnapshotsCommand,
 } from '@/logic/modules/contracts';
 import type {
   TradeExecutionPayload,
@@ -16,18 +22,21 @@ import type {
 } from '@/logic/logicEvents';
 import type { PortfolioState } from './state';
 import { computePortfolioNavRub, positionTotalQuantity } from './selectors';
+import {
+  buildNkdBySymbolFromMarket,
+  computePortfolioNavRubWithNkd,
+  resolveNavBaselineForFireidxComparison,
+  selectPortfolioCompositionSlices,
+} from './statsSelectors';
 
-interface PortfolioRoot {
+interface PortfolioModuleRoot {
   portfolio: PortfolioState;
-  /**
-   * Симуляционное время (мс) — поле GameState, фактически передаваемого LogicManager.
-   * Нужно `onTradingDayChanged`, чтобы привязать NAV-snapshot к корректному моменту.
-   */
   simulationEpochMs: number;
+  market: MarketModuleState;
 }
 
 export class PortfolioModuleService
-  implements LogicModule<PortfolioRoot>
+  implements LogicModule<PortfolioModuleRoot>
 {
   readonly id = 'portfolio';
   private lotSequence = 0;
@@ -42,7 +51,7 @@ export class PortfolioModuleService
   }
 
   handleCommand(
-    state: PortfolioRoot,
+    state: PortfolioModuleRoot,
     command: LogicCommand,
     _context: ModuleContext
   ): boolean {
@@ -67,6 +76,8 @@ export class PortfolioModuleService
           command.simulationEpochMs,
           command.navRub
         );
+      case 'portfolio/record-daily-stats-snapshots':
+        return this.recordDailyStatsSnapshots(state, command);
       case 'portfolio/adjust-reservation':
         return this.adjustReservation(
           state,
@@ -85,20 +96,47 @@ export class PortfolioModuleService
    * UI читает её через селекторы (см. `selectPortfolioProfitForPeriod`).
    */
   onTradingDayChanged(
-    state: PortfolioRoot,
+    state: PortfolioModuleRoot,
     _payload: TradingDayChangedPayload,
     context: ModuleContext
   ): void {
-    const navRub = computePortfolioNavRub(state.portfolio);
+    const nkdBySymbol = buildNkdBySymbolFromMarket(state.market);
+    const navRub = computePortfolioNavRubWithNkd(state.portfolio, nkdBySymbol);
+    const compositionSnapshot: PortfolioCompositionSnapshot = {
+      simulationEpochMs: state.simulationEpochMs,
+      slices: selectPortfolioCompositionSlices(state.portfolio, nkdBySymbol),
+    };
+
+    const fireidxDaily =
+      state.market.chartSeries.dailyClose[FIREIDX_SYMBOL] ?? [];
+    const fireidxBaseline = resolveFireidxComparisonBaseline(
+      fireidxDaily,
+      state.simulationEpochMs
+    );
+    const vsFireidxSnapshot: VsFireidxSnapshot | null = fireidxBaseline
+      ? {
+          recordedAtEpochMs: state.simulationEpochMs,
+          baselineEpochMs: fireidxBaseline.baselineEpochMs,
+          navBaselineRub: resolveNavBaselineForFireidxComparison(
+            state.portfolio,
+            fireidxBaseline.baselineEpochMs
+          ),
+          indexBaselineLevel: fireidxBaseline.indexBaseline,
+          mode: fireidxBaseline.mode,
+        }
+      : null;
+
     context.dispatchCommand({
-      type: 'portfolio/record-nav-snapshot',
+      type: 'portfolio/record-daily-stats-snapshots',
       simulationEpochMs: state.simulationEpochMs,
       navRub,
+      compositionSnapshot,
+      vsFireidxSnapshot,
     });
   }
 
   private applyPriceSync(
-    state: PortfolioRoot,
+    state: PortfolioModuleRoot,
     pricesBySymbol: Readonly<Record<string, number>>
   ): boolean {
     let changed = false;
@@ -120,7 +158,7 @@ export class PortfolioModuleService
   }
 
   private applyTradeExecution(
-    state: PortfolioRoot,
+    state: PortfolioModuleRoot,
     execution: TradeExecutionPayload
   ): boolean {
     const ticker = execution.symbol.toUpperCase();
@@ -283,7 +321,7 @@ export class PortfolioModuleService
   }
 
   private applyCashDelta(
-    state: PortfolioRoot,
+    state: PortfolioModuleRoot,
     deltaRub: number,
     ledgerEntry: LedgerEntry
   ): boolean {
@@ -295,7 +333,7 @@ export class PortfolioModuleService
     return true;
   }
 
-  private appendLedger(state: PortfolioRoot, entry: LedgerEntry): boolean {
+  private appendLedger(state: PortfolioModuleRoot, entry: LedgerEntry): boolean {
     state.portfolio = {
       ...state.portfolio,
       ledger: [entry, ...state.portfolio.ledger],
@@ -303,7 +341,7 @@ export class PortfolioModuleService
     return true;
   }
 
-  private closePosition(state: PortfolioRoot, ticker: string): boolean {
+  private closePosition(state: PortfolioModuleRoot, ticker: string): boolean {
     const upper = ticker.toUpperCase();
     const next = state.portfolio.positions.filter(
       (p) => p.ticker.toUpperCase() !== upper
@@ -324,7 +362,7 @@ export class PortfolioModuleService
    * это защищает от ретроградной перезаписи истории при reset/быстрой перемотке.
    */
   private recordNavSnapshot(
-    state: PortfolioRoot,
+    state: PortfolioModuleRoot,
     simulationEpochMs: number,
     navRub: number
   ): boolean {
@@ -354,8 +392,21 @@ export class PortfolioModuleService
     return true;
   }
 
+  private recordDailyStatsSnapshots(
+    state: PortfolioModuleRoot,
+    command: PortfolioRecordDailyStatsSnapshotsCommand
+  ): boolean {
+    this.recordNavSnapshot(state, command.simulationEpochMs, command.navRub);
+    state.portfolio = {
+      ...state.portfolio,
+      compositionSnapshot: command.compositionSnapshot,
+      vsFireidxSnapshot: command.vsFireidxSnapshot,
+    };
+    return true;
+  }
+
   private adjustReservation(
-    state: PortfolioRoot,
+    state: PortfolioModuleRoot,
     symbol: string,
     deltaCashReservedRub: number,
     deltaQtyReserved: number
@@ -381,7 +432,7 @@ export class PortfolioModuleService
     return true;
   }
 
-  private clearLotNkdAtBuy(state: PortfolioRoot, ticker: string): boolean {
+  private clearLotNkdAtBuy(state: PortfolioModuleRoot, ticker: string): boolean {
     const upper = ticker.toUpperCase();
     let changed = false;
     const next = state.portfolio.positions.map((p) => {
@@ -418,11 +469,11 @@ export class PortfolioModuleService
     };
   }
 
-  exportRuntimeState(_state: PortfolioRoot): unknown {
+  exportRuntimeState(_state: PortfolioModuleRoot): unknown {
     return { lotSequence: this.lotSequence };
   }
 
-  importRuntimeState(_state: PortfolioRoot, runtime: unknown): void {
+  importRuntimeState(_state: PortfolioModuleRoot, runtime: unknown): void {
     const r = runtime as { lotSequence?: number };
     this.lotSequence =
       typeof r.lotSequence === 'number' && Number.isFinite(r.lotSequence)

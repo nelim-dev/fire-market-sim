@@ -1,6 +1,11 @@
 import { LogicManager } from '../../src/logic/managers/LogicManager';
 import { FIREIDX_SYMBOL } from '../../src/logic/modules/market/compositeIndex';
 import { positionTotalQuantity } from '../../src/logic/modules/portfolio/selectors';
+import {
+  createLogicManagerWithTradableMarket,
+  pickTradableSymbolForBuy,
+  pickTradableSymbolForSell,
+} from './tradingTestHarness';
 import { exitCode, printResult } from './runner';
 
 const M = 'M4';
@@ -22,55 +27,6 @@ function run(description: string, fn: () => void): void {
       e instanceof Error ? e.message : String(e)
     );
   }
-}
-
-function pickTradableSymbolForBuy(lm: LogicManager): string {
-  // Берём актив, у которого:
-  // — kind не 'index' (индексы непокупаемы → reject NON_TRADABLE_INSTRUMENT, тест не про это),
-  // — цена > 0 (бонды могут стартовать с 0₽ до асинхронной hydration минутных баров),
-  // — есть ликвидность ask.
-  const state = lm.getState();
-  const symbol = state.market.instrumentCatalog
-    .filter(
-      (row) =>
-        row.assetKind === 'stock' &&
-        row.symbol.toUpperCase() !== FIREIDX_SYMBOL
-    )
-    .map((row) => row.symbol.toUpperCase())
-    .find((sym) => {
-      const asset = state.market.assetsBySymbol[sym];
-      return (
-        asset &&
-        Number.isFinite(asset.currentPriceRub) &&
-        (asset.currentPriceRub ?? 0) > 0 &&
-        (asset.orderBook.asks[0]?.qty ?? 0) > 0
-      );
-    });
-  if (!symbol) {
-    throw new Error('не найден инструмент для покупки');
-  }
-  return symbol;
-}
-
-function pickTradableSymbolForSell(lm: LogicManager): string {
-  // Те же требования: kind ≠ index, цена > 0, есть bid-ликвидность.
-  const state = lm.getState();
-  const symbol = state.portfolio.positions
-    .map((p) => p.ticker.toUpperCase())
-    .find((sym) => {
-      const asset = state.market.assetsBySymbol[sym];
-      return (
-        asset &&
-        asset.assetKind !== 'index' &&
-        Number.isFinite(asset.currentPriceRub) &&
-        (asset.currentPriceRub ?? 0) > 0 &&
-        (asset.orderBook.bids[0]?.qty ?? 0) > 0
-      );
-    });
-  if (!symbol) {
-    throw new Error('не найден инструмент для продажи');
-  }
-  return symbol;
 }
 
 function qtyOf(state: ReturnType<LogicManager['getState']>, symbol: string): number {
@@ -111,7 +67,7 @@ run('FIREIDX: покупка отклоняется (NON_TRADABLE_INSTRUMENT)', 
 });
 
 run('Псевдостакан: несколько уровней bid/ask с положительным объёмом', () => {
-  const lm = new LogicManager();
+  const lm = createLogicManagerWithTradableMarket();
   const symbol = pickTradableSymbolForBuy(lm);
   const asset = lm.getState().market.assetsBySymbol[symbol];
   if (!asset || asset.currentPriceRub == null) {
@@ -128,7 +84,7 @@ run('Псевдостакан: несколько уровней bid/ask с по
 });
 
 run('Успешная покупка: cash уменьшается на (price+commission), позиция растёт, журнал пополняется', () => {
-  const lm = new LogicManager();
+  const lm = createLogicManagerWithTradableMarket();
   const symbol = pickTradableSymbolForBuy(lm);
   const before = lm.getState();
   const qty = 1;
@@ -168,7 +124,7 @@ run('Успешная покупка: cash уменьшается на (price+co
 });
 
 run('Успешная продажа: cash растёт на (price-commission), позиция уменьшается', () => {
-  const lm = new LogicManager();
+  const lm = createLogicManagerWithTradableMarket();
   const symbol = pickTradableSymbolForSell(lm);
   const before = lm.getState();
   const qtyBefore = qtyOf(before, symbol);
@@ -200,7 +156,7 @@ run('Успешная продажа: cash растёт на (price-commission),
 });
 
 run('Отказ buy при недостатке средств (TRADE_REJECTED, журнал не меняется)', () => {
-  const lm = new LogicManager();
+  const lm = createLogicManagerWithTradableMarket();
   const mutableState = lm.getState() as unknown as {
     portfolio: { cashRub: number };
   };
@@ -232,7 +188,7 @@ run('Отказ buy при недостатке средств (TRADE_REJECTED, 
 });
 
 run('Отказ sell при недостатке количества', () => {
-  const lm = new LogicManager();
+  const lm = createLogicManagerWithTradableMarket();
   const symbol = pickTradableSymbolForSell(lm);
   const state = lm.getState();
   const qty = qtyOf(state, symbol);
@@ -256,7 +212,7 @@ run('Отказ sell при недостатке количества', () => {
 });
 
 run('Крупная заявка: частичное исполнение по ликвидности стакана за один тик', () => {
-  const lm = new LogicManager();
+  const lm = createLogicManagerWithTradableMarket();
   const symbol = pickTradableSymbolForBuy(lm);
   const state = lm.getState();
   const asset = state.market.assetsBySymbol[symbol];
@@ -298,7 +254,7 @@ run('Крупная заявка: частичное исполнение по �
 });
 
 run('На паузе ордера не исполняются; за шаг исполняется не больше ликвидности стакана и cash не уходит в минус', () => {
-  const lm = new LogicManager();
+  const lm = createLogicManagerWithTradableMarket();
   const symbol = pickTradableSymbolForBuy(lm);
   const before = lm.getState();
   const totalAsk = before.market.assetsBySymbol[symbol].orderBook.asks.reduce(

@@ -100,5 +100,7 @@ export function buildDemoPortfolio(): PortfolioState {
     upcomingPayments,
     ledger: [],
     navHistory: [],
+    compositionSnapshot: null,
+    vsFireidxSnapshot: null,
   };
 }

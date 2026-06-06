@@ -1,8 +1,13 @@
-import type { LeftPanelMode, MarketOverviewFiltersState } from './state';
+import type { LeftPanelMode, MarketOverviewFiltersState, PortfolioMainTab } from './state';
 
 export type UiStateSetLeftPanelModeCommand = {
   type: 'uiState/set-left-panel-mode';
   mode: LeftPanelMode;
+};
+
+export type UiStateSetPortfolioMainTabCommand = {
+  type: 'uiState/set-portfolio-main-tab';
+  tab: PortfolioMainTab;
 };
 
 export type UiStateSelectInstrumentCommand = {
@@ -17,5 +22,6 @@ export type UiStateSetMarketOverviewFiltersCommand = {
 
 export type UiStateCommand =
   | UiStateSetLeftPanelModeCommand
+  | UiStateSetPortfolioMainTabCommand
   | UiStateSelectInstrumentCommand
   | UiStateSetMarketOverviewFiltersCommand;

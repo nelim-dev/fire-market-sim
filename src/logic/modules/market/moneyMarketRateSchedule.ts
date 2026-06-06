@@ -1,5 +1,5 @@
 import { addDays, format } from 'date-fns';
-import { toDate } from 'date-fns-tz';
+import { formatInTimeZone, toDate } from 'date-fns-tz';
 import {
   loadKeyRateSchedule,
   type KeyRateSchedule,
@@ -67,7 +67,7 @@ export function keyRateEventToMskDate(event: KeyRateEvent): string {
 }
 
 function formatInTimeZoneMsk(epochMs: number): string {
-  return format(toDate(new Date(epochMs), { timeZone: 'Europe/Moscow' }), 'yyyyMMdd');
+  return formatInTimeZone(epochMs, 'Europe/Moscow', 'yyyyMMdd');
 }
 
 /** Первый торговый день строго после `mskYyyymmdd` (календарная дата MSK). */

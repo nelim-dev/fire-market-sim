@@ -31,6 +31,7 @@ import {
 import type { MarketPriceBar } from '../../src/logic/modules/market/priceSeries';
 import { CHART_WEEK_5M_BAR_COUNT, CHART_MONTH_30M_BAR_COUNT } from '../../src/logic/modules/market/chartTimeframes';
 import { applyMarketQuotesForSimulationEpoch } from '../../src/logic/modules/market/quoteApply';
+import { isFireidxPrebakedInCatalog } from '../../src/logic/modules/market/fireidxPrebaked';
 import { mskYyyymmddFromEpochMs } from '../../src/logic/modules/market/minuteBarAggregation';
 import { exitCode, printResult } from './runner';
 
@@ -83,6 +84,13 @@ run('FIREIDX присутствует в каталоге и имеет уров
       }
     }
   }
+  const prebaked = isFireidxPrebakedInCatalog(state.market.instrumentCatalog);
+  if (prebaked) {
+    if (!item.sourceFilePath?.trim()) {
+      throw new Error('prebaked FIREIDX без sourceFilePath в каталоге');
+    }
+    return;
+  }
   if (state.market.compositeIndex.constituents.length < 1) {
     throw new Error('нет компонентов индекса');
   }
@@ -90,9 +98,15 @@ run('FIREIDX присутствует в каталоге и имеет уров
 
 run('веса компонентов суммируются ~100%', () => {
   const lm = new LogicManager();
-  const sum = lm
-    .getState()
-    .market.compositeIndex.constituents.reduce((s, c) => s + c.weightPct, 0);
+  const state = lm.getState();
+  if (isFireidxPrebakedInCatalog(state.market.instrumentCatalog)) {
+    // Prebaked FIREIDX: уровень/история из fonds/FIREIDX.txt, runtime compositeIndex пуст.
+    return;
+  }
+  const sum = state.market.compositeIndex.constituents.reduce(
+    (s, c) => s + c.weightPct,
+    0
+  );
   if (Math.abs(sum - 100) > 0.5) {
     throw new Error(`сумма весов ${sum}%`);
   }
