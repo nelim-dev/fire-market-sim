@@ -1,6 +1,6 @@
 import type { AssetKind } from '@/logic/modules/market/contracts';
 
-export type LeftPanelMode = 'portfolio' | 'market-overview';
+export type LeftPanelMode = 'portfolio' | 'market-overview' | 'analytics';
 
 export type PortfolioMainTab = 'composition' | 'history' | 'orders' | 'stats';
 

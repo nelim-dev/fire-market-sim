@@ -1,5 +1,6 @@
 import { LogicManager } from '../../src/logic/managers/LogicManager';
 import { FIREIDX_SYMBOL } from '../../src/logic/modules/market/compositeIndex';
+import { applyMarketQuotesForSimulationEpoch } from '../../src/logic/modules/market/quoteApply';
 import { positionTotalQuantity } from '../../src/logic/modules/portfolio/selectors';
 import {
   createLogicManagerWithTradableMarket,
@@ -304,6 +305,95 @@ run('На паузе ордера не исполняются; за шаг ис�
   }
   if (state.portfolio.cashRub < 0) {
     throw new Error(`cash ушел в минус: ${state.portfolio.cashRub}`);
+  }
+});
+
+run('На паузе рыночные заявки по разным символам исполняются после resume', () => {
+  const lm = createLogicManagerWithTradableMarket();
+  const symA = pickTradableSymbolForBuy(lm);
+  const symB = lm
+    .getState()
+    .market.instrumentCatalog.filter(
+      (row) =>
+        row.assetKind === 'stock' &&
+        row.symbol.toUpperCase() !== FIREIDX_SYMBOL &&
+        row.symbol.toUpperCase() !== symA
+    )
+    .map((row) => row.symbol.toUpperCase())
+    .find((symbol) => {
+      const asset = lm.getState().market.assetsBySymbol[symbol];
+      return (
+        asset &&
+        Number.isFinite(asset.currentPriceRub) &&
+        (asset.currentPriceRub ?? 0) > 0
+      );
+    });
+  if (!symB) {
+    throw new Error('не найден второй инструмент для теста');
+  }
+
+  const bootstrapOrderBook = (symbol: string) => {
+    lm.dispatchCommand({ type: 'uiState/select-instrument', symbol });
+    const state = lm.getState();
+    applyMarketQuotesForSimulationEpoch(state.market, state.simulationEpochMs, null, {
+      excludeSymbols: [FIREIDX_SYMBOL],
+      fullChartLineSymbols: [symbol],
+    });
+  };
+
+  bootstrapOrderBook(symA);
+  bootstrapOrderBook(symB);
+
+  const before = lm.getState();
+  const qtyBeforeA = qtyOf(before, symA);
+  const qtyBeforeB = qtyOf(before, symB);
+
+  lm.pause();
+  lm.dispatchCommand({ type: 'uiState/select-instrument', symbol: symB });
+  lm.dispatchCommand({
+    type: 'trading/submit-market-order',
+    side: 'buy',
+    symbol: symA,
+    quantity: 1,
+    source: 'modal',
+  });
+  lm.dispatchCommand({
+    type: 'trading/submit-market-order',
+    side: 'buy',
+    symbol: symB,
+    quantity: 1,
+    source: 'modal',
+  });
+
+  lm.update(1);
+  let state = lm.getState();
+  if (qtyOf(state, symA) !== qtyBeforeA || qtyOf(state, symB) !== qtyBeforeB) {
+    throw new Error('на паузе позиции не должны меняться');
+  }
+  const openCount = state.trading.openOrders.filter((o) => o.status === 'open').length;
+  if (openCount !== 2) {
+    throw new Error(`ожидали 2 open orders, получено ${openCount}`);
+  }
+
+  lm.resume();
+  for (let i = 0; i < 30; i++) {
+    lm.update(1);
+    state = lm.getState();
+    const stillOpen = state.trading.openOrders.filter(
+      (o) =>
+        (o.status === 'open' || o.status === 'partially_filled') &&
+        (o.symbol === symA || o.symbol === symB)
+    );
+    if (stillOpen.length === 0) {
+      break;
+    }
+  }
+
+  if (qtyOf(state, symA) !== qtyBeforeA + 1) {
+    throw new Error(`заявка по ${symA} не исполнилась после resume`);
+  }
+  if (qtyOf(state, symB) !== qtyBeforeB + 1) {
+    throw new Error(`заявка по ${symB} не исполнилась после resume`);
   }
 });
 

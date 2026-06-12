@@ -4,9 +4,11 @@ const fs = require('fs/promises');
 const {
   buildSlicesPayload,
   buildDaySlicesPayload,
+  buildLastKnownSeedPayload,
   prefetchNextDayPayload,
   prefetchDayPayload,
 } = require('./market-db-slice.cjs');
+const { registerMlIpc, shutdownWorker } = require('./ml-bridge.cjs');
 
 let mainWindow;
 
@@ -149,43 +151,82 @@ function createWindow() {
   });
 }
 
+function marketIpcError(e) {
+  return { ok: false, error: e instanceof Error ? e.message : String(e) };
+}
+
 function registerMarketIpc() {
   ipcMain.removeHandler('market:get-slices');
   ipcMain.handle('market:get-slices', async (_event, payload) => {
-    const epochMs = Number(payload?.epochMs);
-    const symbols = Array.isArray(payload?.symbols) ? payload.symbols : [];
-    const fromEpochMs = Number(payload?.fromEpochMs);
-    if (!Number.isFinite(epochMs) || symbols.length === 0) {
-      return { ok: false, error: 'invalid_payload' };
+    try {
+      const epochMs = Number(payload?.epochMs);
+      const symbols = Array.isArray(payload?.symbols) ? payload.symbols : [];
+      const fromEpochMs = Number(payload?.fromEpochMs);
+      if (!Number.isFinite(epochMs) || symbols.length === 0) {
+        return { ok: false, error: 'invalid_payload' };
+      }
+      return await buildSlicesPayload({
+        epochMs,
+        symbols,
+        ...(Number.isFinite(fromEpochMs) ? { fromEpochMs } : {}),
+      });
+    } catch (e) {
+      console.error('[market:get-slices]', e);
+      return marketIpcError(e);
     }
-    return await buildSlicesPayload({
-      epochMs,
-      symbols,
-      ...(Number.isFinite(fromEpochMs) ? { fromEpochMs } : {}),
-    });
   });
 
   ipcMain.removeHandler('market:prefetch-next-day');
   ipcMain.handle('market:prefetch-next-day', async (_event, payload) => {
-    return await prefetchNextDayPayload(payload ?? {});
+    try {
+      return await prefetchNextDayPayload(payload ?? {});
+    } catch (e) {
+      console.error('[market:prefetch-next-day]', e);
+      return marketIpcError(e);
+    }
   });
 
   ipcMain.removeHandler('market:prefetch-day');
   ipcMain.handle('market:prefetch-day', async (_event, payload) => {
-    return await prefetchDayPayload(payload ?? {});
+    try {
+      return await prefetchDayPayload(payload ?? {});
+    } catch (e) {
+      console.error('[market:prefetch-day]', e);
+      return marketIpcError(e);
+    }
   });
 
   ipcMain.removeHandler('market:get-day-slices');
   ipcMain.handle('market:get-day-slices', async (_event, payload) => {
-    return await buildDaySlicesPayload(payload ?? {});
+    try {
+      return await buildDaySlicesPayload(payload ?? {});
+    } catch (e) {
+      console.error('[market:get-day-slices]', e);
+      return marketIpcError(e);
+    }
+  });
+
+  ipcMain.removeHandler('market:get-last-known-seed');
+  ipcMain.handle('market:get-last-known-seed', async (_event, payload) => {
+    try {
+      return await buildLastKnownSeedPayload(payload ?? {});
+    } catch (e) {
+      console.error('[market:get-last-known-seed]', e);
+      return marketIpcError(e);
+    }
   });
 }
 
 app.on('ready', () => {
   registerMarketIpc();
+  registerMlIpc(ipcMain);
   registerPersistenceIpc();
   registerWindowIpc();
   createWindow();
+});
+
+app.on('will-quit', () => {
+  shutdownWorker();
 });
 
 app.on('window-all-closed', () => {

@@ -1,5 +1,8 @@
 import type { AssetKind } from './contracts';
 import { FIREIDX_SYMBOL } from './compositeIndex';
+import {
+  isInflationIndexSymbol,
+} from './inflationIndexSeries';
 import { lastBarIndexAtOrBefore } from './priceSeries';
 import type { MarketModuleState } from './state';
 
@@ -50,6 +53,9 @@ export function isInstrumentActiveOnMarket(
 ): boolean {
   const sym = symbol.toUpperCase();
   if (sym === FIREIDX_SYMBOL) {
+    return true;
+  }
+  if (isInflationIndexSymbol(sym)) {
     return true;
   }
 

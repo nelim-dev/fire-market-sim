@@ -50,12 +50,12 @@ export function PositionRow({
           symbol: p.ticker,
         })
       }
-      className={`w-full border-b border-zinc-800/80 py-2 text-left text-[11px] transition last:border-0 hover:bg-zinc-900/50 sm:text-xs ${
+      className={`block w-full border-b border-zinc-800/80 py-2 text-left text-[11px] transition last:border-0 hover:bg-zinc-900/50 sm:text-xs ${
         isSelected ? 'bg-sky-950/30 ring-1 ring-inset ring-sky-800/40' : ''
       }`}
     >
       <div
-        className="grid grid-cols-4 items-baseline gap-x-2 gap-y-0.5"
+        className="grid grid-cols-4 items-baseline gap-x-2 gap-y-0.5 px-4"
         style={{ gridTemplateColumns: 'minmax(0,1.1fr) minmax(0,0.9fr) minmax(0,1fr) minmax(0,0.65fr)' }}
       >
         <div className="flex min-w-0 items-baseline gap-1">

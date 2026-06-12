@@ -123,4 +123,31 @@ run('education/lock-symbol — инструмент в секции закрыт
   );
 });
 
+run('selectMarketOverviewRows — EU price scaled for display (÷1000)', () => {
+  const lm = new LogicManager();
+  const state = lm.getState();
+  const euAsset = state.market.assetsBySymbol.EU;
+  assert(Boolean(euAsset), 'EU asset missing');
+  state.market.assetsBySymbol.EU = {
+    ...euAsset!,
+    currentPriceRub: 71_029,
+  };
+  lm.dispatchCommand({
+    type: 'uiState/set-market-overview-filters',
+    patch: {
+      showAvailable: true,
+      showLocked: false,
+      assetKindFilter: 'index',
+      searchQuery: 'eur',
+    },
+  });
+  const { available } = selectMarketOverviewRows(lm.getState());
+  const eu = available.find((r) => r.symbol === 'EU');
+  assert(Boolean(eu), 'EU должна быть в списке индексов');
+  assert(
+    eu!.currentPriceRub != null && Math.abs(eu!.currentPriceRub - 71.029) < 0.001,
+    `EU price must be ÷1000 for display, got ${eu!.currentPriceRub}`
+  );
+});
+
 process.exit(exitCode(failures));

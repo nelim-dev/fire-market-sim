@@ -6,7 +6,7 @@
   "scripts": {
     "test:m1": "tsx tests/console/m1.test.ts",
     "test:m2": "tsx tests/console/m2.test.ts && tsx tests/console/m2-portfolio-stats.test.ts",
-    "test:m3": "tsx tests/console/m3-catalog-selectors.test.ts && tsx tests/console/m3-market-quote-clip.test.ts && tsx tests/console/m3-minute-bar-aggregation.test.ts && tsx tests/console/m3-market-runtime-contract.test.ts && tsx tests/console/m3-day-buffer-runtime.test.ts && tsx tests/console/m3-macro-indicators.test.ts && tsx tests/console/m3-chart-windows.test.ts && tsx tests/console/m3-dividend-eligibility.test.ts && tsx tests/console/m3-chart-series-retention.test.ts && tsx tests/console/m3-market-instrument-lifecycle.test.ts && tsx tests/console/m3-dn-r-synthetic-fund.test.ts && npx tsx --test src/logic/modules/market/__tests__/macroResolve.test.ts && npx tsx --test src/logic/modules/market/__tests__/inflationSchedule.test.ts && npx tsx --test src/logic/modules/market/__tests__/fireidxComparison.test.ts && npx tsx --test src/logic/modules/portfolio/__tests__/statsSelectors.test.ts && npx tsx --test src/logic/modules/market/__tests__/instrumentCopy.test.ts && npx tsx --test src/logic/modules/market/__tests__/moneyMarketRateSchedule.test.ts && npx tsx --test src/logic/modules/market/__tests__/moneyMarketNav.test.ts",
+    "test:m3": "tsx tests/console/m3-catalog-selectors.test.ts && tsx tests/console/m3-market-quote-clip.test.ts && tsx tests/console/m3-minute-bar-aggregation.test.ts && tsx tests/console/m3-market-runtime-contract.test.ts && tsx tests/console/m3-day-buffer-runtime.test.ts && tsx tests/console/m3-macro-indicators.test.ts && tsx tests/console/m3-chart-windows.test.ts && tsx tests/console/m3-dividend-eligibility.test.ts && tsx tests/console/m3-chart-series-retention.test.ts && tsx tests/console/m3-market-instrument-lifecycle.test.ts && tsx tests/console/m3-dn-r-synthetic-fund.test.ts && npx tsx --test src/logic/modules/market/__tests__/macroResolve.test.ts && npx tsx --test src/logic/modules/market/__tests__/inflationSchedule.test.ts && npx tsx --test src/logic/modules/market/__tests__/inflationIndexSeries.test.ts && npx tsx --test src/logic/modules/market/__tests__/fireidxComparison.test.ts && npx tsx --test src/logic/modules/portfolio/__tests__/statsSelectors.test.ts && npx tsx --test src/logic/modules/market/__tests__/instrumentCopy.test.ts && npx tsx --test src/logic/modules/market/__tests__/moneyMarketRateSchedule.test.ts && npx tsx --test src/logic/modules/market/__tests__/moneyMarketNav.test.ts",
     "test:m4": "tsx tests/console/m4-trading-and-ui-contract.test.ts && tsx tests/console/m4-extended.test.ts && tsx tests/console/pseudo-orderbook.test.ts && tsx tests/console/limit-orders-partial-fill.test.ts && tsx tests/console/composite-index.test.ts && tsx tests/console/market-perf-benchmark.test.ts && tsx tests/console/market-session-degradation.test.ts",
     "test:m5": "tsx tests/console/m5-market-overview-ui.test.ts",
     "test:m6": "tsx tests/console/stub-milestone.ts M6",
@@ -14,9 +14,13 @@
     "test:m8": "tsx tests/console/stub-milestone.ts M8",
     "test:m9": "tsx tests/console/stub-milestone.ts M9",
     "test:m10": "tsx tests/console/stub-milestone.ts M10",
-    "test:all": "npm run test:m1 && npm run test:m2 && npm run test:m3 && npm run test:m4 && npm run test:m5 && npm run test:m6 && npm run test:m7 && npm run test:m8 && npm run test:m9 && npm run test:m10",
+    "test:a1": "tsx tests/console/a1-model-day-tensor.test.ts && tsx tests/console/a1-ml-predict-smoke.test.ts && npx tsx --test src/logic/modules/analytics/__tests__/modelDayTensor.test.ts && npx tsx --test src/logic/modules/analytics/__tests__/analyticsModule.test.ts",
+    "test:a2": "tsx tests/console/a2-analytics-cond-parity.test.ts",
+    "test:a2:plot": "tsx tests/console/a2-analytics-cond-parity.test.ts --source 20191230 --target 20200103 --symbols GAZP,BR --plot",
+    "test:all": "npm run test:m1 && npm run test:m2 && npm run test:m3 && npm run test:m4 && npm run test:m5 && npm run test:m6 && npm run test:m7 && npm run test:m8 && npm run test:m9 && npm run test:m10 && npm run test:a1",
     "gen:calendar": "tsx scripts/build-trading-calendar.ts",
     "gen:inflation-schedule": "tsx scripts/build-inflation-schedule.ts",
+    "gen:inflation-index-data": "tsx scripts/generate-inflation-index-data.ts",
     "gen:fireidx-candles": "tsx scripts/build-fireidx-candles.ts",
     "gen:dn-r-candles": "tsx scripts/generate-dn-r-candles.ts",
     "gen:market-catalog": "tsx scripts/generate-market-instrument-catalog.ts",
@@ -37,12 +41,13 @@
     "download:moex-currency:smoke": "npm --prefix downloadStockData run download:currency:smoke",
     "download:moex-currency:incremental": "npm --prefix downloadStockData run download:currency:incremental",
     "test:download-stock-data": "npm --prefix downloadStockData test",
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
     "rebuild:node": "npm rebuild better-sqlite3",
     "electron:dev": "concurrently \"cross-env NODE_ENV=development npm run dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+    "setup:ml-python": "tsx scripts/setup-embedded-python.ts",
     "electron:build": "next build && npm run build:market-db && electron-builder",
     "electron:start": "electron ."
   },
@@ -80,6 +85,10 @@
       {
         "from": "data/tradingCalendar.json",
         "to": "."
+      },
+      {
+        "from": "resources/ml",
+        "to": "ml"
       }
     ],
     "files": [

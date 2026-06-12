@@ -108,7 +108,6 @@ export function AppHeader() {
           <nav className="flex flex-wrap items-center justify-end gap-x-2 sm:gap-x-3 md:gap-x-4">
             <NavLink href="/">Портфель</NavLink>
             <NavLink href="/learn">Обучение</NavLink>
-            <NavLink href="/achievements">Достижения</NavLink>
             <button
               type="button"
               onClick={openMenu}

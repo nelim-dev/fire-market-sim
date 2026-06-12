@@ -17,9 +17,20 @@ export type MarketPrefetchDayIpcPayload = {
   symbols: readonly string[];
 };
 
+export type MarketLastKnownSeedIpcPayload = {
+  beforeMskDate: string;
+  symbols: readonly string[];
+};
+
+export type MarketLastKnownSeedIpcResult =
+  | { ok: true; closeBySymbol: Record<string, number | null> }
+  | { ok: false; error?: string };
+
 export type MarketDaySlicesIpcPayload = {
   mskDateYyyymmdd: string;
   symbols: readonly string[];
+  /** Analytics ML: all calendar-day minutes (prepare_raw), not session window only. */
+  useCalendarDayMinutes?: boolean;
 };
 
 export type MarketSlicesIpcOk = {
@@ -54,7 +65,7 @@ function asBarList(v: unknown): MarketPriceBar[] {
   }));
 }
 
-function bundleFromOkPayload(res: MarketSlicesIpcOk): MarketChartSeriesBundle {
+export function bundleFromOkPayload(res: MarketSlicesIpcOk): MarketChartSeriesBundle {
   const upperRecord = (rec: Record<string, unknown>) => {
     const out: Record<string, readonly MarketPriceBar[]> = {};
     for (const [k, v] of Object.entries(rec)) {
@@ -170,13 +181,18 @@ export async function fetchDaySlicesFromElectron(
   if (!w.marketData?.getDaySlices) {
     return null;
   }
-  const res = await w.marketData.getDaySlices({
-    mskDateYyyymmdd,
-    symbols: symbols.map((s) => s.toUpperCase()),
-  });
-  if (!res.ok) {
-    console.warn('[marketData]', res);
+  try {
+    const res = await w.marketData.getDaySlices({
+      mskDateYyyymmdd,
+      symbols: symbols.map((s) => s.toUpperCase()),
+    });
+    if (!res.ok) {
+      console.warn('[marketData]', res);
+      return null;
+    }
+    return bundleFromOkPayload(res);
+  } catch (e) {
+    console.warn('[marketData] getDaySlices failed', e);
     return null;
   }
-  return bundleFromOkPayload(res);
 }

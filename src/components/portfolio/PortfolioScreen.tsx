@@ -19,7 +19,7 @@ const tabs: { id: PortfolioMainTab; label: string }[] = [
 ];
 
 const PANEL_SWITCH_BUTTON_CLASS =
-  'mt-3 w-full rounded-lg border border-zinc-700 bg-zinc-900/60 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-sky-700/60 hover:bg-zinc-800 hover:text-white';
+  'rounded-lg border border-zinc-700 bg-zinc-900/60 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-sky-700/60 hover:bg-zinc-800 hover:text-white';
 
 function setPortfolioMainTab(tab: PortfolioMainTab): void {
   gameLoop.getLogicManager().dispatchCommand({
@@ -30,8 +30,10 @@ function setPortfolioMainTab(tab: PortfolioMainTab): void {
 
 export function PortfolioScreen({
   onOpenMarketOverview,
+  onOpenAnalytics,
 }: {
   onOpenMarketOverview?: () => void;
+  onOpenAnalytics?: () => void;
 } = {}) {
   const portfolio = useGameState((s) => s.portfolio);
   const market = useGameState((s) => s.market);
@@ -53,14 +55,27 @@ export function PortfolioScreen({
   return (
     <div className="text-zinc-100">
       <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Мой портфель</h1>
-      {onOpenMarketOverview ? (
-        <button
-          type="button"
-          onClick={onOpenMarketOverview}
-          className={PANEL_SWITCH_BUTTON_CLASS}
-        >
-          Обзор рынка
-        </button>
+      {onOpenMarketOverview || onOpenAnalytics ? (
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {onOpenMarketOverview ? (
+            <button
+              type="button"
+              onClick={onOpenMarketOverview}
+              className={PANEL_SWITCH_BUTTON_CLASS}
+            >
+              Обзор рынка
+            </button>
+          ) : null}
+          {onOpenAnalytics ? (
+            <button
+              type="button"
+              onClick={onOpenAnalytics}
+              className={PANEL_SWITCH_BUTTON_CLASS}
+            >
+              Аналитика
+            </button>
+          ) : null}
+        </div>
       ) : null}
       <nav className="mt-3 flex flex-wrap gap-2 border-b border-zinc-800 pb-2 sm:mt-4 sm:gap-3">
         {tabs.map((t) => (

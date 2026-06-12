@@ -16,6 +16,11 @@ import {
 import type { MarketPriceBar } from './priceSeries';
 import { faceValueAtTime, nkdPerBondRubAt } from './instrumentDetails';
 import { FIREIDX_SYMBOL } from './compositeIndex';
+import {
+  buildInflationIndexChartLines,
+  isInflationIndexSymbol,
+  resolveInflationIndexPriceAtEpoch,
+} from './inflationIndexSeries';
 import { isTradableMarketInstrument } from './instrumentLifecycle';
 import {
   buildPseudoOrderBook,
@@ -122,12 +127,50 @@ function applyQuotesForOneAsset(
   preSlots?: PrecomputedChartSlots | null
 ): boolean {
   const sym = item.symbol.toUpperCase();
-  const minute = market.chartSeries.minute[sym] ?? [];
-  const daily = market.chartSeries.dailyClose[sym] ?? [];
   const asset = market.assetsBySymbol[sym];
   if (!asset) {
     return false;
   }
+
+  if (isInflationIndexSymbol(sym)) {
+    const inflPrice = resolveInflationIndexPriceAtEpoch(simulationEpochMs);
+    const effectivePriceRub = inflPrice ?? asset.currentPriceRub ?? 0;
+    const lines = buildInflationIndexChartLines(simulationEpochMs);
+    const nextPeriod = { ...asset.periodChangePctByTimeframe };
+    let periodChanged = false;
+    for (const id of CHART_TIMEFRAME_IDS) {
+      if (id === '1d' || id === '1w' || id === '1m') {
+        nextPeriod[id] = null;
+        continue;
+      }
+      const nextValue = computePeriodReturnPct(lines[id]);
+      if (nextValue !== asset.periodChangePctByTimeframe[id]) {
+        periodChanged = true;
+      }
+      nextPeriod[id] = nextValue;
+    }
+    const chartChanged = CHART_TIMEFRAME_IDS.some(
+      (id) => asset.chartLineByTimeframe[id] !== lines[id]
+    );
+    const dailyChangePct = asset.dailyChangePct;
+    market.assetsBySymbol[sym] = {
+      ...asset,
+      currentPriceRub: effectivePriceRub,
+      dailyChangePct,
+      chartLineByTimeframe: lines,
+      periodChangePctByTimeframe: nextPeriod,
+      orderBook: { bids: [], asks: [] },
+      orderBookBuiltAtEpochMs: simulationEpochMs,
+    };
+    return (
+      chartChanged ||
+      periodChanged ||
+      asset.currentPriceRub !== effectivePriceRub
+    );
+  }
+
+  const minute = market.chartSeries.minute[sym] ?? [];
+  const daily = market.chartSeries.dailyClose[sym] ?? [];
   const minuteLastIdx = lastBarIndexAtOrBefore(minute, simulationEpochMs);
   const minutePricePct = minuteLastIdx >= 0 ? minute[minuteLastIdx].c : null;
   const lastIdx = lastBarIndexAtOrBefore(daily, simulationEpochMs);

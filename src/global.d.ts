@@ -1,5 +1,7 @@
 import type {
   MarketDaySlicesIpcPayload,
+  MarketLastKnownSeedIpcPayload,
+  MarketLastKnownSeedIpcResult,
   MarketPrefetchDayIpcPayload,
   MarketPrefetchIpcPayload,
   MarketPrefetchIpcResult,
@@ -14,6 +16,14 @@ import type {
 type PersistenceIpcResult<T> =
   | { ok: true } & T
   | { ok: false; error?: string };
+
+export type MlPredictIpcPayload = {
+  prev_day: number[][];
+};
+
+export type MlPredictIpcResult =
+  | { ok: true; next_day: number[][] }
+  | { ok: false; error: string };
 
 declare global {
   interface Window {
@@ -33,6 +43,12 @@ declare global {
         payload: MarketPrefetchDayIpcPayload
       ): Promise<MarketPrefetchIpcResult>;
       getDaySlices(payload: MarketDaySlicesIpcPayload): Promise<MarketSlicesIpcResult>;
+      getLastKnownSeed(
+        payload: MarketLastKnownSeedIpcPayload
+      ): Promise<MarketLastKnownSeedIpcResult>;
+    };
+    ml?: {
+      predict(payload: MlPredictIpcPayload): Promise<MlPredictIpcResult>;
     };
     persistence?: {
       listSaves(): Promise<

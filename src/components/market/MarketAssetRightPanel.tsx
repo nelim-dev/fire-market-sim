@@ -1,11 +1,18 @@
 'use client';
 
 import { formatInTimeZone } from 'date-fns-tz';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { gameLoop } from '@/logic/runners/GameLoop';
 import type { AssetKind, OrderBookLevel } from '@/logic/modules/market/contracts';
 import type { ChartTimeframeId } from '@/logic/modules/market/chartTimeframes';
+import {
+  chartTimeframesForSymbol,
+  chartUsesEvenIndexSpacing,
+  isInflationIndexSymbol,
+} from '@/logic/modules/market/inflationIndexSeries';
+import { displayPriceRubForSymbol } from '@/logic/domain/eurRubSeriesDisplay';
+import { analyticsChartBarsForDisplay } from '@/logic/modules/analytics/displayPrice';
 import { FIREIDX_SYMBOL } from '@/logic/modules/market/compositeIndex';
 import {
   selectInstrumentPayoutHistory,
@@ -68,6 +75,13 @@ function formatOrderBookPrice(n: number): string {
 
 function formatDateMsk(epochMs: number): string {
   return formatInTimeZone(epochMs, 'Europe/Moscow', 'dd.MM.yyyy');
+}
+
+function formatInstrumentPrice(symbol: string, priceRub: number): string {
+  if (isInflationIndexSymbol(symbol)) {
+    return `${formatRub(priceRub)}%`;
+  }
+  return `${formatRub(displayPriceRubForSymbol(symbol, priceRub))} ₽`;
 }
 
 function assetKindLabel(kind: AssetKind): string {
@@ -142,6 +156,19 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
 
   const symUpper = symbol.toUpperCase();
   const isFireIdx = symUpper === FIREIDX_SYMBOL;
+  const isInflIdx = isInflationIndexSymbol(symUpper);
+
+  const chartTimeframeOptions = useMemo(() => {
+    const allowed = new Set(chartTimeframesForSymbol(symUpper));
+    return TIMEFRAMES.filter((tf) => allowed.has(tf.id));
+  }, [symUpper]);
+
+  useEffect(() => {
+    const allowed = chartTimeframesForSymbol(symUpper);
+    setTimeframe((current) =>
+      allowed.includes(current) ? current : (allowed[0] ?? '1d')
+    );
+  }, [symUpper]);
 
   const selectedSlice = useGameState(
     (s) => {
@@ -169,6 +196,11 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
       formatInTimeZone(simulationEpochMs, 'Europe/Moscow', 'dd.MM.yyyy HH:mm'),
     [simulationEpochMs]
   );
+
+  const chartPoints = useMemo(() => {
+    const raw = asset?.chartLineByTimeframe[timeframe] ?? [];
+    return analyticsChartBarsForDisplay(symUpper, raw);
+  }, [asset?.chartLineByTimeframe, timeframe, symUpper]);
 
   if (catalog.length === 0) {
     return (
@@ -203,7 +235,7 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
     isTradable &&
     orderBook != null &&
     (orderBook.bids.length > 0 || orderBook.asks.length > 0);
-  const panelTabs: { id: PanelTab; label: string }[] = isFireIdx
+  const panelTabs: { id: PanelTab; label: string }[] = isFireIdx || isInflIdx
     ? [
         { id: 'chart', label: 'График' },
         { id: 'about', label: 'О бумаге' },
@@ -256,7 +288,7 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
 
       <div>
         <p className="font-mono text-2xl font-semibold text-zinc-50">
-          {priceRub == null ? '—' : `${formatRub(priceRub)} ₽`}
+          {priceRub == null ? '—' : formatInstrumentPrice(symbol, priceRub)}
         </p>
         <p
           className={`mt-1 font-mono text-sm ${
@@ -291,7 +323,7 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
       {panelTab === 'chart' ? (
       <section className="space-y-2">
         <div className="flex flex-wrap gap-1.5">
-          {TIMEFRAMES.map((tf) => (
+          {chartTimeframeOptions.map((tf) => (
             <button
               key={tf.id}
               type="button"
@@ -312,14 +344,15 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
             <span className="font-mono text-zinc-300">{gameDateLabel}</span> МСК
           </p>
           <p className="mt-1 text-[11px] leading-snug text-zinc-600">
-            Горизонт и шаг ряда зависят от выбранного периода (см. план M3 §6.2); точки
-            строго не позже текущего шага симуляции. Свечной режим и полный минутный
-            replay — отдельно.
+            {isInflIdx
+              ? 'Месячная MoM-инфляция (%): полная история с 2013 года; правый край — последний опубликованный месяц на дату симуляции.'
+              : 'Горизонт и шаг ряда зависят от выбранного периода (см. план M3 §6.2); точки строго не позже текущего шага симуляции. Свечной режим и полный минутный replay — отдельно.'}
           </p>
           <div className="mt-3 min-h-[248px] h-64 w-full max-w-full overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/50 p-2">
             <MarketCloseLineChart
-              points={asset?.chartLineByTimeframe[timeframe] ?? []}
+              points={chartPoints}
               timeframe={timeframe}
+              evenIndexSpacing={chartUsesEvenIndexSpacing(symUpper, timeframe)}
             />
           </div>
         </div>

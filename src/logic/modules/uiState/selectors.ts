@@ -1,4 +1,5 @@
 import type { GameState } from '@/logic/managers/LogicManager';
+import { displayPriceRubForSymbol } from '@/logic/domain/eurRubSeriesDisplay';
 import type { MarketInstrumentCatalogItem } from '@/logic/modules/market/contracts';
 import { selectIsInstrumentActiveOnMarket } from '@/logic/modules/market/selectors';
 import { selectEducationIsSymbolUnlocked } from '@/logic/modules/education/selectors';
@@ -62,12 +63,14 @@ function toOverviewRow(
 ): MarketOverviewInstrumentRow {
   const symbol = item.symbol.toUpperCase();
   const asset = state.market.assetsBySymbol[symbol];
+  const rawPrice = asset?.currentPriceRub ?? null;
   return {
     symbol,
     ticker: item.isin.startsWith('TBD-') ? item.ticker : item.isin,
     displayName: item.displayName,
     assetKind: item.assetKind,
-    currentPriceRub: asset?.currentPriceRub ?? null,
+    currentPriceRub:
+      rawPrice == null ? null : displayPriceRubForSymbol(symbol, rawPrice),
     changePct1d: asset?.periodChangePctByTimeframe['1d'] ?? null,
     isUnlocked: selectEducationIsSymbolUnlocked(symbol)(state),
   };

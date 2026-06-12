@@ -356,6 +356,22 @@ function queryMinuteRows(db, upper, minTs, maxTs) {
   }));
 }
 
+function queryLastMinuteCloseBefore(db, upper, beforeTsMs) {
+  const sql = `
+    SELECT close AS c
+    FROM minute_bars
+    WHERE symbol = ? AND ts_ms < ?
+    ORDER BY ts_ms DESC
+    LIMIT 1
+  `;
+  const row = db.prepare(sql).get(upper, beforeTsMs);
+  if (!row) {
+    return null;
+  }
+  const c = Number(row.c);
+  return Number.isFinite(c) && c > 0 ? c : null;
+}
+
 function cloneBars(bars) {
   return bars.map((b) => ({ ...b }));
 }
@@ -414,8 +430,19 @@ function getDayByMskDate(days, mskDateYyyymmdd) {
   return null;
 }
 
-function loadDayBundle(db, symbol, day, sessionEndByDate) {
-  const key = dayCacheKey(symbol, day.mskDateYyyymmdd);
+function calendarDayBoundsMsk(mskYyyymmdd) {
+  const y = mskYyyymmdd.slice(0, 4);
+  const m = mskYyyymmdd.slice(4, 6);
+  const d = mskYyyymmdd.slice(6, 8);
+  const startMs = toDate(`${y}-${m}-${d}T00:00:00`, { timeZone: 'Europe/Moscow' }).getTime();
+  return { startMs, endExclusiveMs: startMs + DAY_MS };
+}
+
+function loadDayBundle(db, symbol, day, sessionEndByDate, options = {}) {
+  const useCalendarDayMinutes = options.useCalendarDayMinutes === true;
+  const key = useCalendarDayMinutes
+    ? `${dayCacheKey(symbol, day.mskDateYyyymmdd)}:cal`
+    : dayCacheKey(symbol, day.mskDateYyyymmdd);
   const cached = dayBundleCache.get(key);
   if (cached) {
     probe.cacheHits += 1;
@@ -423,7 +450,14 @@ function loadDayBundle(db, symbol, day, sessionEndByDate) {
     return cached;
   }
   probe.cacheMisses += 1;
-  const rows = queryMinuteRows(db, symbol, day.sessionStartEpochMs, day.sessionEndEpochMs);
+  let minTs = day.sessionStartEpochMs;
+  let maxTs = day.sessionEndEpochMs;
+  if (useCalendarDayMinutes) {
+    const cal = calendarDayBoundsMsk(day.mskDateYyyymmdd);
+    minTs = cal.startMs;
+    maxTs = cal.endExclusiveMs - 1;
+  }
+  const rows = queryMinuteRows(db, symbol, minTs, maxTs);
   const bundle = aggregateMinuteRows(rows, sessionEndByDate);
   rememberDayBundle(key, bundle);
   return bundle;
@@ -587,6 +621,7 @@ async function prefetchDayPayload(params) {
 async function buildDaySlicesPayload(params) {
   const mskDateYyyymmdd = String(params?.mskDateYyyymmdd ?? '');
   const symbols = Array.isArray(params?.symbols) ? params.symbols : [];
+  const useCalendarDayMinutes = params?.useCalendarDayMinutes === true;
   if (!/^\d{8}$/.test(mskDateYyyymmdd) || symbols.length === 0) {
     return { ok: false, error: 'invalid_payload' };
   }
@@ -621,7 +656,9 @@ async function buildDaySlicesPayload(params) {
 
   for (const sym of symbols) {
     const upper = String(sym).toUpperCase();
-    const bundle = loadDayBundle(db, upper, day, sessionEndByDate);
+    const bundle = loadDayBundle(db, upper, day, sessionEndByDate, {
+      useCalendarDayMinutes,
+    });
     minuteBySymbol[upper] = cloneBars(bundle.minute);
     dailyCloseBySymbol[upper] = cloneBars(bundle.dailyClose);
     fiveMinuteBySymbol[upper] = cloneBars(bundle.fiveMinute);
@@ -641,9 +678,34 @@ async function buildDaySlicesPayload(params) {
   };
 }
 
+/**
+ * Last known close per symbol strictly before calendar day start (analytics seed).
+ * @param {{ beforeMskDate: string, symbols: string[] }} params
+ */
+async function buildLastKnownSeedPayload(params) {
+  const beforeMskDate = String(params?.beforeMskDate ?? '');
+  const symbols = Array.isArray(params?.symbols) ? params.symbols : [];
+  if (!/^\d{8}$/.test(beforeMskDate) || symbols.length === 0) {
+    return { ok: false, error: 'invalid_payload' };
+  }
+  const dbPath = resolveDbPath();
+  if (!fs.existsSync(dbPath)) {
+    return { ok: false, error: 'db_missing', path: dbPath };
+  }
+  const cal = calendarDayBoundsMsk(beforeMskDate);
+  const db = await getDatabase(dbPath);
+  const closeBySymbol = {};
+  for (const sym of symbols) {
+    const upper = String(sym).toUpperCase();
+    closeBySymbol[upper] = queryLastMinuteCloseBefore(db, upper, cal.startMs);
+  }
+  return { ok: true, closeBySymbol };
+}
+
 module.exports = {
   buildSlicesPayload,
   buildDaySlicesPayload,
+  buildLastKnownSeedPayload,
   prefetchNextDayPayload,
   prefetchDayPayload,
   resolveDbPath,

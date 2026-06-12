@@ -48,5 +48,13 @@ src/data/generated/marketChartData.json
 src/data/generated/marketChartSlices.json
 
 # SQLite и копия календаря для Electron (генерация: npm run build:market-db)
-/data/market.sqlite
-/data/tradingCalendar.json
+/data/
+
+# тяжёлые локальные данные и черновики (новые файлы не коммитить)
+/tickers/
+/bonds/
+/indexes/
+/fonds/
+/timeVAE/
+/tmp/
+/vsyakoe/

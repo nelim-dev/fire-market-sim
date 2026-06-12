@@ -10,6 +10,7 @@ import type { EducationCommand } from '@/logic/modules/education/commands';
 import type { PersistenceCommand } from '@/logic/modules/persistence/commands';
 import type { SettingsCommand } from '@/logic/modules/settings/commands';
 import type { UiStateCommand } from '@/logic/modules/uiState/commands';
+import type { AnalyticsCommand } from '@/logic/modules/analytics/commands';
 
 export type MarketSyncPricesCommand = {
   type: 'market/sync-prices';
@@ -159,7 +160,8 @@ export type LogicCommand =
   | EducationCommand
   | PersistenceCommand
   | SettingsCommand
-  | UiStateCommand;
+  | UiStateCommand
+  | AnalyticsCommand;
 
 /**
  * Контекст, доступный модулю в `update` / `handleCommand`.

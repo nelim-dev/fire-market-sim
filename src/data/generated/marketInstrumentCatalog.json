@@ -234,6 +234,14 @@
     },
     {
       "assetKind": "index",
+      "ticker": "INFL",
+      "symbol": "INFL",
+      "displayName": "INFL",
+      "isin": "TBD-INFL",
+      "sourceFilePath": "indexes/INFL.txt"
+    },
+    {
+      "assetKind": "index",
       "ticker": "RGBI",
       "symbol": "RGBI",
       "displayName": "RGBI",

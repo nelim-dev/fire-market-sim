@@ -19,10 +19,12 @@ npm install
 npm --prefix downloadStockData install
 ```
 
-`better-sqlite3` — нативный модуль: после `npm install` для Electron выполните
-`npm run rebuild:electron` (иначе `market:get-slices` может упасть при загрузке).
-Для `npm run build:market-db` из системного Node — `npm run rebuild:node`, если
-перед этим собирали под Electron. `downloadStockData/` — отдельный пакет.
+`better-sqlite3` — нативный модуль с **двумя ABI**: системный Node (тесты,
+`build:market-db`) и Node внутри Electron (`electron:dev`). После `npm install`
+выполните `npm run rebuild:electron`. Если запускали `npm run test:a1` или
+`npm run rebuild:node` — **снова** `npm run rebuild:electron` перед
+`npm run electron:dev`, иначе `market:get-day-slices` падает и симуляция может
+зависнуть на границе торгового дня. `downloadStockData/` — отдельный пакет.
 
 ---
 
@@ -175,8 +177,20 @@ npm run build:market-db
 | Показатель | Файл | Каталог / график |
 |---|---|---|
 | Нефть Brent | `indexes/BR.txt` (Finam) | Да, `assetKind: index` — график, без торговли |
+| Индекс инфляции | `indexes/INFL.txt` (из `assets/инфляция.txt`) | Да, `assetKind: index` — график 6 мес / год / всё время, без торговли |
 | USD/RUB | `tickers/USD000UTSTOM.txt` | Да — график и котировки (`npm run download:moex-currency` → скопировать свечи в `tickers/`) |
 | Ставка ЦБ | `indexes/KS.txt` (таб: `DD.MM.YYYY`, ставка %) | **Нет** — только шапка; в каталог не попадает |
+
+**Индекс инфляции (INFL)** — синтетический ряд из `assets/инфляция.txt`:
+
+```powershell
+npm run gen:inflation-schedule
+npm run gen:inflation-index-data
+npm run gen:market-catalog
+$env:MARKET_IMPORT_SYMBOLS='INFL'; npm run import:market-symbols
+```
+
+Полная пересборка БД не нужна — только точечный импорт одного символа.
 
 После добавления файлов — как в §3.3–3.4 (`gen:market-catalog`, `gen:calendar`, `build:market-db`).
 `build:market-db` также импортирует `KS.txt` в таблицу `key_rate_events` и пишет
@@ -243,4 +257,39 @@ npx tsc --noEmit
 | `download:moex-funds[:smoke\|:incremental]` | MOEX ISS — фонды. |
 | `test:download-stock-data` | Тесты пакета загрузчика. |
 | `test:m1` … `test:m10` | Вехи тестов; `m5..m10` — stub. |
-| `test:all` | M1 → M10 подряд. |
+| `test:a1` | ML-аналитика: тензор дня, smoke predict, unit `modelDayTensor`. |
+| `test:a2` | Parity cond_vae на интегрированном пайплайне (SQLite → worker → сравнение с real next day). |
+| `test:all` | M1 → M10 + A1 подряд. |
+| `setup:ml-python` | Embedded Python + TensorFlow в `resources/ml/python-runtime/` (перед `electron:build`). |
+
+### ML / Аналитика (dev)
+
+```powershell
+pip install -r resources/ml/python/requirements.txt
+npm run rebuild:node
+npm run test:a1
+npm run rebuild:electron
+npm run electron:dev
+```
+
+### Parity-тест (как cond_vae_test, но на данных приложения)
+
+Тот же путь, что «Аналитика»: minute из SQLite → `modelDayTensor` → `predict_worker` → сравнение с реальным следующим днём.
+
+```powershell
+# таблица MAE/RMSE (по умолчанию 20191230 → 20200103, все 21 тикер)
+npm run test:a2
+
+# ваш кейс GAZP+BR + PNG в tmp/analytics-parity/ (Windows: флаги в script, см. test:a2:plot)
+npm run test:a2:plot
+
+# произвольные дни/тикеры — напрямую через tsx (флаги надёжнее, чем npm run … --)
+npx tsx tests/console/a2-analytics-cond-parity.test.ts --source 20191230 --target 20200103 --symbols GAZP,BR --plot
+```
+
+PNG сохраняются в `tmp/analytics-parity/` (close + pred vol для каждого тикера).
+
+Перед `test:a2` нужен `npm run rebuild:node` (SQLite под Node). После — `npm run rebuild:electron` перед Electron.
+
+В приложении: раздел **Аналитика** (`/analytics`) → выбор актива → **Предсказать**.
+Production: один раз `npm run setup:ml-python`, затем `npm run electron:build`.

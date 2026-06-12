@@ -81,6 +81,24 @@ export function pickHydrateSymbolsFromCatalog(
     .filter((symbol, index, arr) => arr.indexOf(symbol) === index);
 }
 
+/** UI selection + open orders: pseudo order book must stay live for execution. */
+export function collectOrderBookSymbols(state: GameState): string[] {
+  const symbols = new Set<string>();
+  const selected = state.uiState.selectedSymbol?.trim().toUpperCase();
+  if (selected) {
+    symbols.add(selected);
+  }
+  for (const order of state.trading.openOrders) {
+    if (order.status === 'open' || order.status === 'partially_filled') {
+      const sym = order.symbol.trim().toUpperCase();
+      if (sym) {
+        symbols.add(sym);
+      }
+    }
+  }
+  return [...symbols];
+}
+
 export class MarketModuleService implements LogicModule<GameState> {
   private static fireidxDisableLogged = false;
   readonly id = 'market';
@@ -219,12 +237,12 @@ export class MarketModuleService implements LogicModule<GameState> {
       forceFullFireidx?: boolean;
       stockBarsChanged?: boolean;
       currentMskDate?: string | null;
-      chartDetailSymbol?: string | null;
+      fullChartLineSymbols?: readonly string[];
     }
   ): void {
     const quotesStart = performance.now();
-    const chartDetail = options?.chartDetailSymbol?.toUpperCase() ?? null;
-    const fullChartLineSymbols = chartDetail ? [chartDetail] : [];
+    const fullChartLineSymbols = options?.fullChartLineSymbols ?? [];
+    const chartDetail = fullChartLineSymbols[0]?.toUpperCase() ?? null;
     const fireidxPrebaked = isFireidxPrebakedInCatalog(state.instrumentCatalog);
     const useRuntimeFireidx = !fireidxPrebaked && !DEBUG_DISABLE_FIREIDX;
     this.perfProbe.fireidxPrebaked = fireidxPrebaked;
@@ -409,7 +427,7 @@ export class MarketModuleService implements LogicModule<GameState> {
     }
     this.applyQuotesAndCompositeIndex(gameState.market, simulationEpochMs, {
       currentMskDate: gameState.currentTradingSession?.mskDateYyyymmdd ?? null,
-      chartDetailSymbol: gameState.uiState.selectedSymbol,
+      fullChartLineSymbols: collectOrderBookSymbols(gameState),
     });
     this.lastQuotedSimulationEpochMs = simulationEpochMs;
   }
@@ -903,7 +921,7 @@ export class MarketModuleService implements LogicModule<GameState> {
     this.lastQuotedSimulationEpochMs = epoch;
     this.applyQuotesAndCompositeIndex(state.market, epoch, {
       currentMskDate: state.currentTradingSession?.mskDateYyyymmdd ?? null,
-      chartDetailSymbol: state.uiState.selectedSymbol,
+      fullChartLineSymbols: collectOrderBookSymbols(state),
     });
     // Сабсервис corporateActions: scan & emit (слой A) — после обновления котировок,
     // чтобы консьюмеры могли уже опираться на актуальные позиции/цены.

@@ -7,6 +7,7 @@ import {
   selectUiPortfolioMainTab,
   selectUiSelectedSymbol,
 } from '@/logic/modules/uiState/selectors';
+import { AnalyticsRightPanel } from '@/components/analytics/AnalyticsRightPanel';
 import { PortfolioCompositionRightPanel } from '@/components/portfolio/PortfolioCompositionRightPanel';
 import { LockedInstrumentPanel } from './LockedInstrumentPanel';
 import { MarketAssetRightPanel } from './MarketAssetRightPanel';
@@ -18,6 +19,14 @@ export function TradingRightPanel() {
   const isUnlocked = useGameState((s) =>
     symbol ? selectEducationIsSymbolUnlocked(symbol)(s) : true
   );
+
+  if (leftPanelMode === 'analytics') {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <AnalyticsRightPanel />
+      </div>
+    );
+  }
 
   if (
     leftPanelMode === 'portfolio' &&

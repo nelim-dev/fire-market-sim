@@ -14,9 +14,19 @@ import {
 } from '@/logic/modules/market/chartTimeframes';
 import type { MarketPriceBar } from '@/logic/modules/market/priceSeries';
 
+type PriceGuideTone = 'min' | 'max';
+
 type Props = {
   points: readonly MarketPriceBar[];
+  /** Вторая линия (например предсказание в аналитике). */
+  overlayPoints?: readonly MarketPriceBar[];
   timeframe: ChartTimeframeId;
+  /** Равномерный шаг по индексу (месячные макро-ряды INFL на 6m/1y). */
+  evenIndexSpacing?: boolean;
+  /** Скрыть подпись под графиком (аналитика — своя легенда). */
+  hideFooterHint?: boolean;
+  /** Горизонтальные маркеры min/max (аналитика). */
+  priceGuides?: readonly { price: number; tone: PriceGuideTone }[];
 };
 
 const W = 420;
@@ -103,8 +113,19 @@ function buildPriceTicks(minP: number, maxP: number, n: number): number[] {
  * Линия по цене; по горизонтали — равномерный шаг между свечами (без разрывов выходных/ночи),
  * подписи снизу — реальное время соответствующей свечи.
  */
-function MarketCloseLineChartImpl({ points, timeframe }: Props) {
-  if (points.length === 0) {
+function formatGuidePrice(price: number): string {
+  return price >= 100 ? price.toFixed(0) : price.toFixed(2);
+}
+
+function MarketCloseLineChartImpl({
+  points,
+  overlayPoints,
+  timeframe,
+  evenIndexSpacing = false,
+  hideFooterHint = false,
+  priceGuides,
+}: Props) {
+  if (points.length === 0 && (overlayPoints?.length ?? 0) === 0) {
     return (
       <div className="flex h-full min-h-[200px] w-full max-w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-zinc-700 bg-zinc-900/40 px-2 text-center text-xs text-zinc-500">
         Нет данных для графика: нет минутных рядов в SQLite для этого инструмента. Соберите БД
@@ -117,18 +138,23 @@ function MarketCloseLineChartImpl({ points, timeframe }: Props) {
 
   const innerW = W - M_LEFT - M_RIGHT;
   const innerH = H - M_TOP - M_BOTTOM;
-  const n = points.length;
-  const windowSlots = CHART_WINDOW_SLOT_COUNT[timeframe] ?? n;
-  const xDenom = Math.max(1, windowSlots - 1);
+  const axisPoints = points.length > 0 ? points : (overlayPoints ?? []);
+  const n = axisPoints.length;
+  const windowSlots = evenIndexSpacing ? n : (CHART_WINDOW_SLOT_COUNT[timeframe] ?? n);
+  const xDenom = Math.max(1, (evenIndexSpacing ? n : windowSlots) - 1);
   // Неполное окно (до carry-init или после потери хвоста) — прижимаем к правому краю,
   // чтобы новые точки не пересчитывали масштаб всей линии.
-  const xOffset = Math.max(0, windowSlots - n);
+  const xOffset = evenIndexSpacing ? 0 : Math.max(0, windowSlots - n);
 
   const xAtIndex = (i: number) =>
     M_LEFT + ((xOffset + i) / xDenom) * innerW;
 
   const [pMin, pMax] = useMemo(() => {
-    const closes = points.map((p) => p.c);
+    const closes = [
+      ...points.map((p) => p.c),
+      ...(overlayPoints ?? []).map((p) => p.c),
+      ...(priceGuides ?? []).map((g) => g.price),
+    ];
     let min = Math.min(...closes);
     let max = Math.max(...closes);
     if (max <= min) {
@@ -139,7 +165,7 @@ function MarketCloseLineChartImpl({ points, timeframe }: Props) {
     min -= pad;
     max += pad;
     return [min, max] as const;
-  }, [points]);
+  }, [points, overlayPoints, priceGuides]);
 
   const yAt = (c: number) =>
     M_TOP + (1 - (c - pMin) / (pMax - pMin)) * innerH;
@@ -152,17 +178,34 @@ function MarketCloseLineChartImpl({ points, timeframe }: Props) {
             `${i === 0 ? 'M' : 'L'} ${xAtIndex(i).toFixed(2)} ${yAt(p.c).toFixed(2)}`
         )
         .join(' '),
-    [points, pMin, pMax, timeframe]
+    [points, pMin, pMax, timeframe, evenIndexSpacing]
   );
 
-  const xTicks = useMemo(() => buildIndexTicks(points, timeframe, 7), [points, timeframe]);
+  const overlayPathD = useMemo(() => {
+    if (!overlayPoints || overlayPoints.length === 0) {
+      return '';
+    }
+    const len = Math.min(overlayPoints.length, axisPoints.length || overlayPoints.length);
+    return overlayPoints
+      .slice(0, len)
+      .map(
+        (p, i) =>
+          `${i === 0 ? 'M' : 'L'} ${xAtIndex(i).toFixed(2)} ${yAt(p.c).toFixed(2)}`
+      )
+      .join(' ');
+  }, [overlayPoints, axisPoints.length, pMin, pMax, timeframe, evenIndexSpacing]);
+
+  const xTicks = useMemo(
+    () => buildIndexTicks(axisPoints, timeframe, 7),
+    [axisPoints, timeframe]
+  );
   const yTicks = useMemo(() => buildPriceTicks(pMin, pMax, 5), [pMin, pMax]);
-  const shouldRenderDots = points.length <= 240;
+  const shouldRenderDots = points.length <= 240 && points.length > 0;
 
   return (
     <div className="flex h-full min-h-[220px] w-full max-w-full flex-col overflow-hidden">
       <svg
-        className="block min-h-[200px] w-full flex-1 text-zinc-500"
+        className="block min-h-0 w-full flex-1 text-zinc-500"
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
         role="img"
@@ -209,13 +252,51 @@ function MarketCloseLineChartImpl({ points, timeframe }: Props) {
             {label}
           </text>
         ))}
-        <path
-          d={pathD}
-          fill="none"
-          className="stroke-sky-400"
-          strokeWidth={1.75}
-          vectorEffect="non-scaling-stroke"
-        />
+        {pathD ? (
+          <path
+            d={pathD}
+            fill="none"
+            className="stroke-sky-400"
+            strokeWidth={1.75}
+            vectorEffect="non-scaling-stroke"
+          />
+        ) : null}
+        {overlayPathD ? (
+          <path
+            d={overlayPathD}
+            fill="none"
+            className="stroke-emerald-400"
+            strokeWidth={1.75}
+            strokeDasharray="6 4"
+            vectorEffect="non-scaling-stroke"
+          />
+        ) : null}
+        {(priceGuides ?? []).map((guide) => (
+          <g key={`guide-${guide.tone}-${guide.price}`}>
+            <line
+              x1={M_LEFT}
+              y1={yAt(guide.price)}
+              x2={M_LEFT + innerW}
+              y2={yAt(guide.price)}
+              className={guide.tone === 'max' ? 'stroke-amber-400/90' : 'stroke-violet-400/90'}
+              strokeDasharray="5 3"
+              strokeWidth={1.25}
+            />
+            <text
+              x={M_LEFT + innerW - 4}
+              y={yAt(guide.price) - 5}
+              textAnchor="end"
+              dominantBaseline="auto"
+              className={
+                guide.tone === 'max'
+                  ? 'fill-amber-300 text-[8px]'
+                  : 'fill-violet-300 text-[8px]'
+              }
+            >
+              {guide.tone === 'max' ? 'макс.' : 'мин.'} {formatGuidePrice(guide.price)}
+            </text>
+          </g>
+        ))}
         {shouldRenderDots
           ? points.map((p, i) => (
               <circle
@@ -228,10 +309,12 @@ function MarketCloseLineChartImpl({ points, timeframe }: Props) {
             ))
           : null}
       </svg>
-      <p className="mt-0.5 text-center text-[10px] text-zinc-600">
-        По горизонтали — порядок свечей без пустот вне торгов; слева — цена; подписи — время
-        (МСК) у выбранных свечей
-      </p>
+      {hideFooterHint ? null : (
+        <p className="mt-0.5 text-center text-[10px] text-zinc-600">
+          По горизонтали — порядок свечей без пустот вне торгов; слева — цена; подписи — время
+          (МСК) у выбранных свечей
+        </p>
+      )}
     </div>
   );
 }

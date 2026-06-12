@@ -36,6 +36,21 @@ describe('applyInstrumentCopyToCatalog', () => {
     assert.equal(out.ticker, 'DN-R');
     assert.ok(out.description?.includes('ежедневной капитализацией'));
   });
+  it('подменяет INFL на справочные displayName, isin, ticker и description', () => {
+    const inflItem: MarketInstrumentCatalogItem = {
+      assetKind: 'index',
+      ticker: 'INFL',
+      symbol: 'INFL',
+      displayName: 'INFL',
+      isin: 'TBD-INFL',
+      sourceFilePath: 'indexes/INFL.txt',
+    };
+    const [out] = applyInstrumentCopyToCatalog([inflItem]);
+    assert.equal(out.displayName, 'Индекс инфляции');
+    assert.equal(out.isin, 'INFL-RU');
+    assert.ok(out.description?.includes('месячной инфляции'));
+  });
+
   it('не меняет инструменты без записи в справочнике', () => {
     const other: MarketInstrumentCatalogItem = {
       ...brItem,

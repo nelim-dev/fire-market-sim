@@ -25,6 +25,15 @@ contextBridge.exposeInMainWorld('marketData', {
   getDaySlices(payload) {
     return ipcRenderer.invoke('market:get-day-slices', payload);
   },
+  getLastKnownSeed(payload) {
+    return ipcRenderer.invoke('market:get-last-known-seed', payload);
+  },
+});
+
+contextBridge.exposeInMainWorld('ml', {
+  predict(payload) {
+    return ipcRenderer.invoke('ml:predict', payload);
+  },
 });
 
 contextBridge.exposeInMainWorld('persistence', {

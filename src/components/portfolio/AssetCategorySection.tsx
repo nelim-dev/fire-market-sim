@@ -52,9 +52,9 @@ export function AssetCategorySection({
         </span>
       </button>
       {open && (
-        <div className="border-t border-zinc-800 px-4 pb-2">
+        <div className="border-t border-zinc-800 pb-2">
           {list.length === 0 ? (
-            <p className="py-4 text-sm text-zinc-500">Нет позиций</p>
+            <p className="px-4 py-4 text-sm text-zinc-500">Нет позиций</p>
           ) : (
             list.map((p) => (
               <PositionRow

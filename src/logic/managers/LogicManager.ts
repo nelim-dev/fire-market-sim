@@ -27,6 +27,8 @@ import type { UiStateModuleState } from '@/logic/modules/uiState/state';
 import { UiStateModuleService } from '@/logic/modules/uiState/service';
 import type { SettingsModuleState } from '@/logic/modules/settings/state';
 import { SettingsModuleService } from '@/logic/modules/settings/service';
+import type { AnalyticsModuleState } from '@/logic/modules/analytics/state';
+import { AnalyticsModuleService } from '@/logic/modules/analytics/service';
 import type { PersistenceModuleState } from '@/logic/modules/persistence/state';
 import { createInitialPersistenceState } from '@/logic/modules/persistence/state';
 import { PersistenceModuleService } from '@/logic/modules/persistence/service';
@@ -87,6 +89,9 @@ export interface GameState extends TimeModuleState {
 
   /** Звук, музыка, громкость, режим окна. */
   settings: SettingsModuleState;
+
+  /** ML-аналитика: on-demand предсказание текущего дня (изолировано от рынка). */
+  analytics: AnalyticsModuleState;
 }
 
 /**
@@ -136,6 +141,7 @@ export class LogicManager {
   private readonly uiStateModule: UiStateModuleService;
   private readonly persistenceModule: PersistenceModuleService;
   private readonly settingsModule: SettingsModuleService;
+  private readonly analyticsModule: AnalyticsModuleService;
   private readonly persistenceStorage: PersistenceStorageAdapter;
   private readonly modules: Array<LogicModule<GameState>>;
   private readonly commandAwareModules: Array<LogicModule<GameState>>;
@@ -169,6 +175,8 @@ export class LogicManager {
       this.persistenceStorage
     );
     this.settingsModule = new SettingsModuleService();
+    this.analyticsModule = new AnalyticsModuleService();
+    this.analyticsModule.setNotifyHook(() => this.notifySubscribers());
     this.modules = [
       this.timeModule,
       this.marketModule,
@@ -178,6 +186,7 @@ export class LogicManager {
       this.uiStateModule,
       this.persistenceModule,
       this.settingsModule,
+      this.analyticsModule,
     ];
     this.commandAwareModules = this.modules.filter((m) =>
       Boolean(m.handleCommand)
@@ -226,6 +235,7 @@ export class LogicManager {
       uiState: this.uiStateModule.createInitialState(),
       persistence: this.persistenceModule.createInitialState(),
       settings: this.settingsModule.createInitialState(),
+      analytics: this.analyticsModule.createInitialState(),
     };
   }
 
@@ -497,15 +507,17 @@ export class LogicManager {
     }
 
     const { persistence: _persistence, ...gameStateWithoutPersistence } = this.state;
+    const gameState = structuredClone(gameStateWithoutPersistence) as Omit<
+      GameState,
+      'persistence'
+    > as GameState;
+    gameState.analytics = this.analyticsModule.createInitialState();
     return {
       schemaVersion: CURRENT_SNAPSHOT_SCHEMA,
       slotId,
       displayName,
       savedAtEpochMs: Date.now(),
-      gameState: structuredClone(gameStateWithoutPersistence) as Omit<
-        GameState,
-        'persistence'
-      > as GameState,
+      gameState,
       moduleRuntime,
     };
   }
@@ -514,6 +526,7 @@ export class LogicManager {
     validateSnapshot(snapshot);
     this.state = structuredClone(snapshot.gameState) as GameState;
     this.state.persistence = createInitialPersistenceState();
+    this.state.analytics = this.analyticsModule.createInitialState();
 
     for (const module of this.modules) {
       if (module.id === 'persistence') {
