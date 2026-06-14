@@ -200,6 +200,14 @@ import {
   PERSISTENCE_LOAD_COMPLETED,
   PERSISTENCE_SAVE_COMPLETED,
 } from '@/logic/modules/persistence/events';
+import type {
+  EducationTestPassedPayload,
+  EducationTestSubmittedPayload,
+} from '@/logic/modules/education/events';
+import {
+  EDUCATION_TEST_PASSED,
+  EDUCATION_TEST_SUBMITTED,
+} from '@/logic/modules/education/events';
 
 export interface LogicEventMap {
   [TRADING_DAY_CHANGED]: TradingDayChangedPayload;
@@ -221,4 +229,13 @@ export interface LogicEventMap {
   [PERSISTENCE_SAVE_COMPLETED]: PersistenceSaveCompletedPayload;
   [PERSISTENCE_LOAD_COMPLETED]: PersistenceLoadCompletedPayload;
   [PERSISTENCE_ERROR]: PersistenceErrorPayload;
+  [EDUCATION_TEST_SUBMITTED]: EducationTestSubmittedPayload;
+  [EDUCATION_TEST_PASSED]: EducationTestPassedPayload;
 }
+
+export {
+  EDUCATION_TEST_SUBMITTED,
+  EDUCATION_TEST_PASSED,
+  type EducationTestSubmittedPayload,
+  type EducationTestPassedPayload,
+} from '@/logic/modules/education/events';

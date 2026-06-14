@@ -1,5 +1,6 @@
 import type { GameState } from '@/logic/managers/LogicManager';
 import type { LogicCommand, LogicModule, ModuleContext } from '@/logic/modules/contracts';
+import { selectEducationIsSymbolUnlocked } from '@/logic/modules/education/selectors';
 import {
   DEFAULT_MARKET_OVERVIEW_FILTERS,
   normalizeUiSymbol,
@@ -15,6 +16,7 @@ export class UiStateModuleService implements LogicModule<GameState> {
       portfolioMainTab: 'composition',
       selectedSymbol: null,
       marketOverview: { ...DEFAULT_MARKET_OVERVIEW_FILTERS },
+      chartHintsActive: false,
       ready: false,
     };
   }
@@ -37,6 +39,8 @@ export class UiStateModuleService implements LogicModule<GameState> {
         return this.setPortfolioMainTab(state, command.tab);
       case 'uiState/set-market-overview-filters':
         return this.setMarketOverviewFilters(state, command.patch);
+      case 'uiState/set-chart-hints-active':
+        return this.setChartHintsActive(state, command.active);
       default:
         return false;
     }
@@ -49,7 +53,10 @@ export class UiStateModuleService implements LogicModule<GameState> {
     if (state.uiState.selectedSymbol != null) {
       return false;
     }
-    const first = state.market.instrumentCatalog[0];
+    const firstUnlocked = state.market.instrumentCatalog.find((item) =>
+      selectEducationIsSymbolUnlocked(item.symbol)(state)
+    );
+    const first = firstUnlocked ?? state.market.instrumentCatalog[0];
     if (!first) {
       return false;
     }
@@ -115,6 +122,12 @@ export class UiStateModuleService implements LogicModule<GameState> {
       return true;
     }
     state.uiState.marketOverview = next;
+    state.uiState.ready = true;
+    return true;
+  }
+
+  private setChartHintsActive(state: GameState, active: boolean): boolean {
+    state.uiState.chartHintsActive = active;
     state.uiState.ready = true;
     return true;
   }

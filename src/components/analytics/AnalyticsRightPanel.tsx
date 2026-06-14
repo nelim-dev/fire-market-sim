@@ -29,7 +29,6 @@ export function AnalyticsRightPanel() {
   const selectedSymbol = useGameState(selectAnalyticsSelectedSymbol);
   const prediction = useGameState(selectAnalyticsPrediction);
   const closeRange = useGameState((s) => selectPredictedCloseRangeForSymbol(s, selectedSymbol));
-  const currentDayMsk = useGameState((s) => s.currentTradingSession?.mskDateYyyymmdd ?? null);
 
   const chartData = useMemo(() => {
     const sym = selectedSymbol.toUpperCase();
@@ -66,25 +65,13 @@ export function AnalyticsRightPanel() {
         <h3 className="text-base font-semibold text-zinc-100">
           {displayNameForSymbol(selectedSymbol)}
         </h3>
-        <p className="text-xs text-zinc-500">
-          {prediction
-            ? `Реальный день ${prediction.sourceDayMsk} → предсказание ${prediction.targetDayMsk}`
-            : currentDayMsk
-              ? `Текущий день симуляции: ${currentDayMsk}`
-              : '—'}
-        </p>
       </div>
       <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
-        <p className="shrink-0 text-xs text-zinc-500">
-          Две линии на одном графике: реальная динамика предыдущего торгового дня и предсказанная
-          траектория следующего дня (цена закрытия, 1 мин).
-        </p>
-        <div className="mt-3 flex h-[calc(100vh-15rem)] min-h-[380px] w-full flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/50 p-2">
+        <div className="flex h-[calc(100vh-15rem)] min-h-[380px] w-full flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/50 p-2">
           <MarketCloseLineChart
             points={chartData.prev}
             overlayPoints={chartData.pred}
             timeframe="1d"
-            hideFooterHint
             priceGuides={priceGuides}
           />
         </div>

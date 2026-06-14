@@ -34,6 +34,9 @@ export const selectUiSelectedSymbol = (state: GameState): string | null =>
 export const selectUiMarketOverviewFilters = (state: GameState) =>
   state.uiState.marketOverview;
 
+export const selectUiChartHintsActive = (state: GameState): boolean =>
+  state.uiState.chartHintsActive;
+
 function matchesSearch(
   item: MarketInstrumentCatalogItem,
   query: string

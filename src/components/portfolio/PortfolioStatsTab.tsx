@@ -51,6 +51,7 @@ export function PortfolioStatsTab({
       simulationEpochMs,
       nkdBySymbol: buildNkdBySymbolFromMarket(market),
       indexNow,
+      assetsBySymbol: market.assetsBySymbol,
     });
   }, [portfolio, simulationEpochMs, market]);
 

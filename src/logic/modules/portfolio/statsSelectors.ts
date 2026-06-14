@@ -14,7 +14,8 @@ import {
   loadInflationSchedule,
   resolveCumulativeCpiMultiplier,
 } from '@/logic/modules/market/inflationSchedule';
-import type { MarketModuleState } from '@/logic/modules/market/state';
+import type { MarketAssetState } from '@/logic/modules/market/state';
+import { resolveInstrumentPublicCode } from '@/logic/modules/market/selectors';
 import {
   computePortfolioNavRub,
   findBaselineNavRub,
@@ -116,7 +117,8 @@ export function selectPortfolioTotalTaxRub(portfolio: PortfolioState): number {
 
 export function selectPortfolioCompositionSlices(
   portfolio: PortfolioState,
-  nkdBySymbol: Readonly<Record<string, number>>
+  nkdBySymbol: Readonly<Record<string, number>>,
+  assetsBySymbol?: Readonly<Record<string, MarketAssetState>>
 ): CompositionSlice[] {
   const nav = computePortfolioNavRubWithNkd(portfolio, nkdBySymbol);
   if (nav <= 0) return [];
@@ -140,10 +142,16 @@ export function selectPortfolioCompositionSlices(
         : 0;
     const valueRub = qty * (p.lastPriceRub + nkd);
     if (valueRub <= 0) continue;
+    const sym = p.ticker.toUpperCase();
+    const asset = assetsBySymbol?.[sym];
+    const label = asset?.displayName ?? p.displayName ?? sym;
+    const publicCode = assetsBySymbol
+      ? resolveInstrumentPublicCode(assetsBySymbol, sym)
+      : sym;
     slices.push({
       id: p.id,
-      ticker: p.ticker,
-      label: p.displayName,
+      ticker: publicCode,
+      label,
       valueRub,
       pct: (valueRub / nav) * 100,
     });
@@ -180,6 +188,7 @@ export function buildPortfolioStatsViewModel(input: {
   simulationEpochMs: number;
   nkdBySymbol: Readonly<Record<string, number>>;
   indexNow: number | null;
+  assetsBySymbol?: Readonly<Record<string, MarketAssetState>>;
 }): PortfolioStatsViewModel {
   const navWithNkd = computePortfolioNavRubWithNkd(
     input.portfolio,
@@ -204,7 +213,11 @@ export function buildPortfolioStatsViewModel(input: {
     totalTaxRub: selectPortfolioTotalTaxRub(input.portfolio),
     compositionSlices:
       input.portfolio.compositionSnapshot?.slices ??
-      selectPortfolioCompositionSlices(input.portfolio, input.nkdBySymbol),
+      selectPortfolioCompositionSlices(
+        input.portfolio,
+        input.nkdBySymbol,
+        input.assetsBySymbol
+      ),
     vsFireidx: selectPortfolioVsFireidxExcess(
       input.portfolio,
       navWithNkd,

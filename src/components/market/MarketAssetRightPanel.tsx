@@ -154,6 +154,14 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
   } | null>(null);
   const lm = gameLoop.getLogicManager();
 
+  useEffect(() => {
+    const active = panelTab === 'chart';
+    lm.dispatchCommand({ type: 'uiState/set-chart-hints-active', active });
+    return () => {
+      lm.dispatchCommand({ type: 'uiState/set-chart-hints-active', active: false });
+    };
+  }, [panelTab, lm]);
+
   const symUpper = symbol.toUpperCase();
   const isFireIdx = symUpper === FIREIDX_SYMBOL;
   const isInflIdx = isInflationIndexSymbol(symUpper);
@@ -189,12 +197,6 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
 
   const payoutRows = useGameState((s) =>
     selectInstrumentPayoutHistory(symbol, simulationEpochMs, s)
-  );
-
-  const gameDateLabel = useMemo(
-    () =>
-      formatInTimeZone(simulationEpochMs, 'Europe/Moscow', 'dd.MM.yyyy HH:mm'),
-    [simulationEpochMs]
   );
 
   const chartPoints = useMemo(() => {
@@ -276,7 +278,7 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
   }, [lastRejection, lotSize]);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 text-zinc-100">
+    <div className="flex w-full flex-col gap-6 text-zinc-100">
       <div>
         <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
           {displayName}
@@ -338,17 +340,8 @@ export function MarketAssetRightPanel({ symbol }: { symbol: string }) {
             </button>
           ))}
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
-          <p className="text-xs text-zinc-500">
-            Игровое время (ограничение графика):{' '}
-            <span className="font-mono text-zinc-300">{gameDateLabel}</span> МСК
-          </p>
-          <p className="mt-1 text-[11px] leading-snug text-zinc-600">
-            {isInflIdx
-              ? 'Месячная MoM-инфляция (%): полная история с 2013 года; правый край — последний опубликованный месяц на дату симуляции.'
-              : 'Горизонт и шаг ряда зависят от выбранного периода (см. план M3 §6.2); точки строго не позже текущего шага симуляции. Свечной режим и полный минутный replay — отдельно.'}
-          </p>
-          <div className="mt-3 min-h-[248px] h-64 w-full max-w-full overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/50 p-2">
+        <div className="@container/chart rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
+          <div className="h-[clamp(12.5rem,43cqw,25rem)] w-full max-w-full overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/50 p-2">
             <MarketCloseLineChart
               points={chartPoints}
               timeframe={timeframe}

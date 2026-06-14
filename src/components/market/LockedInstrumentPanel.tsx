@@ -3,12 +3,16 @@
 import Link from 'next/link';
 import { useGameState } from '@/hooks/useGameState';
 import { gameLoop } from '@/logic/runners/GameLoop';
+import { getTestCatalogEntry } from '@/data/education/catalog';
+import {
+  selectEducationIsSymbolUnlocked,
+  selectEducationMissingTestsForSymbol,
+} from '@/logic/modules/education/selectors';
 import {
   selectInstrumentPublicCode,
   selectMarketAsset,
   selectMarketInstrumentCatalog,
 } from '@/logic/modules/market/selectors';
-import { selectEducationIsSymbolUnlocked } from '@/logic/modules/education/selectors';
 
 export function LockedInstrumentPanel({ symbol }: { symbol: string }) {
   const asset = useGameState(selectMarketAsset(symbol));
@@ -18,7 +22,11 @@ export function LockedInstrumentPanel({ symbol }: { symbol: string }) {
   );
   const displayName = asset?.displayName ?? catalogRow?.displayName ?? symbol;
   const publicCode = useGameState((s) => selectInstrumentPublicCode(symbol)(s));
+  const missingTests = useGameState(selectEducationMissingTestsForSymbol(symbol));
   const lm = gameLoop.getLogicManager();
+
+  const firstMissing = missingTests[0] ?? 'test-1';
+  const learnHref = `/learn?test=${encodeURIComponent(firstMissing)}`;
 
   const goBack = () => {
     const state = lm.getState();
@@ -34,7 +42,7 @@ export function LockedInstrumentPanel({ symbol }: { symbol: string }) {
   };
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-6 rounded-xl border border-zinc-800 bg-zinc-950/50 p-8 text-zinc-100">
+    <div className="flex w-full flex-col gap-6 rounded-xl border border-zinc-800 bg-zinc-950/50 p-8 text-zinc-100">
       <div>
         <p className="text-2xl" aria-hidden>
           🔒
@@ -47,9 +55,21 @@ export function LockedInstrumentPanel({ symbol }: { symbol: string }) {
         Для доступа к этому инструменту необходимо пройти тест в разделе «Обучение».
         После успешного прохождения инструмент появится в списке доступных.
       </p>
+      {missingTests.length > 0 ? (
+        <ul className="space-y-1 text-sm text-zinc-400">
+          {missingTests.map((testId) => {
+            const title = getTestCatalogEntry(testId)?.title ?? testId;
+            return (
+              <li key={testId}>
+                • {title}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
       <div className="flex flex-wrap gap-3">
         <Link
-          href="/learn"
+          href={learnHref}
           className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-600"
         >
           Перейти к тесту

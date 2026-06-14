@@ -18,6 +18,8 @@ export interface UiStateModuleState {
   portfolioMainTab: PortfolioMainTab;
   selectedSymbol: string | null;
   marketOverview: MarketOverviewFiltersState;
+  /** true, когда открыта вкладка «График» у разблокированного инструмента (для подсказок). */
+  chartHintsActive: boolean;
   ready: boolean;
 }
 

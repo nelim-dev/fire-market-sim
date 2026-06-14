@@ -45,7 +45,7 @@ function describeArc(
 }
 
 function sliceCaption(slice: CompositionSlice): string {
-  return slice.ticker;
+  return slice.label;
 }
 
 function formatSlicePct(pct: number): string {
@@ -74,7 +74,7 @@ function LegendItem({
             }}
           />
           <span className="min-w-0 truncate text-xs font-medium text-zinc-200">
-            {slice.ticker}
+            {slice.label}
           </span>
         </div>
         <div className="mt-0.5 pl-3.5 text-[11px] tabular-nums text-zinc-400">
@@ -82,7 +82,7 @@ function LegendItem({
         </div>
         {slice.label !== slice.ticker ? (
           <div className="mt-0.5 pl-3.5 truncate text-[10px] leading-tight text-zinc-500">
-            {slice.label}
+            {slice.ticker}
           </div>
         ) : null}
       </li>
@@ -98,9 +98,9 @@ function LegendItem({
         }}
       />
       <div className="min-w-0 flex-1">
-        <div className="font-medium text-zinc-200">{slice.ticker}</div>
+        <div className="font-medium text-zinc-200">{slice.label}</div>
         {slice.label !== slice.ticker ? (
-          <div className="truncate text-xs text-zinc-500">{slice.label}</div>
+          <div className="truncate text-xs text-zinc-500">{slice.ticker}</div>
         ) : null}
       </div>
       <span className="shrink-0 tabular-nums text-zinc-400">

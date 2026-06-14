@@ -5,6 +5,7 @@ import { DEMO_INITIAL_DEPOSIT_RUB } from '@/data/portfolio/demoPortfolioConstant
 import {
   buildPortfolioStatsViewModel,
   computePortfolioNavRubWithNkd,
+  selectPortfolioCompositionSlices,
   selectPortfolioTradeCount,
   selectPortfolioTotalCommissionRub,
   selectPortfolioTotalTaxRub,
@@ -120,6 +121,40 @@ describe('statsSelectors', () => {
     assert.ok(Math.abs(excess!.excessReturnPct - 1) < 0.01);
     assert.ok(Math.abs(excess!.portfolioReturnPct - 6) < 0.01);
     assert.ok(Math.abs(excess!.fireidxReturnPct - 5) < 0.01);
+  });
+
+  it('composition slices use market display names and public codes', () => {
+    const portfolio = emptyPortfolio({
+      cashRub: 0,
+      positions: [
+        {
+          id: 'p1',
+          kind: 'stock',
+          ticker: 'RU0009029540',
+          displayName: 'RU0009029540',
+          lots: [
+            {
+              id: 'l1',
+              purchaseEpochMs: 0,
+              quantity: 10,
+              pricePerUnitRub: 100,
+              nkdPaidAtBuyPerUnit: 0,
+            },
+          ],
+          lastPriceRub: 110,
+        },
+      ],
+    });
+    const assetsBySymbol = {
+      RU0009029540: {
+        displayName: 'Сокол-Авиа',
+        isin: 'SOKL-AV',
+      },
+    } as const;
+    const slices = selectPortfolioCompositionSlices(portfolio, {}, assetsBySymbol);
+    assert.equal(slices.length, 1);
+    assert.equal(slices[0]!.label, 'Сокол-Авиа');
+    assert.equal(slices[0]!.ticker, 'SOKL-AV');
   });
 
   it('buildPortfolioStatsViewModel nominal profit vs deposit', () => {

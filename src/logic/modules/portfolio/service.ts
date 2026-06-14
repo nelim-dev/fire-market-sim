@@ -104,7 +104,11 @@ export class PortfolioModuleService
     const navRub = computePortfolioNavRubWithNkd(state.portfolio, nkdBySymbol);
     const compositionSnapshot: PortfolioCompositionSnapshot = {
       simulationEpochMs: state.simulationEpochMs,
-      slices: selectPortfolioCompositionSlices(state.portfolio, nkdBySymbol),
+      slices: selectPortfolioCompositionSlices(
+        state.portfolio,
+        nkdBySymbol,
+        state.market.assetsBySymbol
+      ),
     };
 
     const fireidxDaily =
@@ -188,11 +192,12 @@ export class PortfolioModuleService
             : position
         );
       } else {
+        const asset = state.market.assetsBySymbol[ticker];
         const created: PortfolioPosition = {
           id: `pos-${ticker.toLowerCase()}`,
           kind: execution.assetKind,
           ticker,
-          displayName: ticker,
+          displayName: asset?.displayName ?? ticker,
           lots: [newLot],
           lastPriceRub: execution.priceRub,
         };

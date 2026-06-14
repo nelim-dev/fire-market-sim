@@ -23,8 +23,6 @@ type Props = {
   timeframe: ChartTimeframeId;
   /** Равномерный шаг по индексу (месячные макро-ряды INFL на 6m/1y). */
   evenIndexSpacing?: boolean;
-  /** Скрыть подпись под графиком (аналитика — своя легенда). */
-  hideFooterHint?: boolean;
   /** Горизонтальные маркеры min/max (аналитика). */
   priceGuides?: readonly { price: number; tone: PriceGuideTone }[];
 };
@@ -122,7 +120,6 @@ function MarketCloseLineChartImpl({
   overlayPoints,
   timeframe,
   evenIndexSpacing = false,
-  hideFooterHint = false,
   priceGuides,
 }: Props) {
   if (points.length === 0 && (overlayPoints?.length ?? 0) === 0) {
@@ -201,6 +198,8 @@ function MarketCloseLineChartImpl({
   );
   const yTicks = useMemo(() => buildPriceTicks(pMin, pMax, 5), [pMin, pMax]);
   const shouldRenderDots = points.length <= 240 && points.length > 0;
+  const plotCenterY = M_TOP + innerH / 2;
+  const plotCenterX = M_LEFT + innerW / 2;
 
   return (
     <div className="flex h-full min-h-[220px] w-full max-w-full flex-col overflow-hidden">
@@ -211,6 +210,16 @@ function MarketCloseLineChartImpl({
         role="img"
         aria-label="График цены"
       >
+        <text
+          x={12}
+          y={plotCenterY}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          transform={`rotate(-90, 12, ${plotCenterY})`}
+          className="fill-zinc-500 text-[10px] font-medium"
+        >
+          Цена
+        </text>
         <rect
           x={M_LEFT}
           y={M_TOP}
@@ -245,13 +254,21 @@ function MarketCloseLineChartImpl({
           <text
             key={`x-${xi}-${idx}`}
             x={xAtIndex(idx)}
-            y={H - 10}
+            y={H - 16}
             textAnchor="middle"
             className="fill-zinc-400 text-[9px]"
           >
             {label}
           </text>
         ))}
+        <text
+          x={plotCenterX}
+          y={H - 4}
+          textAnchor="middle"
+          className="fill-zinc-500 text-[10px] font-medium"
+        >
+          Дата
+        </text>
         {pathD ? (
           <path
             d={pathD}
@@ -309,12 +326,6 @@ function MarketCloseLineChartImpl({
             ))
           : null}
       </svg>
-      {hideFooterHint ? null : (
-        <p className="mt-0.5 text-center text-[10px] text-zinc-600">
-          По горизонтали — порядок свечей без пустот вне торгов; слева — цена; подписи — время
-          (МСК) у выбранных свечей
-        </p>
-      )}
     </div>
   );
 }

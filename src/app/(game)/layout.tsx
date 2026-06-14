@@ -5,12 +5,15 @@ import { AppHeader } from '@/components/game/AppHeader';
 import { GameMenuProvider } from '@/components/game/GameMenu';
 import { GameAudioProvider } from '@/components/game/GameAudioProvider';
 import { GameSettingsProvider } from '@/components/game/GameSettings';
+import { registerFireDevConsole, unregisterFireDevConsole } from '@/dev/fireConsole';
 import { gameLoop } from '@/logic/runners/GameLoop';
 
 export default function GameLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     gameLoop.start();
+    registerFireDevConsole();
     return () => {
+      unregisterFireDevConsole();
       gameLoop.stop();
     };
   }, []);

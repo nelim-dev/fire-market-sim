@@ -158,10 +158,8 @@ run('trading: INSTRUMENT_NOT_TRADING до листинга', () => {
   if (!asset || asset.assetKind !== 'bond') {
     return;
   }
-  lm.dispatchCommand({
-    type: 'education/unlock-symbol',
-    symbol: RU000A1089K2,
-  });
+  lm.dispatchCommand({ type: 'education/grant-test-pass', testId: 'test-1' });
+  lm.dispatchCommand({ type: 'education/grant-test-pass', testId: 'test-2' });
   lm.dispatchCommand({
     type: 'trading/submit-market-order',
     side: 'buy',

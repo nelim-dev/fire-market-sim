@@ -243,9 +243,7 @@ export class LogicManager {
    * Синхронизировать unlock-набор и выбор инструмента после появления каталога.
    */
   private bootstrapMarketUiState(): void {
-    const changedEducation = this.educationModule.syncUnlockedFromCatalog(
-      this.state
-    );
+    const changedEducation = this.educationModule.bootstrap(this.state);
     const changedUi = this.uiStateModule.ensureDefaultSelectedSymbol(this.state);
     const sel = this.state.uiState.selectedSymbol;
     if (sel && (changedUi || changedEducation)) {

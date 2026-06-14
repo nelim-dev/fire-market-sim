@@ -20,8 +20,14 @@ export type UiStateSetMarketOverviewFiltersCommand = {
   patch: Partial<MarketOverviewFiltersState>;
 };
 
+export type UiStateSetChartHintsActiveCommand = {
+  type: 'uiState/set-chart-hints-active';
+  active: boolean;
+};
+
 export type UiStateCommand =
   | UiStateSetLeftPanelModeCommand
   | UiStateSetPortfolioMainTabCommand
   | UiStateSelectInstrumentCommand
-  | UiStateSetMarketOverviewFiltersCommand;
+  | UiStateSetMarketOverviewFiltersCommand
+  | UiStateSetChartHintsActiveCommand;

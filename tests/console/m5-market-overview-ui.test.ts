@@ -1,6 +1,6 @@
 import { LogicManager } from '../../src/logic/managers/LogicManager';
 import { selectEducationIsSymbolUnlocked } from '../../src/logic/modules/education/selectors';
-import { isEducationDefaultLocked } from '../../src/logic/modules/education/state';
+import { resolveRequiredTestIds } from '../../src/logic/modules/education/unlockResolver';
 import { selectIsInstrumentActiveOnMarket } from '../../src/logic/modules/market/selectors';
 import {
   selectMarketOverviewRows,
@@ -47,16 +47,17 @@ run('uiState/select-instrument обновляет selectedSymbol', () => {
   );
 });
 
-run('selectEducationIsSymbolUnlocked — bootstrap учитывает default locked', () => {
+run('selectEducationIsSymbolUnlocked — rule-based unlock по каталогу', () => {
   const lm = new LogicManager();
   const state = lm.getState();
   for (const row of state.market.instrumentCatalog) {
-    const expectedUnlocked = !isEducationDefaultLocked(row.symbol);
+    const required = resolveRequiredTestIds(row.symbol, row);
+    const expectedUnlocked = required.length === 0;
     assert(
       selectEducationIsSymbolUnlocked(row.symbol)(state) === expectedUnlocked,
       expectedUnlocked
         ? `${row.symbol} должен быть разблокирован`
-        : `${row.symbol} должен быть заблокирован по умолчанию`
+        : `${row.symbol} должен быть заблокирован (нужны тесты: ${required.join(', ')})`
     );
   }
 });
@@ -97,29 +98,27 @@ run('selectMarketOverviewRows — поиск по тикеру', () => {
   );
 });
 
-run('education/lock-symbol — инструмент в секции закрытых', () => {
+run('education — облигации по умолчанию в секции закрытых', () => {
   const lm = new LogicManager();
-  const initialState = lm.getState();
-  const target = initialState.market.instrumentCatalog.find(
-    (row) =>
-      selectIsInstrumentActiveOnMarket(row.symbol)(initialState) &&
-      selectEducationIsSymbolUnlocked(row.symbol)(initialState)
-  )?.symbol;
-  assert(Boolean(target), 'каталог пуст');
-  lm.dispatchCommand({ type: 'education/lock-symbol', symbol: target! });
   const state = lm.getState();
+  const bond = state.market.instrumentCatalog.find(
+    (row) =>
+      row.assetKind === 'bond' &&
+      selectIsInstrumentActiveOnMarket(row.symbol)(state)
+  );
+  assert(Boolean(bond), 'в каталоге должна быть облигация');
   assert(
-    !selectEducationIsSymbolUnlocked(target!)(state),
-    'символ должен быть заблокирован'
+    !selectEducationIsSymbolUnlocked(bond!.symbol)(state),
+    'облигация должна быть заблокирована до прохождения теста'
   );
   lm.dispatchCommand({
     type: 'uiState/set-market-overview-filters',
-    patch: { showAvailable: true, showLocked: true, assetKindFilter: 'all', searchQuery: '' },
+    patch: { showAvailable: true, showLocked: true, assetKindFilter: 'bond', searchQuery: '' },
   });
-  const { locked } = selectMarketOverviewRows(state);
+  const { locked } = selectMarketOverviewRows(lm.getState());
   assert(
-    locked.some((r) => r.symbol === target!.toUpperCase()),
-    'заблокированный символ должен быть в locked'
+    locked.some((r) => r.symbol === bond!.symbol.toUpperCase()),
+    'облигация должна быть в секции закрытых'
   );
 });
 
