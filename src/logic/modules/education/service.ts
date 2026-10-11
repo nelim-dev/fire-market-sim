@@ -1,3 +1,25 @@
+/**
+ * service.ts — фасад модуля обучения (EducationModule).
+ *
+ * ЗАЧЕМ ЭТОТ ФАЙЛ
+ * ---------------
+ * Управляет прогрессом обучения в симуляторе:
+ * - навигация по лекциям и тестам на экране /learn;
+ * - проверка ответов и запись passedTestIds (единственный источник unlock инструментов);
+ * - планировщик контекстных подсказок на графике (hint queue + таймеры).
+ *
+ * Контент (тексты лекций, вопросы, правила unlock) лежит в src/data/education/*.
+ * Этот файл — только **логика состояния** и команды education/*.
+ *
+ * Модуль пассивен в update(): всё через handleCommand. Не мутирует рынок и портфель.
+ * Разблокировка читается селекторами (selectEducationIsSymbolUnlocked) в UI и M5-тестах.
+ *
+ * СОБЫТИЯ
+ * -------
+ * - EDUCATION_TEST_SUBMITTED — любая попытка сдачи
+ * - EDUCATION_TEST_PASSED — первый успешный зачёт + список newlyUnlockedSymbols
+ */
+
 import { EDUCATION_HINT_IDS } from '@/data/education/hints';
 import { getTestById } from '@/data/education/tests';
 import type { LogicCommand, LogicModule, ModuleContext } from '@/logic/modules/contracts';
@@ -19,17 +41,29 @@ import {
   randomHintIntervalMs,
 } from './hintSchedule';
 
+/**
+ * EducationModule — лекции, тесты, подсказки, passedTestIds для допуска к бумагам.
+ */
 export class EducationModuleService implements LogicModule<GameState> {
   readonly id = 'education';
 
+  /** Делегирует начальное состояние в state.ts (lesson-1, пустые passed, очередь hints). */
   createInitialState(): EducationModuleState {
     return createInitialEducationState();
   }
 
+  /**
+   * Намеренно пустой: модуль не тикает сам по себе.
+   * Подсказки двигаются командами hint-scheduler-tick из ChartHintToast (раз в секунду).
+   */
   update(): void {
     // Пассивный модуль: изменения только через команды.
   }
 
+  /**
+   * Роутер education/* из UI (/learn, ChartHintToast).
+   * bootstrap вызывается при монтировании экранов обучения и графика.
+   */
   handleCommand(
     state: GameState,
     command: LogicCommand,
@@ -63,6 +97,10 @@ export class EducationModuleService implements LogicModule<GameState> {
     }
   }
 
+  /**
+   * Идемпотентная инициализация: ready, перемешанная очередь подсказок, первый таймер.
+   * Всегда return true — иначе LogicManager залогирует «команда не обработана».
+   */
   bootstrap(state: GameState): boolean {
     const nowMs = Date.now();
 
@@ -85,6 +123,7 @@ export class EducationModuleService implements LogicModule<GameState> {
     return true;
   }
 
+  /** Если очередь подсказок опустела — пересоздаём shuffle (новый цикл без мгновенного повтора). */
   private ensureHintQueue(state: GameState): void {
     if (state.education.hintQueue.length === 0) {
       state.education.hintQueue = createShuffledHintQueue(
@@ -94,6 +133,7 @@ export class EducationModuleService implements LogicModule<GameState> {
     }
   }
 
+  /** Берёт следующий hint id из головы очереди и сдвигает массив. */
   private popNextHintId(state: GameState): string | null {
     this.ensureHintQueue(state);
     const [next, ...rest] = state.education.hintQueue;
@@ -104,10 +144,17 @@ export class EducationModuleService implements LogicModule<GameState> {
     return next;
   }
 
+  /** Планирует следующую авто-подсказку через случайный интервал 3–6 минут (wall-clock). */
   private scheduleNextAutoHint(state: GameState, nowMs: number): void {
     state.education.nextAutoHintAtMs = nowMs + randomHintIntervalMs();
   }
 
+  /**
+   * Шаг планировщика (вызывается из UI каждую секунду, если schedulingActive).
+   *
+   * 1) Попытаться показать pending-подсказку, если пользователь на вкладке «График».
+   * 2) Если пришло время nextAutoHintAtMs — положить новую подсказку в pending/active.
+   */
   private hintSchedulerTick(
     state: GameState,
     chartSurfaceActive: boolean,
@@ -137,6 +184,10 @@ export class EducationModuleService implements LogicModule<GameState> {
     return true;
   }
 
+  /**
+   * Пользователь открыл/закрыл вкладку «График» на карточке инструмента.
+   * При уходе с графика активный toast скрываем; при возврате — откладываем reveal на 10 с.
+   */
   private onChartHintsSurface(
     state: GameState,
     active: boolean,
@@ -160,6 +211,10 @@ export class EducationModuleService implements LogicModule<GameState> {
     return true;
   }
 
+  /**
+   * Переводит pendingHintId → activeHintId, когда наступило pendingHintRevealAtMs
+   * и пользователь смотрит на график (chartSurfaceActive).
+   */
   private tryRevealPendingHint(
     state: GameState,
     chartSurfaceActive: boolean,
@@ -179,6 +234,7 @@ export class EducationModuleService implements LogicModule<GameState> {
     return true;
   }
 
+  /** Переключатель «Лекции» / «Тесты» в левой колонке /learn. */
   private setBrowseMode(state: GameState, mode: EducationModuleState['browseMode']): boolean {
     if (state.education.browseMode === mode) {
       return false;
@@ -187,6 +243,7 @@ export class EducationModuleService implements LogicModule<GameState> {
     return true;
   }
 
+  /** Выбор лекции; сбрасываем lastTestResult, чтобы не путать с результатом теста. */
   private selectLesson(state: GameState, lessonId: string): boolean {
     if (state.education.selectedLessonId === lessonId) {
       return false;
@@ -196,6 +253,10 @@ export class EducationModuleService implements LogicModule<GameState> {
     return true;
   }
 
+  /**
+   * Новая попытка теста: фиксируем testId и новый testAttemptSeed для перетасовки вопросов.
+   * return true даже если testId тот же — UI мог нажать «пройти заново».
+   */
   private selectTest(state: GameState, testId: string): boolean {
     const changedSelection = state.education.selectedTestId !== testId;
     state.education.selectedTestId = testId;
@@ -204,6 +265,12 @@ export class EducationModuleService implements LogicModule<GameState> {
     return changedSelection || true;
   }
 
+  /**
+   * Проверка ответов, запись lastTestResult, при первом pass — passedTestIds и unlock.
+   *
+   * Порог прохождения — test.passingScorePercent из данных (например 80 %).
+   * computeNewlyUnlockedSymbols сравнивает каталог рынка до/после pass.
+   */
   private submitTest(
     state: GameState,
     command: Extract<LogicCommand, { type: 'education/submit-test' }>,
@@ -259,6 +326,7 @@ export class EducationModuleService implements LogicModule<GameState> {
     return true;
   }
 
+  /** Ручной показ следующей подсказки из очереди (без ожидания таймера). */
   private showNextHint(state: GameState): boolean {
     if (state.education.activeHintId) {
       return false;
@@ -278,6 +346,7 @@ export class EducationModuleService implements LogicModule<GameState> {
     return true;
   }
 
+  /** Закрытие toast пользователем или по таймауту HINT_VISIBLE_MS в ChartHintToast. */
   private dismissHint(state: GameState): boolean {
     if (!state.education.activeHintId) {
       return false;
@@ -286,6 +355,10 @@ export class EducationModuleService implements LogicModule<GameState> {
     return true;
   }
 
+  /**
+   * Dev/отладка: показать конкретную или следующую подсказку немедленно.
+   * chartSurfaceActive=true — сразу в activeHintId; иначе через pending + задержку.
+   */
   private forceShowHint(
     state: GameState,
     hintId?: string,
@@ -325,6 +398,10 @@ export class EducationModuleService implements LogicModule<GameState> {
     return true;
   }
 
+  /**
+   * Зачесть тест без UI (load save, консольные тесты).
+   * Не эмитит EDUCATION_TEST_PASSED — только расширяет passedTestIds.
+   */
   private grantTestPass(state: GameState, testId: string): boolean {
     if (state.education.passedTestIds.includes(testId)) {
       return false;

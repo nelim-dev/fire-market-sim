@@ -1,9 +1,30 @@
+/**
+ * snapshot.ts — контракт и утилиты снимка сохранения игры (PersistenceModule).
+ *
+ * При save/load нужно сериализовать не только `GameState` в памяти, но и
+ * **runtime-поля модулей** (счётчики tradeId, pendingSimMs у TimeModule и т.д.),
+ * которые не лежат в общем state. Формат описан типом `PersistedGameSnapshot`.
+ *
+ * Renderer (PersistenceModule) собирает снимок → Electron main пишет JSON в
+ * userData/saves/{slotId}.json. При загрузке — validateSnapshot() отсекает битые файлы.
+ *
+ * schemaVersion — задел на миграции: при изменении формата увеличиваем число и
+ * пишем конвертер
+ */
+
 import type { GameState } from '@/logic/managers/LogicManager';
 
+/** Текущая версия схемы JSON на диске. Менять при несовместимых изменениях формата. */
 export const CURRENT_SNAPSHOT_SCHEMA = 1 as const;
 
 export type SnapshotSchemaVersion = typeof CURRENT_SNAPSHOT_SCHEMA;
 
+/**
+ * Полный снимок одного слота сохранения.
+ *
+ * - gameState — весь GameState на момент save (портфель, рынок, обучение…)
+ * - moduleRuntime — map moduleId → opaque blob из exportRuntimeState() каждого модуля
+ */
 export interface PersistedGameSnapshot {
   schemaVersion: SnapshotSchemaVersion;
   slotId: string;
@@ -13,6 +34,7 @@ export interface PersistedGameSnapshot {
   moduleRuntime: Record<string, unknown>;
 }
 
+/** Краткая карточка слота для UI меню (без тяжёлого gameState). */
 export interface SaveSlotMeta {
   slotId: string;
   displayName: string;
@@ -21,6 +43,7 @@ export interface SaveSlotMeta {
   cashRub: number;
 }
 
+/** Строит SaveSlotMeta из полного снимка (дублирует логику electron/main buildSlotMetaFromSnapshot). */
 export function buildSaveSlotMeta(snapshot: PersistedGameSnapshot): SaveSlotMeta {
   return {
     slotId: snapshot.slotId,
@@ -31,6 +54,10 @@ export function buildSaveSlotMeta(snapshot: PersistedGameSnapshot): SaveSlotMeta
   };
 }
 
+/**
+ * Строгая проверка JSON после read-save. Бросает Error с кодом-причиной.
+ * PersistenceModule ловит и показывает ошибку в UI, не ломая приложение.
+ */
 export function validateSnapshot(raw: unknown): PersistedGameSnapshot {
   if (raw == null || typeof raw !== 'object') {
     throw new Error('invalid_snapshot');
@@ -57,6 +84,10 @@ export function validateSnapshot(raw: unknown): PersistedGameSnapshot {
   return s as PersistedGameSnapshot;
 }
 
+/**
+ * Имя файла из отображаемого названия: латиница/кириллица, дефисы, до 48 символов.
+ * Пример: «Моя игра» → «моя-игра»
+ */
 export function slugifySaveName(displayName: string): string {
   const base = displayName
     .trim()
@@ -67,6 +98,9 @@ export function slugifySaveName(displayName: string): string {
   return base.length > 0 ? base : 'save';
 }
 
+/**
+ * Уникальный id слота = slug + timestamp. Используется как имя файла {slotId}.json.
+ */
 export function createSlotId(displayName: string, nowMs = Date.now()): string {
   return `${slugifySaveName(displayName)}-${nowMs}`;
 }

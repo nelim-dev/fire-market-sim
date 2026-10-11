@@ -1,3 +1,23 @@
+/**
+ * electron/main.js — главный процесс Electron (desktop-оболочка симулятора).
+ *
+ * Next.js/React крутится в renderer (окно браузера), но часть работы нельзя делать
+ * в renderer по соображениям безопасности и из-за native-модулей:
+ *
+ * 1. Чтение SQLite (market.sqlite) — better-sqlite3 в main, IPC `market:*`
+ * 2. Сохранения игры на диск — JSON в userData/saves, IPC `persistence:*`
+ * 3. Python ML-воркер для аналитики — ml-bridge.cjs, IPC из registerMlIpc
+ * 4. Полноэкранный режим окна — `window:*`
+ *
+ * Preload (preload.js) пробрасывает безопасный API в `window.*` для renderer.
+ * Логика симуляции (GameState) остаётся в TypeScript renderer — main только I/O.
+ *
+ * ЗАПУСК
+ * ------
+ * dev:  npm run electron:dev  → loadURL localhost:3000 + DevTools
+ * prod: electron . после next build → file://.../out/index.html
+ */
+
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
@@ -12,6 +32,7 @@ const { registerMlIpc, shutdownWorker } = require('./ml-bridge.cjs');
 
 let mainWindow;
 
+/** Папка слотов сохранения: %APPDATA%/FIRE Market Simulator/saves (или аналог на macOS/Linux). */
 function getSavesDir() {
   return path.join(app.getPath('userData'), 'saves');
 }
@@ -22,6 +43,7 @@ async function ensureSavesDir() {
   return dir;
 }
 
+/** Краткие метаданные слота для списка в меню «Загрузить» (без полного gameState). */
 function buildSlotMetaFromSnapshot(snapshot) {
   return {
     slotId: snapshot.slotId,
@@ -32,6 +54,10 @@ function buildSlotMetaFromSnapshot(snapshot) {
   };
 }
 
+/**
+ * IPC для PersistenceModule: list / write / read JSON-снимков игры.
+ * Запись атомарная: сначала .tmp, потом rename — чтобы не оставить битый файл при сбое.
+ */
 function registerPersistenceIpc() {
   ipcMain.removeHandler('persistence:list-saves');
   ipcMain.handle('persistence:list-saves', async () => {
@@ -102,6 +128,7 @@ function registerPersistenceIpc() {
   });
 }
 
+/** Полноэкранный vs оконный режим — настройки из SettingsModule. */
 function registerWindowIpc() {
   ipcMain.removeHandler('window:get-mode');
   ipcMain.handle('window:get-mode', () => {
@@ -123,6 +150,7 @@ function registerWindowIpc() {
   });
 }
 
+/** Создаёт BrowserWindow и грузит Next (dev) или статику out/ (prod). */
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -151,10 +179,15 @@ function createWindow() {
   });
 }
 
+/** Единый формат ошибки для market IPC (renderer смотрит ok: false). */
 function marketIpcError(e) {
   return { ok: false, error: e instanceof Error ? e.message : String(e) };
 }
 
+/**
+ * IPC к market-db-slice.cjs: котировки из SQLite для MarketModule и Analytics.
+ * get-slices / get-day-slices — данные; prefetch-* — прогрев кэша до смены дня.
+ */
 function registerMarketIpc() {
   ipcMain.removeHandler('market:get-slices');
   ipcMain.handle('market:get-slices', async (_event, payload) => {
@@ -217,6 +250,7 @@ function registerMarketIpc() {
   });
 }
 
+// Порядок: зарегистрировать IPC, потом открыть окно (renderer сразу может звать marketData).
 app.on('ready', () => {
   registerMarketIpc();
   registerMlIpc(ipcMain);
@@ -225,6 +259,7 @@ app.on('ready', () => {
   createWindow();
 });
 
+// Корректно завершить Python ML worker при выходе приложения.
 app.on('will-quit', () => {
   shutdownWorker();
 });

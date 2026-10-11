@@ -1,3 +1,19 @@
+/**
+ * AppHeader.tsx — общая шапка приложения (все игровые экраны).
+ *
+ * Верхняя панель, которая всегда на виду: бренд, cash, макро-индикаторы,
+ * навигация (Портфель / Обучение), меню, часы симуляции, пауза и скорость времени.
+ *
+ * Это **слой представления**: компонент не считает бизнес-логику сам.
+ * - Читает срезы GameState через useGameState + селекторы (cash, macro, время, пауза).
+ * - Действия пользователя уходят в LogicManager через dispatchCommand (runtime/*).
+ *
+ * Макро (Brent, USD/RUB, ключевая ставка, инфляция) приходят из MarketModule —
+ * шапка только форматирует числа для отображения.
+ *
+ * GameMenu (сохранение, настройки) открывается через useGameMenu().openMenu — не здесь.
+ */
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -23,6 +39,10 @@ import {
   selectTimeScale,
 } from '@/logic/stateSelectors';
 
+/**
+ * Ссылка навигации с подсветкой активного маршрута (pathname из Next.js).
+ * Сравнение: точное совпадение или префикс для вложенных путей (кроме корня «/»).
+ */
 function NavLink({
   href,
   children,
@@ -45,6 +65,7 @@ function NavLink({
   );
 }
 
+/** Краткий вывод макро-цены в шапке; при отсутствии данных — прочерк. */
 function formatMacroPrice(value: number | null, digits: number): string {
   if (value === null || !Number.isFinite(value)) {
     return '—';
@@ -52,6 +73,10 @@ function formatMacroPrice(value: number | null, digits: number): string {
   return value.toFixed(digits);
 }
 
+/**
+ * Шапка: подписывается на GameState, рендерит три зоны (слева направо):
+ * 1) логотип + макро-строка; 2) навигация + меню; 3) дата/время симуляции + пауза + пресеты скорости.
+ */
 export function AppHeader() {
   const { openMenu } = useGameMenu();
   const simulationEpochMs = useGameState(selectSimulationEpochMs);
@@ -67,6 +92,7 @@ export function AppHeader() {
   return (
     <header className="shrink-0 border-b border-zinc-800 bg-zinc-950 text-zinc-100">
       <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 px-3 py-2 sm:gap-x-4 sm:px-5 lg:px-6">
+        {/* Левая зона: бренд и макро-показатели (только чтение state) */}
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 sm:gap-x-4">
           <Link
             href="/"
@@ -104,6 +130,7 @@ export function AppHeader() {
           </div>
         </div>
 
+        {/* Правая зона: маршруты, меню, управление временем симуляции */}
         <div className="ml-auto flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
           <nav className="flex flex-wrap items-center justify-end gap-x-2 sm:gap-x-3 md:gap-x-4">
             <NavLink href="/">Портфель</NavLink>
@@ -117,6 +144,7 @@ export function AppHeader() {
             </button>
           </nav>
 
+          {/* Часы симуляции (MSK) + пауза + пресеты timeScale (команды в TimeModule) */}
           <div className="flex shrink-0 flex-col items-center gap-1 border-l border-zinc-800 pl-2 sm:gap-1.5 sm:pl-3 md:pl-4">
             <div className="text-center font-mono text-[10px] leading-tight text-sky-400 tabular-nums sm:text-[11px]">
               <div>{dateStr}</div>
@@ -135,6 +163,7 @@ export function AppHeader() {
               >
                 {isPaused ? '▶' : '⏸'}
               </button>
+              {/* Пресеты из TIME_SCALE_PRESETS; активный disabled, чтобы не слать лишних команд */}
               <div className="flex flex-wrap items-center justify-center gap-0.5">
                 {TIME_SCALE_PRESETS.map((p: TimeScalePreset) => (
                   <button

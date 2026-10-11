@@ -1,22 +1,49 @@
+/**
+ * marketElectronBridge.ts — мост между слоем логики (renderer) и SQLite в Electron.
+ *
+ * MarketModule нуждается в исторических OHLCV из `data/market.sqlite`, но в браузере
+ * (чистый `npm run dev`) к файлу БД доступа нет. В Electron main-процесс читает SQLite
+ * через better-sqlite3; renderer вызывает `window.marketData.*`, которые preload
+ * пробрасывает в IPC (`market:get-slices`, `market:get-day-slices` и т.д.).
+ *
+ * Этот файл — **тонкая обёртка** на стороне React/логики:
+ * - проверяет, что мы в окне с `window.marketData`;
+ * - нормализует тикеры в UPPER;
+ * - превращает IPC-ответ в `MarketChartSeriesBundle` для MarketModule.
+ *
+ * В Node-тестах и SSR `window` нет → функции тихо возвращают `null` (рынок без графиков).
+ *
+ * СВЯЗЬ С ДРУГИМИ ФАЙЛАМИ
+ * -----------------------
+ * - electron/main.js           — регистрация IPC-хендлеров
+ * - electron/preload.js        — expose `marketData` в renderer (не здесь)
+ * - electron/market-db-slice.cjs — SQL-запросы и агрегация баров
+ * - market/service.ts          — вызывает fetch* / prefetch* при реплее котировок
+ */
+
 import type { MarketChartSeriesBundle } from './chartWindows';
 import type { MarketPriceBar } from './priceSeries';
 
+/** Параметры IPC `market:get-slices` — срезы от эпохи симуляции назад. */
 export type MarketSlicesIpcPayload = {
   epochMs: number;
   symbols: readonly string[];
   fromEpochMs?: number;
 };
 
+/** Подогрузка минут следующего торгового дня в кэш main (смена сессии без лага). */
 export type MarketPrefetchIpcPayload = {
   epochMs: number;
   symbols: readonly string[];
 };
 
+/** Явный prefetch конкретного календарного дня (msk YYYYMMDD). */
 export type MarketPrefetchDayIpcPayload = {
   mskDateYyyymmdd: string;
   symbols: readonly string[];
 };
 
+/** Для ML/аналитики: последний известный close до даты (seed тензора). */
 export type MarketLastKnownSeedIpcPayload = {
   beforeMskDate: string;
   symbols: readonly string[];
@@ -26,6 +53,7 @@ export type MarketLastKnownSeedIpcResult =
   | { ok: true; closeBySymbol: Record<string, number | null> }
   | { ok: false; error?: string };
 
+/** Все бары одного торгового/календарного дня по списку символов. */
 export type MarketDaySlicesIpcPayload = {
   mskDateYyyymmdd: string;
   symbols: readonly string[];
@@ -51,6 +79,7 @@ export type MarketPrefetchIpcResult =
   | { ok: true; prefetched?: boolean; mskDateYyyymmdd?: string }
   | { ok: false; error: string; path?: string };
 
+/** Приводит сырой массив из IPC к типизированным MarketPriceBar (защита от кривого JSON). */
 function asBarList(v: unknown): MarketPriceBar[] {
   if (!Array.isArray(v)) {
     return [];
@@ -65,6 +94,10 @@ function asBarList(v: unknown): MarketPriceBar[] {
   }));
 }
 
+/**
+ * Конвертирует успешный ответ main в структуру графиков MarketModule.
+ * Ключи символов приводятся к верхнему регистру для единообразия с каталогом.
+ */
 export function bundleFromOkPayload(res: MarketSlicesIpcOk): MarketChartSeriesBundle {
   const upperRecord = (rec: Record<string, unknown>) => {
     const out: Record<string, readonly MarketPriceBar[]> = {};
@@ -84,7 +117,12 @@ export function bundleFromOkPayload(res: MarketSlicesIpcOk): MarketChartSeriesBu
 }
 
 /**
- * Запрос срезов из Electron main (SQLite). В чистом браузере / тестах API отсутствует — вернётся `null`.
+ * Основной запрос котировок для реплея: минутки + агрегаты (5m, 30m, 1h, daily, weekly).
+ *
+ * @param epochMs — текущая эпоха симуляции (конец окна)
+ * @param symbols — тикеры, для которых нужны ряды
+ * @param fromEpochMs — опционально начало окна (иначе main выбирает дефолт)
+ * @returns bundle или null, если не Electron / ошибка IPC
  */
 export async function fetchMarketSlicesFromElectron(
   epochMs: number,
@@ -118,6 +156,7 @@ export async function fetchMarketSlicesFromElectron(
   return bundleFromOkPayload(res);
 }
 
+/** Фоновая подгрузка данных следующего торгового дня (вызывается до смены дня). */
 export async function prefetchNextDayFromElectron(
   epochMs: number,
   symbols: readonly string[]
@@ -139,6 +178,7 @@ export async function prefetchNextDayFromElectron(
   });
 }
 
+/** Подгрузка конкретного дня по дате MSK — для буфера day-buffer в MarketModule. */
 export async function prefetchDayFromElectron(
   mskDateYyyymmdd: string,
   symbols: readonly string[]
@@ -163,6 +203,10 @@ export async function prefetchDayFromElectron(
   });
 }
 
+/**
+ * Полные срезы одного дня (mskDateYyyymmdd). Используется при prefetch границы сессии.
+ * Обёрнут в try/catch — IPC может упасть при несовпадении ABI better-sqlite3.
+ */
 export async function fetchDaySlicesFromElectron(
   mskDateYyyymmdd: string,
   symbols: readonly string[]
