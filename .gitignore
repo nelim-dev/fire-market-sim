@@ -81,9 +81,9 @@ resources/ml/python-runtime/
 # Текстовые черновики контента (не используются в коде — контент в src/data/education/*)
 resources/hints/
 resources/lessons/
-# Текстовые черновики контента (не используются в коде — контент в src/data/education/*)
 resources/tests/
 #котировки
+src/data/generated/marketChartSlices.json
 #облигации
 bonds/
 #акции
@@ -94,3 +94,4 @@ fonds/
 indexes/
 #аудио
 assets/audio/
+
