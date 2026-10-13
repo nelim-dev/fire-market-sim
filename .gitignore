@@ -83,3 +83,14 @@ resources/hints/
 resources/lessons/
 # Текстовые черновики контента (не используются в коде — контент в src/data/education/*)
 resources/tests/
+#котировки
+#облигации
+bonds/
+#акции
+tickers/
+#фонды
+fonds/
+#индексы
+indexes/
+#аудио
+assets/audio/
