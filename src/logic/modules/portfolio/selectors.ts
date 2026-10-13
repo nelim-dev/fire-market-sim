@@ -115,10 +115,10 @@ export function findBaselineNavRub(
 }
 
 /**
- * Горизонт «ближайших выплат» по умолчанию: 2 месяца (≈ 62 дня).
+ * Горизонт «ближайших выплат» по умолчанию: 1 месяц (≈ 31 дня).
  * Используется UI-карточкой «Ближайшие выплаты» в портфеле.
  */
-export const UPCOMING_PAYMENTS_DEFAULT_HORIZON_MS = 62 * 24 * 60 * 60_000;
+export const UPCOMING_PAYMENTS_DEFAULT_HORIZON_MS = 31 * 24 * 60 * 60_000;
 
 /**
  * Спроецировать «ближайшие выплаты» по позициям пользователя на горизонт `horizonMs` от `nowEpochMs`.

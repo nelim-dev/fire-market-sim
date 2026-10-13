@@ -1,6 +1,6 @@
 /**
  * M3: тесты cut-off для участия в реестре по дивиденду.
- * Правило settlement-цикла Мосбиржи: T+0 до 02.09.2013, T+2 до 31.07.2023, T+1 после.
+ * Правило settlement-цикла: T+0 до 02.09.2013, T+2 до 31.07.2023, T+1 после.
  * Запуск: npx tsx tests/console/m3-dividend-eligibility.test.ts
  */
 import { TradingCalendar } from '../../src/logic/time/TradingCalendar';

@@ -46,7 +46,7 @@ export interface RedemptionDetail {
 export interface InstrumentDetailsCatalog {
   generatedAt?: string;
   lotSizeBySymbol: Record<string, number>;
-  /** Количество акций в обращении (MOEX ISSUESIZE), шт. */
+  /** Количество акций в обращении (ISSUESIZE), шт. */
   sharesOutstandingBySymbol?: Record<string, number>;
   instrumentMetaBySymbol: Record<string, InstrumentMetaDetail>;
   dividendsBySymbol: Record<string, DividendDetail[]>;

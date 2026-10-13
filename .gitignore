@@ -43,10 +43,6 @@ next-env.d.ts
 # electron
 /dist/
 
-# устаревший тяжёлый артефакт
-src/data/generated/marketChartData.json
-src/data/generated/marketChartSlices.json
-
 # SQLite и копия календаря для Electron (генерация: npm run build:market-db)
 /data/
 
@@ -58,3 +54,32 @@ src/data/generated/marketChartSlices.json
 /timeVAE/
 /tmp/
 /vsyakoe/
+
+# --- Внешние инструменты и материалы (не входят в проект) ---
+
+# Локальный загрузчик данных (внешний инструмент, не входит в проект)
+/downloadStockData/
+
+# Внешние материалы: НИРС, ТЗ, диаграммы
+/NIRS/
+docs/TZ_MARKET.txt
+docs/nirs-architecture-diagrams.md
+
+# Внутренний чекап «статус vs ТЗ» (устарел, не для публикации)
+docs/project/03-status-vs-tz.md
+
+# Конфиг Cursor AI (инструмент разработки, не часть проекта)
+.cursor/
+
+# Аудио вне кода (mp3 не используется в приложении; ogg в assets/audio — лицензионно чистый)
+assets/audio/Audionarkotik-Технология-успеха.mp3
+
+# ML: веса моделей (тяжёлые) и embedded Python runtime (устанавливается setup:ml-python)
+resources/ml/model/
+resources/ml/python-runtime/
+
+# Текстовые черновики контента (не используются в коде — контент в src/data/education/*)
+resources/hints/
+resources/lessons/
+# Текстовые черновики контента (не используются в коде — контент в src/data/education/*)
+resources/tests/

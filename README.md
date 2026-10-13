@@ -1,10 +1,9 @@
 # FIRE Market Sim — Симулятор начинающего инвестора
 
 Десктоп-приложение (Next.js + React + Electron + SQLite) для обучения новичков
-азам инвестиций на исторических данных Московской биржи (2013–2026).
+азам инвестиций на исторических данных (2013–2026).
 
-> Полная UI/UX-спецификация — `docs/TZ_MARKET.txt`. Этот README — краткий вход
-> для разработчика. Подробная документация — в [`docs/project/`](docs/project/).
+> Подробная документация — в [`docs/project/`](docs/project/).
 
 ---
 
@@ -12,9 +11,8 @@
 
 | Файл | О чём |
 |---|---|
-| [`docs/project/01-architecture.md`](docs/project/01-architecture.md) | Текущее устройство кодовой базы: слои, модули, подмодули, ключевые файлы и их назначение. |
-| [`docs/project/02-commands.md`](docs/project/02-commands.md) | Все команды: запуск, релизная сборка, добавление активов, генерация каталогов и SQLite, тесты. |
-| [`docs/project/03-status-vs-tz.md`](docs/project/03-status-vs-tz.md) | Что реализовано, что — нет: статус каждого пункта ТЗ + словесный итог «что осталось до полноценного симулятора». |
+| [`docs/project/01-architecture.md`](docs/project/01-architecture.md) | Устройство кодовой базы: слои, модули, подмодули, ключевые файлы и их назначение. |
+| [`docs/project/02-commands.md`](docs/project/02-commands.md) | Все команды: запуск, релизная сборка, генерация каталогов и SQLite, тесты, ML-аналитика. |
 
 ---
 
@@ -23,7 +21,6 @@
 ```powershell
 # 1. Зависимости
 npm install
-npm --prefix downloadStockData install
 
 # 2. Запуск (Electron + Next + SQLite)
 npm run electron:dev
@@ -35,6 +32,11 @@ npm run test:all
 > Полноценный режим — только через **Electron** (`electron:dev`).
 > Чистый `npm run dev` в браузере не видит SQLite и рынок останется пустым.
 
+> **Данные не входят в репозиторий.** Для работы нужны локальные файлы:
+> `data/market.sqlite` (собирается `npm run build:market-db` из `.txt`-свечей в
+> `tickers/`, `bonds/`, `fonds/`, `indexes/`) и ML-веса в `resources/ml/model/`.
+> Эти папки исключены из git (см. `.gitignore`).
+
 ---
 
 ## Стек
@@ -43,8 +45,8 @@ npm run test:all
 - **Desktop:** Electron 40 (NSIS-инсталлятор под Windows)
 - **БД:** SQLite — `better-sqlite3` (сборка `data/market.sqlite` и чтение слайсов в Electron main; файл БД может быть >2 GiB)
 - **Время / даты:** `date-fns`, `date-fns-tz` (всё в Europe/Moscow)
-- **Тесты:** свой консольный runner (`tests/console/`) на `tsx`
-- **Загрузчик:** отдельный пакет `downloadStockData/` к MOEX ISS API
+- **ML-аналитика:** Python + TensorFlow (TimeVAE), воркер запускается из Electron main (`electron/ml-bridge.cjs`)
+- **Тесты:** свой консольный runner (`tests/console/`) на `tsx` + unit-тесты `node:test` в `src/logic/modules/*/__tests__`
 
 ---
 
@@ -53,40 +55,42 @@ npm run test:all
 ```
 fire-market-sim/
 ├── src/
-│   ├── app/          ← Next.js страницы (game / learn / achievements / settings)
-│   ├── components/   ← React-компоненты (header, portfolio, market)
+│   ├── app/          ← Next.js страницы (game / learn / achievements / analytics)
+│   ├── components/   ← React-компоненты (header, portfolio, market, education, analytics)
 │   ├── hooks/        ← useGameState (подписка на LogicManager)
 │   ├── logic/        ← ядро: GameLoop, LogicManager, EventBus, модули
+│   ├── audio/        ← звуковой движок (клики, фоновая музыка)
 │   └── data/         ← модели данных, сгенерированные каталоги
-├── scripts/          ← gen:catalog, gen:details, gen:calendar, build:market-db
-├── electron/         ← main.js, IPC к SQLite
-├── downloadStockData/← пакет-загрузчик MOEX ISS
-├── tickers/, bonds/, fonds/, indexes/   ← Finam-формат .txt свечей
-├── data/             ← market.sqlite, tradingCalendar.json (артефакты сборки)
-├── tests/console/    ← M1–M4 + arch-инварианты
-└── docs/             ← TZ_MARKET.txt + docs/project/* (этот README ссылается сюда)
+├── scripts/          ← генерация каталогов, сборка SQLite, ML-скрипты
+├── electron/         ← main.js, IPC к SQLite, ML-мост
+├── resources/ml/     ← Python-код ML-воркера (веса моделей — локально, не в git)
+├── tests/console/    ← M1–M10 + A1/A2 + arch-инварианты
+└── docs/             ← project/01-architecture.md, 02-commands.md
 ```
 
 ---
 
 ## Что уже работает
 
-- Симуляция исторических минутных котировок MOEX с детерминированным циклом (20 UPS).
+- Симуляция исторических минутных котировок с детерминированным циклом (20 UPS).
 - Покупка/продажа акций, облигаций (с НКД), фондов — комиссии, лотность, FIFO.
+- Лимитные ордера и псевдостакан (частичное исполнение).
 - НДФЛ 13% на дивиденды, купоны, реализованную прибыль и погашение бондов.
-- Cut-off для участия в реестре дивидендов по реальному правилу Мосбиржи (T+0/T+2/T+1).
+- Cut-off для участия в реестре дивидендов по реальному правилу (T+0/T+2/T+1).
 - Единый финансовый журнал (`LedgerEntry`) с фильтром по типу операций.
 - Графики цены в **торговом времени** (без растягивания на ночь/выходные) + forward-fill для редких серий.
-- Макропоказатели в шапке: нефть **BR**, курс **USD000UTSTOM**, ключевая ставка ЦБ (**KS**, с 16.09.2013).
-- 60+ автотестов (`test:m1..m4` + `arch-invariants`).
+- Макропоказатели в шапке: нефть **BR**, курс **USD000UTSTOM**, ключевая ставка ЦБ (**KS**), инфляция 12m.
+- **Обучение** (`/learn`): лекции, тесты, контекстные подсказки, разблокировка инструментов через тесты.
+- **Сохранение прогресса**: слоты в `userData/saves` (IPC `persistence:*`).
+- **Настройки**: звук, музыка, громкость, полноэкранный режим (меню в шапке).
+- **ML-аналитика**: предсказание следующего торгового дня (TimeVAE) в разделе «Аналитика».
+- Составной индекс **FIREIDX**, синтетический фонд денежного рынка **DN-R**, индекс инфляции **INFL**.
+- 100+ автотестов (`test:m1..m10` + `test:a1`/`test:a2` + unit-тесты + `arch-invariants`).
 
 ## Чего пока нет
 
-- Вкладки «Обучение», «Достижения», «Настройки» — только заглушки.
-- Локальное сохранение прогресса.
-- Тепловая карта рынка, статистика портфеля (волатильность, Шарп, α).
+- Вкладка «Достижения» — заглушка; модуль уведомлений — каркас.
+- Тепловая карта рынка.
 - Свечные кэндлы (есть только линейный график).
-- Туториал и модальные окна из ТЗ §10–§11.
 - Светлая тема.
-
-Полный разбор — в [`docs/project/03-status-vs-tz.md`](docs/project/03-status-vs-tz.md).
+- Туториал и модальные окна из ТЗ §10–§11.

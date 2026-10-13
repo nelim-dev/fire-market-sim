@@ -64,7 +64,7 @@ interface RedemptionEntry {
 interface DetailsCatalog {
   generatedAt: string;
   lotSizeBySymbol: Record<string, number>;
-  /** MOEX ISSUESIZE — акции в обращении (шт.). */
+  /** ISSUESIZE — акции в обращении (шт.). */
   sharesOutstandingBySymbol: Record<string, number>;
   instrumentMetaBySymbol: Record<string, InstrumentMeta>;
   dividendsBySymbol: Record<string, DividendEntry[]>;
@@ -74,7 +74,7 @@ interface DetailsCatalog {
   staticOrderBookLotsBySymbol: Record<string, number>;
 }
 
-/** Синтетические инструменты без MOEX meta. */
+/** Синтетические инструменты. */
 const SYNTHETIC_STATIC_ORDER_BOOK_LOTS: Record<string, number> = {
   'DN-R': 1_000_000,
 };

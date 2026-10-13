@@ -29,7 +29,7 @@ export type ScannedDeclaration =
 /**
  * Возвращает все декларации, попавшие в окно `(prevEpochMs, currentEpochMs]`.
  * - dividend: emit на «cut-off для участия в реестре» = `recordCloseDate - N торговых дней`,
- *   где N зависит от эры settlement-цикла Мосбиржи (T+0 / T+2 / T+1).
+ *   где N зависит от эры settlement-цикла (T+0 / T+2 / T+1).
  *   См. `dividendEligibility.ts`. На этот момент TradingModule.tax проверит позиции
  *   игрока: купивший после cutoff дивиденд не получит, что воспроизводит реальное
  *   правило биржи. Если `calendar=null` (или дата попадает в эру T+0) — fallback

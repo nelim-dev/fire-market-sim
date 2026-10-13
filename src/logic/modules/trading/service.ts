@@ -538,7 +538,7 @@ export class TradingModuleService implements LogicModule<GameState> {
     }
 
     const lotSize = Math.max(1, asset.lotSize);
-    // MOEX: заявка должна быть кратна размеру лота (из каталога instrument details).
+    // Заявка должна быть кратна размеру лота (из каталога instrument details).
     if (input.quantity % lotSize !== 0) {
       return this.reject(state, context, {
         simulationEpochMs: state.simulationEpochMs,

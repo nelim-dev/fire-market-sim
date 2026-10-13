@@ -73,7 +73,7 @@ function buildHeavyMarket() {
 
 /** Синтетический торговый календарь: N торговых дней по 6.5 ч, заканчивающихся в anchorEpochMs. */
 function makeSyntheticCalendar(anchorEpochMs: number, numDays: number): TradingCalendar {
-  const SESSION_MS = 390 * MINUTE_MS; // 6 ч 30 мин — типичная сессия MOEX
+  const SESSION_MS = 390 * MINUTE_MS; // 6 ч 30 мин — типичная сессия
   const DAY_MS = 86_400_000;
   const records: TradingDayRecord[] = [];
   let t = anchorEpochMs;

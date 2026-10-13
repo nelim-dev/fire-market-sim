@@ -926,7 +926,7 @@ export class MarketModuleService implements LogicModule<GameState> {
     // Сабсервис corporateActions: scan & emit (слой A) — после обновления котировок,
     // чтобы консьюмеры могли уже опираться на актуальные позиции/цены.
     // Передаём календарь: для дивидендов scanner вычисляет cut-off реестра
-    // (T-N торговых дней по эре settlement-цикла Мосбиржи).
+    // (T-N торговых дней по эре settlement-цикла).
     const declarations = scanScheduleWindow(
       state.market.details,
       prevEpoch,
