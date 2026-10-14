@@ -94,3 +94,40 @@ fire-market-sim/
 - Свечные кэндлы (есть только линейный график).
 - Светлая тема.
 - Туториал и модальные окна из ТЗ §10–§11.
+
+## 📸 Скриншоты
+
+Общий вид интерфейса симулятора и ключевые экраны приложения.
+
+### Портфель
+![Портфель](docs/screenshots/portfolio.png)
+
+### История сделок
+![История сделок](docs/screenshots/trade-history.png)
+
+### Состав портфеля
+![Состав портфеля](docs/screenshots/portfolio-composition.png)
+
+### Форма заявки на покупку
+![Форма заявки на покупку](docs/screenshots/order-form.png)
+
+### Активные заявки
+![Активные заявки](docs/screenshots/active-orders.png)
+
+### Закрытый инструмент
+![Закрытый инструмент](docs/screenshots/locked-instrument.png)
+
+### Список лекций
+![Список лекций](docs/screenshots/lessons-list.png)
+
+### Просмотр лекции
+![Просмотр лекции](docs/screenshots/lesson-view.png)
+
+### Игровое меню
+![Игровое меню](docs/screenshots/game-menu.png)
+
+### Настройки
+![Настройки](docs/screenshots/settings.png)
+
+### Сохранение и загрузка
+![Сохранение и загрузка](docs/screenshots/save-load-menu.png)
